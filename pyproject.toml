@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mostlyharmless"
+version = "0.0.0"
+description = "Analytic interferometric visibilities of spherical-harmonic surface maps"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Prasenjit Saha" }]
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+# Pinned to what Stage 0 is actually developed and tested against: Python 3.10.11
+# with numpy 2.2.6, scipy 1.15.3, sympy 1.13.3 (Thonny's bundled interpreter).
+# See ROADMAP.md section 0 for the environment note.
+dependencies = [
+    "numpy>=2.2",
+    "scipy>=1.15",
+    "sympy>=1.13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# pythonpath lets `pytest` run straight from the repo root against the src layout,
+# with no editable install.  Nothing is installed into the Thonny app bundle.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

@@ -1,0 +1,38 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+
+% House macros.  \vtag resolves in the verification register to a named
+% certificate in mostlyharmless.symbolic (see section 1.5).
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\PA}{\mathrm{PA}}
+\newcommand{\vtag}[1]{\textnormal{[V#1]}}
+
+\title{Interferometric visibilities of\\ spherical-harmonic surface maps}
+\author{Prasenjit Saha}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+These notes derive closed-form complex visibilities for surface brightness maps
+expanded in spherical harmonics, in the far-field limit and for a source of unit
+angular radius.  Both parity families are treated: $l-|m|$ odd reduces to a
+single spherical Bessel function, and $l-|m|$ even to a finite sum of ordinary
+Bessel functions via a Zernike expansion.  Conventions are fixed once and for all
+in section~\ref{sec:conventions}.  Derivations state their structural steps and
+delegate the mechanical algebra to named, machine-checked lemmas; the evidence
+rung and the scope of every such claim are stated with it.
+\end{abstract}
+
+\tableofcontents
+
+\input{sections/01-conventions}
+
+\end{document}

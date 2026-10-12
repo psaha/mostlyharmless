@@ -1,0 +1,142 @@
+% 01-conventions.tex -- conventions and notation.
+% Input by mostlyharmless.tex.  No preamble here; house macros are defined in
+% the master file.
+
+\section{Conventions and notation}
+\label{sec:conventions}
+
+This section fixes the conventions used everywhere else.  Later sections assume
+it and do not restate it.  Where a symbol is overloaded in the wider literature,
+the alternative reading is named explicitly, because those are the places where
+errors enter silently.
+
+\subsection{Frames and angles}
+
+The observer frame is right-handed, with axes
+\begin{equation}
+  \hat e_E = \text{East}, \qquad
+  \hat e_N = \text{North}, \qquad
+  \hat e_{\mathrm{los}} = \text{line of sight},
+  \label{eq:observer-frame}
+\end{equation}
+so that $\hat e_E \times \hat e_N = \hat e_{\mathrm{los}}$.  The projected disk of
+the source is the unit disk in this frame, and a point on it is specified either
+by Cartesian direction cosines $(x_E, x_N)$ or by plane polar coordinates
+\begin{equation}
+  \rho = \sqrt{x_E^2 + x_N^2} = \sin\theta, \qquad
+  \varphi = \arctan(x_N, x_E),
+  \label{eq:disk-coords}
+\end{equation}
+where $\theta$ is the polar angle measured from $\hat e_{\mathrm{los}}$.  For a
+source of unit angular radius, $\rho \in [0,1]$.
+
+The body frame is the frame in which the surface map is specified, with $z$ along
+the spin axis.  Its orientation relative to the observer is fixed by three
+angles: the spin phase $\alpha$, the inclination $\beta$ measured from the line
+of sight, and the position angle $\PA$ measured from North towards East.  The
+body-to-observer rotation is
+\begin{equation}
+  R(\alpha,\beta,\PA) =
+  R_z\!\left(\tfrac{\pi}{2} - \PA\right) R_y(\beta) R_z(\alpha),
+  \label{eq:body-to-observer}
+\end{equation}
+with $R_y$ and $R_z$ active right-handed rotations.
+
+\subsection{Spherical harmonics}
+
+Harmonics are orthonormal on the sphere, with the Condon--Shortley phase carried
+inside the associated Legendre function,
+\begin{equation}
+  Y_l^m(\theta,\varphi) = N_{lm}\, P_l^m(\cos\theta)\, e^{im\varphi},
+  \qquad
+  N_{lm} = \sqrt{\frac{2l+1}{4\pi}\,\frac{(l-|m|)!}{(l+|m|)!}} ,
+  \label{eq:ylm}
+\end{equation}
+for $l \ge 0$ and $-l \le m \le l$.  We write $\mu = |m|$ wherever only the
+magnitude matters.
+
+For derivations the complex basis \eqref{eq:ylm} is used.  For the interface the
+real basis is used, with $\cos(\mu\varphi)$ for $m \ge 0$ and $\sin(\mu\varphi)$
+for $m < 0$; this is what a real surface brightness requires, and it removes all
+signed-$m$ case analysis from the public surface.  Coefficients are stored in
+blocks of fixed $l$, with $m$ running from $-l$ to $l$.
+
+\subsection{Visibility and Fourier conventions}
+
+The complex visibility is the Fourier transform of the sky brightness, with the
+factor $2\pi$ inside the exponent and no prefactor,
+\begin{equation}
+  V(u,v) = \int I(x_E,x_N)\, e^{-2\pi i (u x_E + v x_N)}\, dx_E\, dx_N ,
+  \label{eq:visibility-definition}
+\end{equation}
+with $u$ and $v$ in \emph{wavelengths} and $x_E, x_N$ dimensionless direction
+cosines.  Thus $V(0,0)$ is the total flux.  The transform is written in plane
+polar coordinates through
+\begin{equation}
+  q = \sqrt{u^2 + v^2}, \qquad \psi = \arctan(v,u), \qquad a = 2\pi q .
+  \label{eq:uv-polar}
+\end{equation}
+Public functions take $(u,v)$; $q$, $\psi$ and $a$ are internal.
+
+The measure in \eqref{eq:visibility-definition} is the planar measure over the
+projected disk, $dx_E\,dx_N = \rho\,d\rho\,d\varphi$.  The exact solid-angle
+measure differs by a factor $1/n$ with $n = \sqrt{1-\rho^2}$, and is not used
+here, because the planar measure is the one in which the classical uniform-disk
+and limb-darkening results are expressed.  The difference is not cosmetic: the
+solid-angle measure moves the square root from the odd family to the even one,
+and so swaps which family is easy.
+
+\subsection{Symbols}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+symbol & meaning \\
+\hline
+$\theta,\ \varphi$ & polar and azimuthal angles on the sphere \\
+$z = \cos\theta$ & natural variable for Legendre and Jacobi polynomials \\
+$\rho = \sin\theta$ & disk radius; also $\sqrt{x_E^2+x_N^2}$ \\
+$x_E,\ x_N$ & East and North direction cosines \\
+$u,\ v,\ w$ & baseline coordinates, in wavelengths \\
+$q = \sqrt{u^2+v^2}$ & radial baseline, in wavelengths \\
+$\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\
+$a = 2\pi q$ & argument of the Bessel functions \\
+$l,\ m$ & spherical-harmonic degree and order \\
+$\mu = |m|$ & azimuthal order, non-negative \\
+$n$ & Zernike radial degree \\
+$k = (n-\mu)/2$ & Jacobi degree \\
+$\alpha,\ \beta,\ \PA$ & spin phase, inclination, position angle \\
+$N_{lm}$ & harmonic normalisation, \eqref{eq:ylm} \\
+$R_n^\mu(\rho)$ & Zernike radial polynomial \\
+$j_l,\ J_m$ & spherical and cylindrical Bessel functions \\
+\hline
+\end{tabular}
+\end{center}
+
+Two overloadings are worth stating explicitly, because both have caused errors.
+First, $u$ is a baseline coordinate here, whereas the limb-darkening literature
+uses $u, u_1, u_2$ for the coefficients of the limb-darkening law; in this
+package those coefficients are named \code{ld\_coeffs} and never $u$.  Second,
+$x_E$ and $x_N$ are what the radio-interferometry literature calls the direction
+cosines $l$ and $m$.  That notation is avoided here so that $l$ and $m$ always
+mean harmonic degree and order.
+
+\subsection{Verification conventions}
+
+Claims that rest on algebra rather than on argument carry a tag such as
+\vtag{11}, which resolves in the verification register to a named certificate
+function in \code{mostlyharmless.symbolic}.  Each such claim also states its
+scope and one of three evidence rungs:
+
+\begin{description}
+\item[exact] the residual simplifies to zero with the parameters left free;
+\item[range-limited] the residual is exactly zero for every case in a stated
+  finite set, typically all integer $l$ up to some $l_{\max}$ --- a proof of the
+  finite statement, but not of the general one;
+\item[numerical] agreement with an independent computation, to a stated
+  tolerance.
+\end{description}
+
+The rung is not decoration.  ``Verified'' without a stated scope is the failure
+mode this convention exists to prevent, and the distinction between a proof of a
+finite statement and a proof of the general one is the one most easily blurred.
