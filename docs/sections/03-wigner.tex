@@ -1,0 +1,127 @@
+% 03-wigner.tex -- rotation.  Formulas F4-F8.
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{Rotation}
+\label{sec:wigner}
+
+Changing the viewing geometry is a linear transformation of the coefficients, not
+a refitting of the map.  This section states the law, the matrices that implement
+it, and the non-negative-order form in which the transform is actually applied.
+It is the one place where negative orders are wanted, and they appear only as
+indices of the representation, never as coefficients.
+
+\subsection{The rotation law}
+\label{sec:rotation-law}
+
+With $\hat n$ a direction in the body frame and $R$ the body-to-observer rotation,
+the harmonics transform as
+\begin{equation}
+  Y_l^m(R^{-1}\hat n) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_l^{m'}(\hat n) ,
+  \label{eq:rotation-law}
+\end{equation}
+so a map whose coefficients are $a_{lm}$ in the body frame has coefficients
+\begin{equation}
+  b_{lm'} = \sum_{m=-l}^{l} D^l_{m'm}(R) \, a_{lm}
+  \label{eq:coefficient-rotation}
+\end{equation}
+in the observer frame: the matrix contracts the \emph{second} index of $D$, and no
+conjugation is involved.  Equation \eqref{eq:rotation-law} says that the two
+descriptions are one physical map evaluated at rotated arguments --- a statement
+that certif\-icate \vtag{6} tests directly.
+
+\subsection{The Wigner matrices}
+\label{sec:wigner-matrices}
+
+In the zyz convention, with $R = R_z(\alpha) R_y(\beta) R_z(\gamma)$,
+\begin{equation}
+  D^l_{m'm}(\alpha,\beta,\gamma) = e^{-im'\alpha} \, d^l_{m'm}(\beta) \, e^{-im\gamma} ,
+  \qquad
+  d^l_{m'm}(\beta) = \langle l m' | e^{-i\beta J_y} | l m \rangle ,
+  \label{eq:wigner-D}
+\end{equation}
+the $d$ matrix is real, and its explicit form is
+\begin{equation}
+  d^l_{m'm}(\beta) =
+  \sqrt{(l+m')!\,(l-m')!\,(l+m)!\,(l-m)!}\;
+  \sum_s \frac{(-1)^{m'-m+s}}{(l+m-s)!\,s!\,(m'-m+s)!\,(l-m'-s)!}\;
+  \cos^{2l+m-m'-2s}\!\tfrac{\beta}{2}\;
+  \sin^{m'-m+2s}\!\tfrac{\beta}{2},
+  \label{eq:wigner-d-explicit}
+\end{equation}
+summed over the $s$ for which every factorial is defined.  Certificate \vtag{4}
+checks \eqref{eq:wigner-d-explicit} against the exponential in
+\eqref{eq:wigner-D}, which is an independent construction of the same object.
+\emph{Numerical}, $l \le 6$.
+
+The elementary properties follow from \eqref{eq:wigner-D} and are collected in
+certificate \vtag{5}: the $d$ matrix is real and orthogonal,
+$d^l_{m'm}(0) = \delta_{m'm}$, $d^l_{00}(\beta) = P_l(\cos\beta)$, and
+$d^l_{m'm} = (-1)^{m-m'} d^l_{mm'}$.  \emph{Numerical}, $l \le 6$.
+
+Only the two diagonal factors in \eqref{eq:wigner-D} are complex, and they carry
+the spin phase and the position angle; the inclination enters only through the
+real $d$ matrix.
+
+\subsection{The viewing angles}
+\label{sec:viewing-angles}
+
+The body-to-observer rotation is built from the spin phase $\alpha$, the
+inclination $\beta$ and the position angle $\PA$ of the spin axis as
+\begin{equation}
+  R(\alpha,\beta,\PA) = R_z\!\left(\tfrac{\pi}{2} - \PA\right) R_y(\beta) R_z(\alpha) ,
+  \label{eq:body-to-observer-wigner}
+\end{equation}
+which is \eqref{eq:wigner-D} with $\alpha_{\rm zyz} = \pi/2 - \PA$ and
+$\gamma_{\rm zyz} = \alpha$:
+\begin{equation}
+  D^l_{m'm}(R) = e^{-im'(\pi/2 - \PA)} \, d^l_{m'm}(\beta) \, e^{-im\alpha} .
+  \label{eq:D-viewing}
+\end{equation}
+Note which angle multiplies which index: $\pi/2 - \PA$ goes with the row index
+$m'$, and $\alpha$ with the column index $m$.
+
+\subsection{The transform without negative-order coefficients}
+\label{sec:rotation-nonnegative}
+
+Splitting the sum in \eqref{eq:coefficient-rotation} into $m \ge 0$ and $m < 0$,
+and substituting the value of each negative-order coefficient, gives an expression
+in which every coefficient carries a non-negative order:
+\begin{equation}
+  b_{lm'} = D^l_{m'0} \, a_{l0}
+  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, a_{lm}
+  + (-1)^m \, D^l_{m',-m} \, \overline{a_{lm}} \, \Big] ,
+  \qquad m' \ge 0 .
+  \label{eq:rotation-nonnegative}
+\end{equation}
+The $m = 0$ term appears once and not twice, because $a_{l0}$ is real: written as
+a pair it would be doubled.  Every negative order in \eqref{eq:rotation-nonnegative}
+is an index of $D$; none is a coefficient.
+
+\subsection{What was checked}
+\label{sec:wigner-register}
+
+Equation \eqref{eq:rotation-nonnegative} is checked against the full-range
+transform \eqref{eq:coefficient-rotation} by \vtag{6}, and the full-range
+transform against direct geometry by the same certificate: rotating the
+coefficients must agree with evaluating the original map at the inversely rotated
+direction,
+\begin{equation}
+  I_{\rm new}(\hat n) = I_{\rm body}(R^{\!\top}\hat n) ,
+  \label{eq:rotation-geometry}
+\end{equation}
+which shares nothing with the algebra.  Composition is checked the same way, by
+applying two rotations and comparing against the composite direction.
+\emph{Numerical}, $l \le 4$ and $l \le 3$ respectively.
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+tag & claim & rung \\
+\hline
+\vtag{4} & $d$ from \eqref{eq:wigner-d-explicit} against $\exp(-i\beta J_y)$ & numerical, $l \le 6$ \\
+\vtag{5} & properties of $d$ & numerical, $l \le 6$ \\
+\vtag{6} & \eqref{eq:rotation-nonnegative} and \eqref{eq:rotation-geometry} & numerical, $l \le 4$ \\
+\vtag{7} & composition of two rotations & numerical, $l \le 3$ \\
+\hline
+\end{tabular}
+\end{center}

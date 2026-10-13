@@ -44,22 +44,94 @@ with $R_y$ and $R_z$ active right-handed rotations.
 
 \subsection{Spherical harmonics}
 
-Harmonics are orthonormal on the sphere, with the Condon--Shortley phase carried
-inside the associated Legendre function,
+Complex harmonics are used in the derivations, and only for non-negative orders:
 \begin{equation}
   Y_l^m(\theta,\varphi) = N_{lm}\, P_l^m(\cos\theta)\, e^{im\varphi},
   \qquad
-  N_{lm} = \sqrt{\frac{2l+1}{4\pi}\,\frac{(l-|m|)!}{(l+|m|)!}} ,
+  N_{lm} = \sqrt{\frac{2l+1}{4\pi}\,\frac{(l-m)!}{(l+m)!}} ,
   \label{eq:ylm}
 \end{equation}
-for $l \ge 0$ and $-l \le m \le l$.  We write $\mu = |m|$ wherever only the
-magnitude matters.
+for $l \ge 0$ and $0 \le m \le l$, with the Condon--Shortley phase carried inside
+$P_l^m$.  Negative orders are never formed --- not in the derivations, not for
+maps, not anywhere --- so the magnitude $|m|$ is never needed either.  The order is
+non-negative wherever it appears, and there is consequently no signed-order
+convention to get wrong.
 
-For derivations the complex basis \eqref{eq:ylm} is used.  For the interface the
-real basis is used, with $\cos(\mu\varphi)$ for $m \ge 0$ and $\sin(\mu\varphi)$
-for $m < 0$; this is what a real surface brightness requires, and it removes all
-signed-$m$ case analysis from the public surface.  Coefficients are stored in
-blocks of fixed $l$, with $m$ running from $-l$ to $l$.
+The harmonics are extended to negative orders by
+\begin{equation}
+  Y_l^{-m} := (-1)^m \, \overline{Y_l^{m}} , \qquad m > 0 ,
+  \label{eq:ylm-extension}
+\end{equation}
+which is a definition, and which coincides with the standard convention built
+from the associated Legendre function of negative order.  Negative orders are
+wanted in exactly one place, the rotation machinery of section~3, where the order
+is an index of the representation rather than of a map.
+
+Coefficients, by contrast, are never formed at a negative order.  For a real map
+the term accompanying $a_{lm} Y_l^m$ is $(-1)^m \overline{a_{lm}} \, Y_l^{-m}$,
+which is to say $2\,\mathrm{Re}(a_{lm} Y_l^m)$; wherever the rotation would call
+for a negative-order coefficient, its value is substituted in that form.
+
+The basis used for maps is real.  At degree $l$ there are $2l+1$ real basis
+functions, labelled by $m = 0, \dots, l$ together with a cosine or sine branch:
+\begin{equation}
+  R_l^0 = Y_l^0 , \qquad
+  R_l^{m,c} = \sqrt{2}\,\mathrm{Re}\,Y_l^m , \qquad
+  R_l^{m,s} = \sqrt{2}\,\mathrm{Im}\,Y_l^m \quad (m > 0) .
+  \label{eq:real-basis}
+\end{equation}
+They are orthonormal on the sphere, and a real map is expanded in them with real
+coefficients,
+\begin{equation}
+  I(\theta,\varphi) = \sum_{l} \Big[ \, c_{l0} R_l^0
+  + \sum_{m=1}^{l} \big( c_{lm} R_l^{m,c} + s_{lm} R_l^{m,s} \big) \Big] .
+  \label{eq:map-expansion}
+\end{equation}
+
+The constant term is $c_{00}R_0^0 = a_{00}Y_0^0 = a_{00}/\sqrt{4\pi}$, so $a_{00}$
+is $\sqrt{4\pi}$ times the mean intensity over the sphere,
+\begin{equation}
+  \frac{1}{4\pi}\int_{S^2} I \, d\Omega = \frac{a_{00}}{\sqrt{4\pi}} .
+  \label{eq:mean-intensity}
+\end{equation}
+It is neither the mean over the visible disk nor the flux.  Those integrals lack
+the orthogonality of \eqref{eq:mean-intensity}: on the disk every harmonic picks up
+the foreshortening factor $n$ of the visibility measure,
+$\int_{\rm disk} Y_l^m \, d^2x = \int_{\rm visible} Y_l^m(\hat n)\, n \, d\Omega$,
+which does not vanish for $l > 0$.
+
+Maps in this work are normalised so that
+\begin{equation}
+  a_{00} = 1 ,
+  \label{eq:a00-normalisation}
+\end{equation}
+so the uniform component is the reference and every other coefficient is a mode
+amplitude relative to uniform brightness.  The sphere mean is then
+$1/\sqrt{4\pi}$.  This is an assumption of the same kind as the unit radius: both
+fix a scale that would otherwise be a free parameter, and both are stated once
+rather than carried around.  Rotation preserves \eqref{eq:a00-normalisation},
+because the $l = 0$ block is untouched by it --- the $d$ matrix at $l = 0$ is the
+identity, which certificate \vtag{5} covers.  The free coefficients of a map are
+therefore those with $l \ge 1$.
+
+For compact storage the same map is carried as complex coefficients of the
+non-negative orders alone,
+\begin{equation}
+  a_{l0} = c_{l0} , \qquad
+  a_{lm} = \frac{c_{lm} - i\,s_{lm}}{\sqrt{2}} \quad (m > 0) ,
+  \label{eq:half-complex}
+\end{equation}
+in terms of which \eqref{eq:map-expansion} reads
+\begin{equation}
+  I(\theta,\varphi) = \sum_{l} \Big[ \, a_{l0} Y_l^0
+  + \sum_{m=1}^{l} 2\,\mathrm{Re}\big( a_{lm} Y_l^m \big) \Big] .
+  \label{eq:map-from-half-complex}
+\end{equation}
+This is real by construction: there is no second set of stored coefficients that
+could disagree with the first, and the explicit factor of $2$ is what a pair of
+conjugate orders would otherwise have contributed.  At degree $\le L$ there are
+$\sum_{l=0}^{L} (2l+1) = (L+1)^2$ independent real numbers, which is what a flat
+coefficient vector holds.
 
 \subsection{Visibility and Fourier conventions}
 
@@ -101,13 +173,14 @@ $u,\ v,\ w$ & baseline coordinates, in wavelengths \\
 $q = \sqrt{u^2+v^2}$ & radial baseline, in wavelengths \\
 $\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\
 $a = 2\pi q$ & argument of the Bessel functions \\
-$l,\ m$ & spherical-harmonic degree and order \\
-$\mu = |m|$ & azimuthal order, non-negative \\
+$l,\ m$ & degree and order, with $m \ge 0$ throughout \\
+$c_{lm},\ s_{lm}$ & real cosine and sine coefficients of a map \\
+$a_{lm}$ & complex coefficient of order $m \ge 0$, \eqref{eq:half-complex} \\
 $n$ & Zernike radial degree \\
-$k = (n-\mu)/2$ & Jacobi degree \\
+$k = (n-m)/2$ & Jacobi degree, $m \ge 0$ \\
 $\alpha,\ \beta,\ \PA$ & spin phase, inclination, position angle \\
 $N_{lm}$ & harmonic normalisation, \eqref{eq:ylm} \\
-$R_n^\mu(\rho)$ & Zernike radial polynomial \\
+$R_n^m(\rho)$ & Zernike radial polynomial, $m \ge 0$ \\
 $j_l,\ J_m$ & spherical and cylindrical Bessel functions \\
 \hline
 \end{tabular}

@@ -3,6 +3,7 @@
 Modules planned (ROADMAP.md section 2):
 
 ``spherical_harmonics``  definitions, evaluation, orthonormality      (F1-F3)
+``coefficients``         the Coeffs container for a real map          (D13)
 ``wigner``               d and D matrices, coefficient rotation       (F4-F8)
 ``zernike``              radial polynomials built from Jacobi         (F14)
 ``visibility``          the master reduction and both parity families (F9-F18)

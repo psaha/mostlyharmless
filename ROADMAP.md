@@ -19,11 +19,15 @@ still open.
 | D5 | **Coefficients are exact rationals**, stored inspectably as integer numerator/denominator pairs. |
 | D6 | **`make docs` is not strict for now:** certificates run, failures are reported, the PDF still builds. Tighten once the stages are closed. |
 | D7 | **Measure:** planar over the projected disk, `dx_E dx_N`. The exact solid-angle alternative (`dOmega = dx_E dx_N / n`) is stated as a remark, not implemented. |
-| D8 | **Conventions:** Condon–Shortley phase inside `P_l^m`; complex basis for derivations and the real cos/sin basis for the interface; `u, v` in wavelengths; the `2*pi` inside the exponent; observer frame `(East, North, line of sight)`. |
-| D9 | **Notation:** `rho = sin(theta)`; `x_E, x_N` direction cosines; `q = sqrt(u^2+v^2)`; `psi = arctan(v/u)`; `a = 2*pi*q`; `mu = abs(m)`; `k = (n-mu)/2` for the Jacobi degree. |
+| D8 | **Conventions:** Condon–Shortley phase inside `P_l^m`; complex harmonics `Y_l^m` with `m >= 0` only, used in the derivations; maps use the real basis `R_l^0 = Y_l^0`, `R_l^{m,c} = sqrt(2) Re Y_l^m`, `R_l^{m,s} = sqrt(2) Im Y_l^m`, expanded with real coefficients `c_lm, s_lm`; **negative orders are never formed**, so `\|m\|` is never needed and there is no signed-order convention to get wrong; `u, v` in wavelengths; the `2*pi` inside the exponent; observer frame `(East, North, line of sight)`. |
+| D9 | **Notation:** `rho = sin(theta)`; `x_E, x_N` direction cosines; `q = sqrt(u^2+v^2)`; `psi = arctan(v/u)`; `a = 2*pi*q`; `k = (n-m)/2` for the Jacobi degree. `\|m\|` is never used as a symbol: orders are always written signed, and the parity condition is stated as `l+m` odd or even. |
 | D10 | **Verification rungs** are labelled on every claim: `exact` (free parameters), `range-limited` (exactly zero for all integer cases in a stated range — a proof of the finite statement), `numerical` (agreement to a stated tolerance). Prefer exact expansion and coefficient comparison to `simplify`, so a pass is a proof of the instance rather than trust in a heuristic. |
 | D11 | **Non-spherical sources: perturb in a deformation field.** The surface is `r(n) = R[1 + sum eps_lm Y_lm(n)]`, with an independent brightness perturbation, rather than a single flattening scalar; the `eps_lm` are the fitting parameters. The first-order visibility correction has **two** pieces — the interior integrand change and a **limb boundary term** from the moving silhouette — and both are required. Shape and gravity darkening enter at the same order and must be included together. Validate by the `eps^2` scaling of the residual, not merely by agreement. The reference implementation is a direct sky-plane ray-trace, chosen because it shares no algebra with the perturbation. |
 | D12 | **Triaxiality is required** — spinning stars in a binary — so a single flattening parameter will not do. Rotational and tidal quadrupoles about different axes are the natural input; the deformation-field parameterisation of D11 covers this. |
+| D13 | **Coefficients are half-complex and negative-order-free.** A real map is stored as `a_l0 = c_l0` and `a_lm = (c_lm - i s_lm)/sqrt(2)` for `m > 0`, one complex array per degree of length `l+1`, equivalently `I = sum_l [a_l0 Y_l0 + sum_{m>0} 2 Re(a_lm Y_lm)]`. The map is real by construction — there is no second set of stored coefficients to disagree with the first — and no unphysical direction for an optimiser to populate. Fitting goes through a flat real vector of exactly `(l+1)^2` numbers. The order is non-negative wherever it occurs, so the magnitude appears nowhere. |
+| D14 | **Negative orders are indices, never coefficients.** `Y_l^-m` is *defined* as `(-1)^m conj(Y_l^m)`, which coincides with the standard convention, and is used only in the rotation machinery, where the order indexes the representation. Coefficients are formed only for `m >= 0`; where the rotation would call for a negative-order coefficient its value is substituted, so the transform reads `b_lm' = D^l_{m'0} a_l0 + sum_{m=1..l} [ D^l_{m'm} a_lm + (-1)^m D^l_{m',-m} conj(a_lm) ]` with `m' >= 0`. The `m = 0` term appears once, not twice, because `a_l0` is real. The classical Wigner `d` and `D` therefore stay in the manual, rather than being relegated to the certificates. |
+| D15 | **Flux, mean intensity, and normalisation.** With the convention of D8 (no prefactor), `V(0,0)` is the total flux — a linear functional of *all* the coefficients, not of `a_00` alone, because the disk integral weights each harmonic by the foreshortening factor `cos(theta)` rather than being orthogonal as the sphere integral is. Normalising the visibility to unity at the origin therefore means dividing by the instantaneous flux, which for a rotating spotted star is time-dependent and discards the light-curve information; the unnormalised convention is kept. Separately, `a_00` is `sqrt(4*pi)` times the mean intensity over the **sphere** — not the mean over the visible disk, and not the flux. Fixing `a_00` is a choice of overall brightness scale and does not by itself make `V(0,0) = 1` unless the map is constant. Where a flux constraint is wanted, its row is the mode visibilities at `q = 0`, which Stage 2 produces anyway. |
+| D16 | **No convenience features the user can add trivially, and `a_00 = 1`.** Two assumptions do the work that parameters, helper methods or wrappers otherwise would: the sphere has **unit radius**, and maps are normalised so that **`a_00 = 1`**, which makes every other coefficient a mode amplitude relative to uniform brightness. Both are documented assumptions rather than code constraints or conveniences such as `normalised()`, because a wrapper reduces the readability of the code for no real gain. The convention is preserved by rotation, the `l = 0` block being untouched by it, so the free coefficients of a map are those with `l >= 1`. The container itself stays general — it still holds arbitrary maps, including the zero map — and it is the modelling convention, not the container, that fixes `a_00`. |
 
 ---
 
@@ -33,7 +37,7 @@ Status: **derived** = worked out and checked during design discussion; **new** =
 
 | # | formula | status | section |
 |---|---|---|---|
-| F1 | `Y_l^m`: definition, CS phase, negative order, reality | derived | 02 |
+| F1 | `Y_l^m` for `m >= 0`: definition, CS phase; the real basis `R_l^{m,c}`, `R_l^{m,s}` and the map expansion | derived | 02 |
 | F2 | Orthonormality; addition theorem | derived | 02 |
 | F3 | Real basis (cos/sin) and its normalisation | derived | 02 |
 | F4 | Rotation law `Y_lm(R^-1 n) = sum D^l_{m'm}(R) Y_lm'(n)` | derived | 03 |
@@ -43,7 +47,7 @@ Status: **derived** = worked out and checked during design discussion; **new** =
 | F8 | Parity factorisation of `i^m` into a family phase times a real sign | derived | 03 |
 | F9 | Jacobi–Anger reduction: `V = 2 pi (-i)^m e^{i m psi} int f(rho) J_m(2 pi q rho) rho drho` | derived | 04 |
 | F10 | Planar measure convention, and the `1/n` alternative | derived | 04 |
-| F11 | Parity dichotomy: `l-mu` odd ⇒ factor `sqrt(1-rho^2)`; even ⇒ polynomial in `rho^2` | derived | 04 |
+| F11 | Parity dichotomy: `l+m` odd ⇒ factor `sqrt(1-rho^2)`; even ⇒ polynomial in `rho^2` | derived | 04 |
 | F12 | Odd family: parity doubling, Legendre recurrence, the `K` identity, the collapse | derived | 05 |
 | F13 | Odd result: single spherical Bessel `j_l(2 pi q)/q` with double-factorial coefficient | derived | 05 |
 | F14 | Zernike `R_n^m` from Jacobi; orthogonality on the disk | derived | 06 |
@@ -65,6 +69,7 @@ src/mostlyharmless/
 ├── visylm/
 │   ├── __init__.py
 │   ├── spherical_harmonics.py    # F1-F3
+│   ├── coefficients.py           # the Coeffs container (D13)
 │   ├── wigner.py                 # F4-F8
 │   ├── zernike.py                # F14
 │   ├── visibility.py             # F9-F13, F15-F18
@@ -103,7 +108,7 @@ zernike_coefficients(l, m)                  -> list[Fraction]
 
 Public entry points take `(u, v)`; `q` and `psi` are derived internally (D9) and never appear in a
 caller's code. The intermediate `radial_integral(l, m, q)` is the workhorse and is deliberately
-public, because it dispatches on the parity of `l - mu` and so keeps the odd and even paths
+public, because it dispatches on the parity of `l + m` and so keeps the odd and even paths
 separately visible and separately tested. `visibility_mode` applies the closed-form azimuthal and
 phase factors; `visibility` sums over modes.
 
@@ -162,12 +167,12 @@ One tag, one function, one row in the register, one citation in the text.
 | tag | claim | rung |
 |---|---|---|
 | V1 | `Y_l^m` orthonormal on the exact quadrature grid | exact, `l <= L` |
-| V2 | reality and negative-order relation | exact |
-| V3 | addition theorem | exact, `l <= L` |
-| V4 | explicit `d` sum equals `exp(-i beta J_y)` | exact, `l <= L` |
-| V5 | `d^T d = I`; `d(0) = I`; `d_00 = P_l(cos beta)` | exact |
-| V6 | coefficient rotation equals a direct geometric rotation | exact, `l <= L` |
-| V7 | composition `D(R) D(R_0) = D(R R_0)` | exact |
+| V2 | harmonic extension `Y_l^-m = (-1)^m conj(Y_l^m)`, and that the implementation reproduces it | exact |
+| V3 | addition theorem | numerical: 40-digit SymPy, plus float at higher `l` (the symbolic route tangles in the sign of `sin theta`) |
+| V4 | explicit `d` sum equals `exp(-i beta J_y)` | numerical, `l <= 6` |
+| V5 | `d^T d = I`; `d(0) = I`; `d_00 = P_l(cos beta)`; symmetry | numerical, `l <= 6` |
+| V6 | rotation equals a direct geometric rotation; and the non-negative-order form equals the full-range transform | numerical, `l <= 4` |
+| V7 | composition of two rotations | numerical, `l <= 3` |
 | V8 | Jacobi–Zernike relation against the explicit series | exact, `n <= L` |
 | V9 | Zernike orthogonality | exact rational |
 | V10 | Zernike–Hankel identity | exact, `n <= L` |
@@ -210,13 +215,28 @@ structural steps in full, mechanical algebra delegated to a named certificate.
 
 ## 6. Build order, with gates
 
+*Status: Stages 0 and 1 (a and b) closed — 52 tests green, manual 8 pages, 13 certificates.*
+
 **Stage 0 — skeleton.** Repo layout, `pyproject.toml`, pytest harness, section 01 with the
-symbol table.
-*Gate:* `pytest` runs; the manual compiles.
+symbol table. **Done.** Gate passed: 9 smoke tests green under Thonny's Python 3.10.11
+(numpy 2.2.6, scipy 1.15.3, sympy 1.13.3, pytest 9.1.1), and the manual compiles to 3 pages with
+cross-references resolved.
 
 **Stage 1 — harmonics and Wigner.** F1–F8, V1–V7. Largely transcription of material already
-verified during design, plus the certificate workflow itself.
-*Gate:* all certificates pass; sections 02–03 compile.
+verified during design, plus the certificate workflow itself. Split in two, because only the
+second needs the `Coeffs` container and the real/complex interface settled (section 7).
+
+**Stage 1a — spherical harmonics.** F1–F3, V1–V3; `visylm/spherical_harmonics.py`,
+`symbolic/derivations.py`, section 02. **Done.** Gate passed: 24 tests green, manual 5 pages,
+cross-references resolved. It also caught a real error in section 01 on the way — the harmonic
+normalisation had been written with `|m|` instead of the signed `m`, which leaves every negative
+order unnormalised by `[(l-|m|)!/(l+|m|)!]^2`, invisible for `m >= 0`. Found by writing the
+reality relation as certificate V2.
+
+**Stage 1b — Wigner.** F4–F8, V4–V7; `visylm/wigner.py`, section 03. **Done.** Gate passed: 52
+tests green, manual 8 pages, sections 02–03 compile. Both blocking decisions were taken first:
+half-complex `Coeffs` (D13) and negative orders as indices only (D14).
+*Gate for both:* all certificates pass; sections 02–03 compile.
 
 **Stage 2 — master reduction.** F9–F11, plus V16 as the end-to-end anchor that the
 conventions are right.
@@ -253,6 +273,11 @@ enters. Not to be started before stages 1–5 are closed.
    (`w = L^T u_2D`), but the flux weight becomes a dipole instead of `cos(theta)`, which
    couples the odd and even families and destroys the single-spherical-Bessel result. To be
    scoped as its own stage once the approach is agreed — see section 8.
+6. **`real_sph_harm` labelling.** The manual labels the real basis as `(l, m, c)` and
+   `(l, m, s)` with `m > 0`, while the code reaches the sine branch as `real_sph_harm(l, -m, ...)`.
+   The two agree under D14, but an explicit branch argument would read better at the call site.
+   Note that `sph_harm`'s acceptance of negative orders is now *correct* — it implements the
+   extension (6) — so V2 has gone back to being a certificate rather than a code-level check.
 
 ---
 
