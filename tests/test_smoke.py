@@ -19,7 +19,6 @@ MINIMUM = {
 SUBPACKAGES = [
     "mostlyharmless",
     "mostlyharmless.visylm",
-    "mostlyharmless.special",
     "mostlyharmless.symbolic",
 ]
 

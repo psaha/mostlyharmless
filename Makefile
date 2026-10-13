@@ -1,8 +1,8 @@
 # mostlyharmless -- build targets.
 #
 #   make check   run the certificates (pytest)
-#   make docs    build the manual
-#   make all     same as docs; deliberately NOT strict, see decision D6
+#   make docs    build the manual; plain LaTeX, no Python unless a generated file is missing
+#   make all     the default: check first, then build, stopping if the certificates fail (D6)
 #
 # PYTHON defaults to the Thonny interpreter that Stage 0 was developed against.
 # Override on the command line if you are working elsewhere:
@@ -11,27 +11,37 @@
 
 PYTHON   ?= /Users/psaha/Applications/Thonny.app/Contents/Frameworks/Python.framework/Versions/3.10/bin/python3.10
 PDFLATEX ?= pdflatex
+BIBTEX   ?= bibtex
 
 DOC := docs/mostlyharmless.tex
 PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
+GENERATED := docs/generated/coefficients.tex
+FIGURES := docs/generated/map.pdf docs/generated/uv.pdf docs/generated/convergence.pdf
 
 .PHONY: all check docs data clean distclean
 
-all: docs
+all: check docs
 
 check:
 	$(PYTHON) -m pytest
 
 docs: $(PDF)
 
-$(PDF): $(DOC) $(TEX)
+$(PDF): $(DOC) $(TEX) $(GENERATED) $(FIGURES) docs/refs.bib
+	cd docs && $(PDFLATEX) -interaction=nonstopmode -halt-on-error mostlyharmless.tex
+	cd docs && $(BIBTEX) mostlyharmless
 	cd docs && $(PDFLATEX) -interaction=nonstopmode -halt-on-error mostlyharmless.tex
 	cd docs && $(PDFLATEX) -interaction=nonstopmode -halt-on-error mostlyharmless.tex
 
-# The coefficient table and the emitted LaTeX fragments arrive in Stage 4.
+# The emitted LaTeX fragments and figures.  The output is committed, so a fresh
+# checkout builds without this; the rules fire when a file is missing.
 data:
-	@echo "nothing to emit yet -- the coefficient table arrives in Stage 4"
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.emit
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.figures
+
+$(GENERATED) $(FIGURES):
+	$(MAKE) data
 
 clean:
 	rm -f docs/*.aux docs/*.log docs/*.out docs/*.toc docs/*.bbl docs/*.blg

@@ -1,0 +1,58 @@
+% 07-full-map.tex -- the whole map.  Formula F18, certificate V15.
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{The whole map}
+\label{sec:full-map}
+
+Everything a map needs is now in place, and assembling it is arithmetic.
+\eqref{eq:contribution} gives the contribution of one stored coefficient, so
+\begin{equation}
+  V(u,v) = \sum_{l=0}^{l_{\max}} \bigg[\, a_{l0} V_l^0
+  + \sum_{m=1}^{l} \Big( a_{lm} V_l^m + (-1)^m \overline{a_{lm}}\, V_l^{-m} \Big)
+  \bigg] ,
+  \label{eq:map-visibility}
+\end{equation}
+with the mode visibilities from \eqref{eq:mode-visibility} --- the odd family's from
+\eqref{eq:odd-mode}, the even family's from \eqref{eq:even-radial}.
+
+Two properties are worth stating, because they are what an observer can check.
+
+The first is Hermitian symmetry.  For a real map
+\begin{equation}
+  V(-u,-v) = \overline{V(u,v)} ,
+  \label{eq:hermitian}
+\end{equation}
+so the real part of a visibility map is even and the imaginary part odd.  This is
+visible by eye in figure~\ref{fig:visibility-uv}, and it is checked directly.
+
+The second is a bound,
+\begin{equation}
+  |V(u,v)| \le V(0,0) \qquad \text{when } I \ge 0 ,
+  \label{eq:visibility-bound}
+\end{equation}
+since $|V| \le \int|I| = \int I = V(0,0)$ for a non-negative map.  The condition
+matters: a truncated expansion of a discontinuous map dips below zero near its
+edges, which is the ringing of figure~\ref{fig:starspot}, and there the bound fails.
+Stating it with its condition is the honest form.
+
+\subsection{What was checked}
+\label{sec:full-map-register}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+tag & claim & rung \\
+\hline
+\vtag{15} & \eqref{eq:map-visibility} against a 2-D FFT of the rendered image & numerical, low-frequency band \\
+\hline
+\end{tabular}
+\end{center}
+
+Certificate \vtag{15} renders a rotated starspot, transforms the image with a 2-D
+FFT using the same planar measure, and compares.  It is the end-to-end anchor: the
+coefficients, both parity families, the rotation and the measure all enter, and it
+is the only check that would catch an error common to both families.  The comparison
+is restricted to low frequencies, because the rim of the disk is a discontinuity and
+its Gibbs ringing contaminates high frequencies at any resolution.  Hermitian
+symmetry \eqref{eq:hermitian} is checked separately and much more tightly, being a
+statement about the transform rather than about a resolution.

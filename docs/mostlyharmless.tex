@@ -3,6 +3,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage[round]{natbib}
 \usepackage[hidelinks]{hyperref}
 
 % House macros.  \vtag resolves in the verification register to a named
@@ -12,7 +13,7 @@
 \newcommand{\vtag}[1]{\textnormal{[V#1]}}
 
 \title{Interferometric visibilities of\\ spherical-harmonic surface maps}
-\author{Prasenjit Saha}
+\author{DeepSeek Harness (prompted by PS)}
 \date{\today}
 
 \begin{document}
@@ -23,9 +24,10 @@
 \noindent
 These notes derive closed-form complex visibilities for surface brightness maps
 expanded in spherical harmonics, in the far-field limit and for a source of unit
-angular radius.  Both parity families are treated: $l-|m|$ odd reduces to a
-single spherical Bessel function, and $l-|m|$ even to a finite sum of ordinary
-Bessel functions via a Zernike expansion.  Conventions are fixed once and for all
+angular radius.  Both parity families are treated: $l+m$ odd reduces to a
+single spherical Bessel function, and $l+m$ even to a finite sum of ordinary
+Bessel functions via a Zernike expansion, the order $m$ being non-negative
+throughout.  Conventions are fixed once and for all
 in section~\ref{sec:conventions}.  Derivations state their structural steps and
 delegate the mechanical algebra to named, machine-checked lemmas; the evidence
 rung and the scope of every such claim are stated with it.
@@ -36,5 +38,12 @@ rung and the scope of every such claim are stated with it.
 \input{sections/01-conventions}
 \input{sections/02-harmonics}
 \input{sections/03-wigner}
+\input{sections/04-visibility}
+\input{sections/05-odd}
+\input{sections/06-even}
+\input{sections/07-full-map}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
 
 \end{document}

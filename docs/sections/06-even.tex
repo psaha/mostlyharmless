@@ -1,0 +1,148 @@
+% 06-even.tex -- the even family.  Formulas F14-F17.
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{The even family}
+\label{sec:even}
+
+For $l+m$ even the parity dichotomy of section~\ref{sec:parity} gives no factor of
+$\sqrt{1-\rho^2}$, and the radial integral does not collapse to a single spherical
+Bessel function.  It becomes a finite sum of ordinary Bessel functions instead, with
+coefficients that are exact rationals.
+
+\subsection{The mode as a polynomial in \texorpdfstring{$\rho^2$}{rho squared}}
+\label{sec:even-polynomial}
+
+With $u = \rho^2$ and $x = \sqrt{1-u} = \cos\theta$, the associated Legendre
+function is
+\begin{equation}
+  P_l^m\!\left(\sqrt{1-u}\right) = u^{m/2} A(u) , \qquad
+  A(u) = (-1)^m \left. \frac{d^m P_l}{dx^m} \right|_{x^2 = 1-u} ,
+  \label{eq:even-A}
+\end{equation}
+in the Condon--Shortley convention of section~\ref{sec:conventions}.  For $l+m$
+even the $m$-th derivative is an even function of $x$, so it is a polynomial in
+$x^2 = 1-u$, and $A$ is an ordinary polynomial.  That is the whole difference
+between the families: the odd family has a half-integer power to exploit in its
+doubling, and here its absence is what forces a sum.
+
+\subsection{The Zernike radial polynomials}
+\label{sec:zernike}
+
+These are the natural basis for functions of $\rho$ with a fixed parity.  With the
+normalisation $R_n^m(1) = 1$, and $n-m$ even,
+\begin{equation}
+  R_n^m(\rho) = \sum_{s=0}^{(n-m)/2} (-1)^s
+  \frac{(n-s)!}{s! \left(\frac{n-m}{2}+m-s\right)! \left(\frac{n-m}{2}-s\right)!}\,
+  \rho^{n-2s} .
+  \label{eq:zernike-sum}
+\end{equation}
+Equivalently, and better for evaluation,
+\begin{equation}
+  R_n^m(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
+  \label{eq:zernike-jacobi}
+\end{equation}
+a Jacobi polynomial in $1-2\rho^2$.  Certificate \vtag{8} checks
+\eqref{eq:zernike-sum} against \eqref{eq:zernike-jacobi} by expanding both as
+polynomials.  \emph{Exact}, $n \le 8$.
+
+They are orthogonal against the weight $\rho$,
+\begin{equation}
+  \int_0^1 R_n^m(\rho)\, R_{n'}^m(\rho)\, \rho\, d\rho
+  = \frac{\delta_{nn'}}{2n+2} ,
+  \label{eq:zernike-orthogonality}
+\end{equation}
+which certificate \vtag{9} checks in exact rational arithmetic for every pairing
+with $n \le 8$.  \emph{Exact}, $n \le 8$.
+
+\subsection{The expansion, and its coefficients}
+\label{sec:even-projection}
+
+Write the mode's radial part as $\rho^m A(\rho^2)$, a polynomial of degree $l$, and
+expand it in Zernike polynomials of the same order,
+\begin{equation}
+  \rho^m A(\rho^2) = \sum_{k=0}^{(l-m)/2} c_k\, R_{m+2k}^m(\rho) .
+  \label{eq:even-expansion}
+\end{equation}
+The expansion is finite because both sides have the same degree and parity, and
+\eqref{eq:zernike-orthogonality} turns the coefficients into integrals,
+\begin{equation}
+  c_k = \left(2(m+2k)+2\right) \int_0^1 \rho^m A(\rho^2)\, R_{m+2k}^m(\rho)\,
+  \rho\, d\rho .
+  \label{eq:even-coefficients}
+\end{equation}
+The integrand is a polynomial, so every $c_k$ is an exact rational.  They are not
+tabulated: they are computed on demand and memoised (decision D19), which is why
+there is no data file and no maximum $l$.
+
+Certificate \vtag{12} obtains the same coefficients a second way, by matching powers
+of $\rho$ from the highest downwards.  That system is triangular, since the highest
+power of the mode occurs in $R_l^m$ alone, and the two routes agree.  \emph{Exact}
+rational, $l \le 6$.
+
+\subsection{The Zernike--Hankel identity}
+\label{sec:zernike-hankel}
+
+The integral of a Zernike polynomial against a Bessel function is elementary
+\citep{zernike1934,bornwolf}:
+\begin{equation}
+  \int_0^1 R_n^m(\rho)\, J_m(a\rho)\, \rho\, d\rho
+  = (-1)^{(n-m)/2} \frac{J_{n+1}(a)}{a} .
+  \label{eq:zernike-hankel}
+\end{equation}
+This is the identity that converts the expansion into Bessel functions, so its sign
+and normalisation matter.  Certificate \vtag{10} expands both sides in powers of $a$
+--- the left from the exact moments of $R_n^m$, the right from the Bessel series ---
+and compares every power up to $a^{n+2J}$.  \emph{Exact}, with that stated series
+scope, $n \le 6$ and $J = 6$.
+
+\subsection{The result}
+\label{sec:even-result}
+
+Substituting \eqref{eq:even-expansion} into the radial integral and applying
+\eqref{eq:zernike-hankel} term by term gives
+\begin{equation}
+  R_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_k\, (-1)^k\,
+  \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} ,
+  \label{eq:even-radial}
+\end{equation}
+a finite sum of ordinary Bessel functions of odd orders $m+1, m+3, \dots, l+1$.  For
+$l = m = 0$ it is $J_1(2\pi q)/(2\pi q)$, which is the uniform disk of
+section~\ref{sec:uniform-disk}, so that anchor is recovered here by a different
+route.
+
+At $q = 0$ only the term with $m+2k = 0$ survives, since $J_\nu(a) \approx a^\nu$
+there:
+\begin{equation}
+  R_{lm}(0) = \begin{cases}
+    c_0/2 , & m = 0 , \\[2pt]
+    0 , & m \ge 2 ,
+  \end{cases}
+  \label{eq:even-limit}
+\end{equation}
+the case $m = 1$ being absent from the even family.
+
+\subsection{The coefficients to \texorpdfstring{$l \le 3$}{l <= 3}}
+\label{sec:even-table}
+
+The coefficients are computed in exact rational arithmetic and emitted as LaTeX by
+\code{make data}, so the numbers below are derived rather than transcribed.
+
+\IfFileExists{generated/coefficients.tex}{\input{generated/coefficients}}{%
+  \emph{Not generated yet --- run \code{make data}.}}
+
+\subsection{What was checked}
+\label{sec:even-register}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+tag & claim & rung \\
+\hline
+\vtag{8} & \eqref{eq:zernike-sum} against \eqref{eq:zernike-jacobi} & exact, $n \le 8$ \\
+\vtag{9} & orthogonality \eqref{eq:zernike-orthogonality} & exact, $n \le 8$ \\
+\vtag{10} & the Hankel identity \eqref{eq:zernike-hankel}, by power series & exact, $n \le 6$, powers to $a^{18}$ \\
+\vtag{12} & \eqref{eq:even-coefficients} against coefficient matching & exact rational, $l \le 6$ \\
+\vtag{14} & \eqref{eq:even-radial} against the quadrature, $q = 0$ included & numerical, $l \le 6$ \\
+\hline
+\end{tabular}
+\end{center}

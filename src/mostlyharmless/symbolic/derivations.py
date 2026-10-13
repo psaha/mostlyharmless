@@ -24,19 +24,32 @@ import math
 import numpy as np
 import sympy as sp
 from scipy.linalg import expm
-from scipy.special import eval_legendre
+from scipy.special import eval_legendre, jv, spherical_jn
 
 from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.spherical_harmonics import (
+    associated_legendre,
+    normalisation,
     real_sph_harm,
     sph_harm,
     sph_harm_addition,
+)
+from mostlyharmless.visylm.visibility import (
+    radial_integral,
+    visibility,
+    visibility_mode,
+    visibility_uniform_disk,
 )
 from mostlyharmless.visylm.wigner import (
     rotate_coefficients,
     rotation_matrix,
     wigner_d,
     wigner_D,
+)
+from mostlyharmless.visylm.zernike import (
+    mode_polynomial,
+    zernike_coefficients,
+    zernike_polynomial,
 )
 
 __all__ = [
@@ -55,6 +68,17 @@ __all__ = [
     "check_rotation_against_geometry",
     "check_rotation_composition",
     "check_rotation_nonnegative_form",
+    "check_jacobi_anger",
+    "check_uniform_disk_visibility",
+    "check_odd_collapse_exact",
+    "check_k_identity",
+    "check_odd_closed_form",
+    "check_zernike_jacobi",
+    "check_zernike_orthogonality",
+    "check_zernike_hankel",
+    "check_zernike_projection",
+    "check_even_closed_form",
+    "check_full_map_fft",
 ]
 
 THETA, PHI = sp.symbols("theta phi", real=True)
@@ -511,4 +535,371 @@ def check_rotation_nonnegative_form(l_max=4, seed=20261012):
                           + (-1) ** m * D[mp + l, l - m]
                           * np.conjugate(coeffs[l, m]))
             worst = max(worst, abs(total - rotated[l, mp]))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V16, V17 -- the master reduction
+# --------------------------------------------------------------------------
+
+def check_jacobi_anger(m_max=3, n_phi=512):
+    """V17, numerical rung -- the azimuthal factors of the reduction.
+
+        int_0^{2 pi} cos(m phi) exp(-i z cos(phi - psi)) dphi
+            = 2 pi (-i)^m J_m(z) cos(m psi) ,
+
+    and the same with sin.  This is the step that produces the master reduction;
+    it is a statement about Bessel functions, independent of any convention of
+    ours.  The integrand is periodic, so the uniform rule converges fast and the
+    residual is at the roundoff level.
+    """
+    phi = 2.0 * math.pi * np.arange(n_phi) / n_phi
+    worst = 0.0
+    for m in range(m_max + 1):
+        for z in (0.5, 2.3, 7.0):
+            for psi in (0.0, 0.7, 2.5):
+                kernel = np.exp(-1j * z * np.cos(phi - psi))
+                cosine = np.sum(np.cos(m * phi) * kernel) * (2.0 * math.pi / n_phi)
+                sine = np.sum(np.sin(m * phi) * kernel) * (2.0 * math.pi / n_phi)
+                common = 2.0 * math.pi * (-1j) ** m * jv(m, z)
+                worst = max(worst,
+                            abs(cosine - common * np.cos(m * psi)),
+                            abs(sine - common * np.sin(m * psi)))
+    return worst
+
+
+def check_uniform_disk_visibility(q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0), l_max=0):
+    """V16, numerical rung -- the uniform map against the Airy form.
+
+    A map with a_00 = 1 and every other coefficient zero is the uniform
+    brightness case, whose normalised visibility is 2 J_1(x)/x.  Two things are
+    checked: the flux at the origin, which must be sqrt(pi)/2, and the normalised
+    visibilities at a range of baselines.
+
+    This is the end-to-end anchor for the whole convention stack: the harmonic
+    normalisation, the placement of 2 pi, and the planar measure all enter, and
+    the classical result fixes them jointly.
+    """
+    vector = np.zeros((l_max + 1) ** 2)
+    vector[0] = 1.0
+    coeffs = Coeffs.from_vector(vector)
+
+    flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
+    worst = abs(flux - math.sqrt(math.pi) / 2.0)
+
+    for q in q_values:
+        value = np.real(visibility(coeffs, q, 0.0)) / flux
+        worst = max(worst, abs(value - visibility_uniform_disk(q, 0.0, 1.0)))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V11, V13, V18 -- the odd family
+# --------------------------------------------------------------------------
+
+def _factorial2(n):
+    """n!! as an exact integer, with 0!! = (-1)!! = 1."""
+    if n <= 0:
+        return sp.Integer(1)
+    return sp.factorial2(n)
+
+
+def check_odd_collapse_exact(l_max=8):
+    """V11, exact rung -- the two coefficients of the collapse coincide.
+
+    With the K identity substituted into the doubled integral, the odd-family
+    result is
+
+        (1/(2l+1)) [ (l-m+1) K_{l+1} + (l+m) K_{l-1} ]
+            -> (2(-1)^m/(2l+1)) [ C_R j_{l+1} + C_L j_{l-1} ] ,
+
+    and the claim is that C_R and C_L, once the double factorials are tidied, are
+    the same number.  That is what lets the spherical Bessel recurrence fuse the
+    two terms into one.  Exact rational arithmetic for every valid (l, m), so this
+    is a proof of the finite statement rather than evidence for it.
+    """
+    worst = sp.Integer(0)
+    for l in range(1, l_max + 1):
+        for m in range(0, l + 1):
+            if (l + m) % 2 == 0:
+                continue
+            common = (2 * (-1) ** m * _factorial2(l + m)
+                      / ((2 * l + 1) * _factorial2(l - m - 1)))
+            right = (2 * (-1) ** m * (l - m + 1) * _factorial2(l + m)
+                     / ((2 * l + 1) * _factorial2(l - m + 1)))
+            left = (2 * (-1) ** m * (l + m) * _factorial2(l + m - 2)
+                    / ((2 * l + 1) * _factorial2(l - m - 1)))
+            worst = sp.Max(worst, sp.Abs(right - common), sp.Abs(left - common))
+    return sp.simplify(worst)
+
+
+def check_k_identity(l_max=6, n_theta=200):
+    """V18, numerical rung -- the K identity that the odd derivation cites.
+
+        int_{-1}^{1} P_l^m(z) J_m(a sqrt(1-z^2)) dz
+            = (-1)^m 2 (l+m-1)!!/(l-m)!! j_l(a) ,     l + m even,
+
+    in our Condon-Shortley convention.  The sign is the one thing the citation
+    does not settle for us, so it is checked rather than assumed.  Gauss-Legendre
+    in theta, where the integrand is analytic.
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(n_theta)
+    theta = 0.5 * math.pi * (nodes + 1.0)          # [-1, 1] -> [0, pi]
+    weight = 0.5 * math.pi * weights
+    sine = np.sin(theta)
+    worst = 0.0
+    for l in range(l_max + 1):
+        for m in range(l + 1):
+            if (l + m) % 2 == 1:
+                continue
+            for a in (0.4, 2.0, 5.5):
+                integrand = (associated_legendre(l, m, np.cos(theta))
+                             * jv(m, a * sine))
+                value = float(np.sum(weight * integrand * sine))
+                expected = float((-1) ** m * 2 * _factorial2(l + m - 1)
+                                 / _factorial2(l - m)) * float(spherical_jn(l, a))
+                worst = max(worst, abs(value - expected))
+    return worst
+
+
+def check_odd_closed_form(l_max=5, q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0)):
+    """V13, numerical rung -- the odd closed form against the quadrature.
+
+    Compared through ``visibility_mode``, so the dispatch is checked as well as
+    the closed form.  The quadrature is the reference and is never itself
+    dispatched to a closed form, which is what keeps this an independent
+    comparison rather than a tautology.  The grid includes q = 0, where the closed
+    form needs its limit.
+    """
+    worst = 0.0
+    for l in range(1, l_max + 1):
+        for m in range(l + 1):
+            if (l + m) % 2 == 0:
+                continue
+            for q in q_values:
+                mode = complex(visibility_mode(l, m, q, 0.0))
+                reference = (2.0 * math.pi * (-1j) ** m * normalisation(l, m)
+                             * complex(radial_integral(l, m, q)))
+                worst = max(worst, abs(mode - reference))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V8, V9, V10, V12, V14 -- the even family
+# --------------------------------------------------------------------------
+
+def check_zernike_jacobi(n_max=8):
+    """V8, exact rung -- the Jacobi form of the Zernike radial polynomial.
+
+        R_n^m(rho) = (-1)^k rho^m P_k^(m,0)(1 - 2 rho^2) ,   k = (n-m)/2 ,
+
+    compared as polynomials by expansion.  Exact over the stated range.
+    """
+    rho = sp.Symbol("rho", nonnegative=True)
+    for n in range(n_max + 1):
+        for m in range(n + 1):
+            if (n - m) % 2 == 1:
+                continue
+            k = (n - m) // 2
+            jacobi = (-1) ** k * rho ** m * sp.jacobi(k, m, 0, 1 - 2 * rho ** 2)
+            difference = sp.expand(zernike_polynomial(n, m) - jacobi)
+            if difference != 0:
+                return difference
+    return sp.Integer(0)
+
+
+def check_zernike_orthogonality(n_max=8):
+    """V9, exact rung -- int_0^1 R_n^m R_n'^m rho drho = delta_{nn'}/(2n+2)."""
+    rho = sp.Symbol("rho", nonnegative=True)
+    worst = sp.Integer(0)
+    for m in range(n_max + 1):
+        orders = [n for n in range(m, n_max + 1) if (n - m) % 2 == 0]
+        for n in orders:
+            for other in orders:
+                integral = sp.integrate(zernike_polynomial(n, m)
+                                        * zernike_polynomial(other, m) * rho,
+                                        (rho, 0, 1))
+                expected = (sp.Rational(1, 2 * n + 2) if n == other
+                            else sp.Integer(0))
+                worst = sp.Max(worst, sp.Abs(sp.simplify(integral - expected)))
+    return sp.simplify(worst)
+
+
+def check_zernike_hankel(n_max=6, order=6):
+    """V10, exact rung -- the Zernike-Hankel identity, through its power series.
+
+        int_0^1 R_n^m(rho) J_m(a rho) rho drho = (-1)^k J_{n+1}(a)/a ,
+        k = (n-m)/2 .
+
+    Both sides are expanded in a: the left from the exact moments of R_n^m and the
+    Bessel series, the right from the Bessel series alone.  Every power up to
+    a^(n + 2*order) is compared, so the rung is exact with a stated series scope
+    rather than a proof of the identity for all a.  The identity itself is cited;
+    what this fixes is its sign and normalisation in our conventions.
+    """
+    rho = sp.Symbol("rho", nonnegative=True)
+    worst = sp.Integer(0)
+    for n in range(n_max + 1):
+        for m in range(n + 1):
+            if (n - m) % 2 == 1:
+                continue
+            k = (n - m) // 2
+            left = {}
+            for j in range(k + order + 1):
+                moment = sp.integrate(
+                    zernike_polynomial(n, m) * rho ** (m + 2 * j + 1),
+                    (rho, 0, 1))
+                power = m + 2 * j
+                term = (sp.Rational((-1) ** j, 2 ** (m + 2 * j)) * moment
+                        / (sp.factorial(j) * sp.factorial(m + j)))
+                left[power] = left.get(power, sp.Integer(0)) + term
+            right = {}
+            for j in range(order + 1):
+                power = n + 2 * j
+                right[power] = (sp.Rational((-1) ** (k + j), 2 ** (n + 1 + 2 * j))
+                                / (sp.factorial(j) * sp.factorial(n + 1 + j)))
+            for power in sorted(set(left) | set(right)):
+                worst = sp.Max(worst, sp.Abs(left.get(power, sp.Integer(0))
+                                             - right.get(power, sp.Integer(0))))
+    return sp.simplify(worst)
+
+
+def check_zernike_projection(l_max=6):
+    """V12, exact rung -- the projection coefficients equal coefficient matching.
+
+    The same c_k obtained two ways: from the orthogonality integral, and by
+    matching powers of rho from the top down.  The highest power in
+    P_l^m = sum_k c_k R_{m+2k}^m occurs in R_l^m alone, so the system is triangular
+    once solved downwards, and the leftover polynomial must vanish identically.
+    Exact rational arithmetic throughout.
+    """
+    rho = sp.Symbol("rho", nonnegative=True)
+    worst = sp.Integer(0)
+    for l in range(l_max + 1):
+        for m in range(l + 1):
+            if (l + m) % 2 == 1:
+                continue
+            order = (l - m) // 2
+            residual = sp.expand(mode_polynomial(l, m))
+            matched = [None] * (order + 1)
+            for k in range(order, -1, -1):
+                n = m + 2 * k
+                leading = sp.binomial(n, (n - m) // 2)
+                coefficient = (sp.Poly(residual, rho).coeff_monomial(rho ** n)
+                               / leading)
+                matched[k] = coefficient
+                residual = sp.expand(residual
+                                     - coefficient * zernike_polynomial(n, m))
+            worst = sp.Max(worst, sp.Abs(sp.simplify(residual)))
+            for projected, by_matching in zip(zernike_coefficients(l, m), matched):
+                worst = sp.Max(worst,
+                               sp.Abs(sp.simplify(projected - by_matching)))
+    return sp.simplify(worst)
+
+
+def check_even_closed_form(l_max=6, q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0)):
+    """V14, numerical rung -- the even closed form against the quadrature.
+
+    Through ``visibility_mode``, so the dispatch is checked as well, and the
+    quadrature is the reference.  Includes q = 0, where the limit is c_0/2 for
+    m = 0 and zero otherwise.  At l = m = 0 this repeats the uniform-disk anchor
+    by a different route.
+    """
+    worst = 0.0
+    for l in range(l_max + 1):
+        for m in range(l + 1):
+            if (l + m) % 2 == 1:
+                continue
+            for q in q_values:
+                mode = complex(visibility_mode(l, m, q, 0.0))
+                reference = (2.0 * math.pi * (-1j) ** m * normalisation(l, m)
+                             * complex(radial_integral(l, m, q)))
+                worst = max(worst, abs(mode - reference))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V15 -- the full map against a 2-D FFT
+# --------------------------------------------------------------------------
+
+def _zonal_starspot(l_max, half_angle=0.9, depth=0.6):
+    """A starspot on a uniformly bright surface, as zonal coefficients with a_00 = 1.
+
+    The surface has brightness 1 outside the cap and 1 - depth inside it.  Built
+    here rather than imported from the figure module, so that the certificate does
+    not depend on the plotting code.
+    """
+    cos_edge = math.cos(half_angle)
+    nodes, weights = np.polynomial.legendre.leggauss(200)
+    mu = 0.5 * (nodes + 1.0) * (1.0 - cos_edge) + cos_edge
+    weight = 0.5 * (1.0 - cos_edge) * weights
+    moments = [float(np.sum(weight * eval_legendre(l, mu))) for l in range(l_max + 1)]
+    zeroth = 2.0 - depth * moments[0]
+    blocks = []
+    for l in range(l_max + 1):
+        inside = (2.0 if l == 0 else 0.0) - depth * moments[l]
+        block = np.zeros(l + 1, dtype=complex)
+        block[0] = (inside / zeroth) * math.sqrt(2 * l + 1)
+        blocks.append(block)
+    return Coeffs(tuple(blocks))
+
+
+def _fft_visibility(coeffs, n_side=129):
+    """The visibility by a 2-D FFT of the sampled image, in our planar measure.
+
+    The image is sampled at x_E, x_N = j h on a grid of odd length, h = 2/n_side,
+    with the origin at the centre.  An odd length matters: it makes the sample points
+    symmetric about the origin, so the discrete transform needs no phase correction.
+    The measure enters as the pixel area h^2, and the ifftshift/fftshift pair puts
+    the zero frequency at the centre of the array.
+    """
+    half = (n_side - 1) // 2
+    step = 2.0 / n_side
+    axis = step * np.arange(-half, half + 1)
+    x_east, x_north = np.meshgrid(axis, axis)
+    rho_squared = x_east ** 2 + x_north ** 2
+    z = np.sqrt(np.clip(1.0 - rho_squared, 0.0, None))
+    theta = np.arccos(np.clip(z, -1.0, 1.0))
+    phi = np.arctan2(x_north, x_east)
+
+    image = np.zeros_like(x_east)
+    real = coeffs.to_real()
+    for l, row in enumerate(real):
+        image = image + row[l] * real_sph_harm(l, 0, theta, phi)
+        for m in range(1, l + 1):
+            image = image + (row[l + m] * real_sph_harm(l, m, theta, phi)
+                             + row[l - m] * real_sph_harm(l, -m, theta, phi))
+    image = np.where(rho_squared <= 1.0, image, 0.0)
+
+    transformed = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(image)))
+    frequencies = np.fft.fftshift(np.fft.fftfreq(n_side, d=step))
+    return step ** 2 * transformed, frequencies
+
+
+def check_full_map_fft(l_max=4, n_side=129, band=16):
+    """V15, numerical rung -- the whole map against a 2-D FFT of its image.
+
+    A starspot, rotated so that it has m != 0 content, is fed through the whole chain
+    --- real coefficients, both parity families, the rotation --- and its visibility
+    compared with a direct transform of the rendered image.  This is the only check
+    that would catch an error common to both families, and it is the end-to-end
+    anchor for the map.
+
+    Only the lowest frequencies are compared.  The disk's rim is a discontinuity, so
+    its Gibbs ringing contaminates the high frequencies at any resolution; the
+    comparison covers |p| <= band, well below Nyquist.  The residual is relative to
+    the flux and includes the zero-frequency component, which must equal it.
+    """
+    coeffs = rotate_coefficients(_zonal_starspot(l_max), 0.0, 0.9, 0.4)
+    values, frequencies = _fft_visibility(coeffs, n_side)
+    flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
+
+    u_grid, v_grid = np.meshgrid(frequencies, frequencies)
+    exact = visibility(coeffs, u_grid, v_grid)
+
+    centre = n_side // 2
+    worst = abs(values[centre, centre] - exact[centre, centre]) / abs(flux)
+    window = slice(centre - band, centre + band + 1)
+    worst = max(worst, float(np.max(np.abs(values[window, window]
+                                           - exact[window, window]))) / abs(flux))
     return worst

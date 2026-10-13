@@ -26,6 +26,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=9"]
+# Only for `make data`: the figures of docs/generated/.  The package itself does
+# not import matplotlib, so it is not a hard dependency.
+figures = ["matplotlib>=3.10"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

@@ -149,3 +149,19 @@ def test_blocks_are_read_only():
     c = random_coeffs()
     with pytest.raises(ValueError):
         c.blocks[0][0] = 1.0
+
+
+def test_the_flat_vector_puts_a_l0_at_l_squared_plus_l():
+    """A degree's row has length 2l+1 with (l, 0) in the middle, so the flat index
+    of a_l0 is l*l + l, not l*l.
+
+    Writing a zonal map at l*l puts its coefficients in the sin(l*phi) slots and
+    draws a banana rather than a polar cap, which is how this was noticed.  The
+    certificates do not go through the flat vector --- it is the fitting interface
+    --- so nothing had pinned it.
+    """
+    vector = np.arange(1.0, 10.0)          # (lmax + 1)^2 = 9, so lmax = 2
+    coeffs = Coeffs.from_vector(vector)
+    for l in range(3):
+        assert coeffs[l, 0] == pytest.approx(vector[l * l + l])
+    assert coeffs.to_vector() == pytest.approx(vector)

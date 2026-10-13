@@ -114,6 +114,20 @@ because the $l = 0$ block is untouched by it --- the $d$ matrix at $l = 0$ is th
 identity, which certificate \vtag{5} covers.  The free coefficients of a map are
 therefore those with $l \ge 1$.
 
+\begin{figure}[t]
+  \centering
+  \IfFileExists{generated/map.pdf}{%
+    \includegraphics[width=0.8\textwidth]{generated/map.pdf}}{%
+    \emph{Not generated yet --- run \code{make data}.}}
+  \caption{A starspot on a uniformly bright surface, truncated at $l_{\max} = 16$,
+  with brightness in units of the sphere mean that
+  \eqref{eq:a00-normalisation} fixes.  Left: down the spin axis, near and far
+  hemispheres.  Right: the same map rotated into the observer's frame by the
+  rotation of section~\ref{sec:wigner}.  The ripples at the spot's rim are
+  truncation error, the series being finite, and not structure.}
+  \label{fig:starspot}
+\end{figure}
+
 For compact storage the same map is carried as complex coefficients of the
 non-negative orders alone,
 \begin{equation}
