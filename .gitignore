@@ -16,5 +16,5 @@ __pycache__
 
 *.pdf
 # ... except the figures, which are committed with the rest of docs/generated/
-!docs/generated/*.pdf
+# !docs/generated/*.pdf
 *.html

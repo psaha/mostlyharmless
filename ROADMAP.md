@@ -32,6 +32,8 @@ still open.
 | D18 | **Negative orders are extended, not computed.** The visibility is extended to negative orders by `V_l^-m = conj(V_l^m)`, the analogue of the harmonic extension `Y_l^-m = (-1)^m conj(Y_l^m)`; the sign is absent because the `(-1)^m` of the harmonic extension is cancelled by the `(-1)^m` that reversing the baseline contributes. A stored `a_lm` therefore contributes `a_lm V_l^m + (-1)^m conj(a_lm) conj(V_l^m) = 4 pi (-i)^m N_lm R_lm(q) Re(a_lm exp(i m psi))`, which is equation (35) of the manual. There is consequently no need for two real branches, in the derivation or in the code: one mode function suffices, and the real branches become a remark for comparing with the literature. |
 | D19 | **Coefficients are computed just in time, and the emitter is separate.** The even-family coefficients are exact rationals computed on demand and memoised, not stored in a table: there is then no maximum `l` to choose, and no data file for the package to depend on. A short program, `symbolic/emit.py`, calls the library and writes the LaTeX fragment the manual inputs, so the only code that knows about LaTeX is the emitter; `symbolic/figures.py` does the same for the figures, importing matplotlib lazily so that it stays an optional extra. `visylm/tables.py` is dropped from the planned layout, nothing having to load a table. The manual's printed table goes to `l <= 3`. |
 | D20 | **The application is intensity (HBT) interferometry.** The measured quantity is `|V|^2`, so the phase of `V` is not observable — but it is retained throughout, both for visualisation and because discarding it early would make the intermediate results harder to check, and squared only at the end. Two design consequences: the deliverable for deformed sources is a *diagnostic* evaluable on a sparse set of `(u,v)` points rather than an image, since a fitting loop over orientations makes a numerical transform per model too expensive; and the (u,v) sampling being sparse means the high-frequency behaviour of the transform is not the design driver. |
+| D21 | **Brightness is proportional to `g`, for now.** The surface brightness of the deformed star is set by the bolometric von Zeipel law, `T_eff^4 ∝ g` and hence `I ∝ g`, which is the simplest law that is also the standard one for radiative envelopes. The literature favours a weaker dependence — `T_eff ∝ g^beta` with `beta ≈ 0.25` radiative but nearer 0.08 for convective envelopes, so `I ∝ g^(4 beta)` and about `g^0.3` in the convective case, a much flatter law. This is recorded rather than acted on: the brightness law enters the renderer as a single exponent, so changing it later is a parameter and not a rewrite, and the figures will say which exponent they use. |
+| D22 | **The observable is normalised at the origin.** Intensity interferometry measures `|V|^2` in units of the zero-baseline correlation, so what is modelled is `V/V(0,0)`, which is 1 at the origin by definition. Every difference is therefore taken between *normalised* visibilities, so `Delta V(0,0) = 0` by construction, and the absolute flux — which the normalisation removes — is not modelled at all. This also settles the normalisation rung 1 had left open: the affine model is normalised by its own origin, and the unobservable flux difference between the star and its reference is divided out rather than carried. The *squared* difference `|V_tri|^2 - |V_ref|^2` is deliberately not used: the phase is retained, and the difference is taken on `V` itself. Worth recording why the normalisation is needed even against a volume-equivalent reference: the flux is the *projected area*, not the volume, so the two agree only for a sphere, and the deformed star's projected area depends on the viewing direction. |
 
 ---
 
@@ -76,10 +78,13 @@ src/mostlyharmless/
 │   ├── coefficients.py           # the Coeffs container (D13)
 │   ├── wigner.py                 # F4-F8
 │   ├── zernike.py                # F14
-│   └── visibility.py             # F9-F13, F15-F18, plus the classical anchors
+│   ├── visibility.py             # F9-F13, F15-F18, plus the classical anchors
+│   └── deformation.py            # the potential, its level surface, the gravity there
 └── symbolic/
     ├── __init__.py
     ├── derivations.py            # one function per certificate, returning a residual
+    ├── render.py                 # the reference ray renderer of Stage 6
+    ├── affine.py                 # rung 1: the projected stretch and its visibility
     ├── emit.py                   # LaTeX fragments for the manual; run as a module
     └── figures.py                # the figures of docs/generated/; run as a module
 ```
@@ -107,6 +112,14 @@ visibility_mode(l, m, u, v)                 -> ndarray   # complex, Y_l^m, m >= 
 visibility(coeffs, u, v)                    -> ndarray   # full map, by linearity
 radial_integral(l, m, q)                    -> ndarray   # the quadrature reference
 zernike_coefficients(l, m)                  -> tuple     # even-family c_k, exact rationals
+
+# --- the deformation field (Stage 6) -------------------------------------
+Deformation(tide, tide_direction, centrifugal, spin_direction)
+    .potential(x) / .gradient(x)             # Phi and grad Phi, analytic
+    .level_radius(direction)                 # the inner crossing of Phi = -1
+    .surface_gravity(direction)              # |grad Phi| there
+    .axis_lengths() / .volume() / .equivalent_radius()
+    .first_order_radii(direction)            # for comparison with the solver
 
 # --- classical anchors ---------------------------------------------------
 visibility_uniform_disk(u, v, theta_d)      -> ndarray   # 2 J_1(x)/x
@@ -191,6 +204,8 @@ One tag, one function, one row in the register, one citation in the text.
 | V16 | uniform disk reduces to `2 J_1(x)/x`, and the flux is `sqrt(pi)/2` | numerical, `l = 0` exactly |
 | V17 | Jacobi–Anger azimuthal factors | numerical, roundoff level |
 | V18 | the `K` identity, in our Condon–Shortley convention | numerical, `l <= 6` |
+| V19 | the deformation field against its first-order relations | numerical, residual/`eps^2` below 50 |
+| V20 | the level surface is level, and the analytic gradient matches a difference | numerical, `1e-8` |
 
 Two habits, from D10: prefer exact expansion and coefficient comparison to `simplify`; and
 state the rung and the scope next to every claim, in the register and in the text.
@@ -283,18 +298,72 @@ truncation error is visible.
 
 **Stage 6 — triaxial deformation.** Section 8's method, in this order:
 
-1. **The potential and its level surface.** `phi_1` = a tidal quadrupole plus a centrifugal one,
-   both `l = 2`, the latter with an `l = 0` piece that renormalises the effective monopole, giving
-   `delta r` and `delta g`. Certificate: the oblate case must reproduce the equatorial bulge *and*
-   the reduced equatorial gravity from the same field.
-2. **The physical renderer.** For each sky-plane ray find the *equipotential* surface point, take
-   `g` there, and set the brightness by the bolometric von Zeipel law `I ∝ g`. One piece of code
-   then gives the picture, the reference visibilities, and the ray-trace of section 8. Limb
-   darkening is absent by construction until Stage 7, and the captions must say so.
-3. **The two figures**: the triaxial star at two orbital phases, since the change of aspect is the
-   signal; and `Delta V` against a *volume-equivalent* sphere, `R = (abc)^(1/3)`, which makes
-   `Delta V(0,0) = 0` for uniform brightness, so that only asphericity shows.
-4. **Rung 1, the affine model**: `V(u) = V_sphere(Lambda^T u)` at the call site, pointwise.
+1. **The potential and its level surface.** **Done.** `visylm/deformation.py` carries `phi_1` = a
+   tidal quadrupole plus a centrifugal one, both `l = 2`, the latter with an `l = 0` piece that
+   renormalises the effective monopole. `level_radius` finds the *inner* crossing of `Phi = -1` and
+   `surface_gravity` takes `|grad Phi|` there. Certificates V19 (the first-order relations) and V20
+   (the surface really is level, and the analytic gradient matches a central difference). The oblate
+   case reproduces the equatorial bulge *and* the reduced equatorial gravity from the one field.
+   *Range of validity:* with `E = eps_tide + 1.5 eps_cent`, the surface closes only for `E < 0.148`,
+   because the quadrupole grows as `r^2` while the monopole falls as `1/r`; beyond that it opens, as
+   a Roche lobe does. About 0.15 for the tide alone, 0.10 for the spin alone, 0.059 for two equal
+   amplitudes. So the twenty per cent first asked for is *not* attainable in this model, which is
+   itself the useful result.
+2. **The physical renderer.** **Done.** `symbolic/render.py` samples the level surface by
+   direction and forward-maps it onto the sky. For modest deformation the body is convex, so that
+   map is one-to-one; and since the surface is an equipotential the outward normal *is* the
+   gradient, so visibility is the sign of `N . e_obs`, with no z-buffer and no nested root find.
+   Each sample carries the *sky-plane* area it projects to, `(N.e_obs) r^2/(n.N) dOmega`, which is
+   what our planar visibility integrates. Level radii come from a vectorised bisection on a common
+   bracket. Products: `surface_samples`, `sky_image`, and `direct_visibility`, a quadrature, so no
+   Gibbs ringing at the limb. Tests include the decisive null case — a zero deformation rendering
+   as the uniform disk, flux `pi` and `2 J_1(x)/x`. Brightness is `g^power` with the exponent a
+   parameter (D21); limb darkening is absent by construction until Stage 7, and the captions must
+   say so.
+3. **The two figures.** Both are **done**: `figure_triaxial` and `figure_delta_visibility` in
+   `symbolic/figures.py`. The render shows the star down the spin axis and inclined by 60
+   degrees, each in *both hemispheres*, through the same sky axes per orientation — so the far
+   panel is the near view **rotated by half a turn**, the far observer's offset `(a, b)` being the
+   antipodal surface point rather than the mirrored one. A convex body's silhouette is the same
+   from either side, so the two panels of a view share an outline and differ only in the shading,
+   which is where the gravity darkening lives and so where the triaxiality shows.
+   The default is `eps_tide = 0.09`, `eps_cent = 0.03` — a 3:1 pair, which makes the perturbation
+   vanish at the tide's perpendicular, putting that semi-axis at exactly the reference radius — at
+   orbital `phase = 45` degrees and inclination 60, with principal semi-axes near
+   `(1.28, 1.00, 0.962)`. This is essentially the last usable step. *Ceiling:* closure needs
+   `eps_tide + 1.5 eps_cent < 0.148`, which at 3:1 means `eps_tide < 0.099`, so 0.09/0.03 is 91
+   per cent of the way and the surface is close to pinching along the tide axis. Two consequences
+   worth expecting: the ellipsoid approximation is poor enough that the *outlines* should
+   disagree, and the projection weight `r^2/(n.N)` grows sharply toward the bulge tip, so the
+   renderer's own sampling is coarsest exactly where the model is worst — artefact and model
+   error have to be told apart there. Beyond the ceiling the star opens toward the companion,
+   which is Roche-lobe overflow rather than a numerical failure.
+   `figure_stretched_sphere` shows the actual rendering against the affine prediction — the same
+   potential's brightness evaluated on the unit sphere and stretched in the sky plane, samples
+   moved to `Lambda x`, their area grown by `|det Lambda|` and their brightness divided by it so
+   each carries its flux. Both rows are shown with their **mean removed**, which is D22 in image
+   space: the affine model conserves total flux while the render does not (it sets `I ∝ g` with no
+   renormalisation), so the two would otherwise differ by a uniform factor of order the area ratio
+   that swamps the pattern entirely. What remains is the departure from uniform brightness, which
+   is what the model actually claims to reproduce.
+   *The phase is not cosmetic.* With the tidal axis *in* the plane of the spin and the line of
+   sight, reflection through that plane fixes both quadrupoles, so the image keeps the mirror
+   symmetry of an axisymmetric star however triaxial the body is, and the null test has nothing to
+   see. Only a phase away from that plane breaks it — which is what "two orbital phases" meant.
+   Setting the tide to zero gives the pure-spin case, whose far panel is then an exact mirror and
+   whose cut is a pure cosine series: the base case to compare against. Brightness is `g^power` in
+   the potential's units, where the undeformed `g` is 1, so all four panels share one colour scale.
+   The sampler splats each sample bilinearly over four pixels, a nearest-pixel deposit having
+   speckled at the earlier sampling.
+4. **Rung 1, the affine model.** **Done.** `symbolic/affine.py` has `body_axes`,
+   `projected_stretch` and `affine_visibility`. `Lambda = sqrt(A A^T)` with `A = P diag(a, b, c)`
+   and `P` the two rows (east, north): the projection is exact for an ellipsoid, so the only
+   approximation is that the deformed body *is* one. `V_affine(u) = V_sphere(Lambda^T u)` carries
+   **no flux factor**, the `1/|det Lambda|` that the change of variables puts on the image
+   cancelling the Jacobian's `|det Lambda|` — which settles the normalisation this roadmap had
+   left open. `V_sphere` is a sphere carrying the *same* brightness pattern, so the gravity
+   darkening is carried through and only the shape is modelled. Three tests, the decisive one
+   being that the sampled surface's projected area equals `pi |det Lambda|`.
 5. **Rung 2**, documented in section 8, implemented only if rung 1's error demands it.
 
 *Gate:* the affine model against the ray-trace over a sweep of `eps`, inclinations and orientations,

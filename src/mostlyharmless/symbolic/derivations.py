@@ -27,6 +27,7 @@ from scipy.linalg import expm
 from scipy.special import eval_legendre, jv, spherical_jn
 
 from mostlyharmless.visylm.coefficients import Coeffs
+from mostlyharmless.visylm.deformation import Deformation
 from mostlyharmless.visylm.spherical_harmonics import (
     associated_legendre,
     normalisation,
@@ -79,6 +80,8 @@ __all__ = [
     "check_zernike_projection",
     "check_even_closed_form",
     "check_full_map_fft",
+    "check_deformation_first_order",
+    "check_level_surface",
 ]
 
 THETA, PHI = sp.symbols("theta phi", real=True)
@@ -902,4 +905,67 @@ def check_full_map_fft(l_max=4, n_side=129, band=16):
     window = slice(centre - band, centre + band + 1)
     worst = max(worst, float(np.max(np.abs(values[window, window]
                                            - exact[window, window]))) / abs(flux))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V19, V20 -- the deformation field
+# --------------------------------------------------------------------------
+
+def _sphere_directions(n):
+    """n directions spread over the sphere, by the golden-angle spiral."""
+    index = np.arange(n) + 0.5
+    mu = 1.0 - 2.0 * index / n
+    phi = np.pi * (1.0 + 5.0 ** 0.5) * index
+    sine = np.sqrt(1.0 - mu ** 2)
+    return np.stack([sine * np.cos(phi), sine * np.sin(phi), mu], axis=-1)
+
+
+def check_deformation_first_order(amplitudes=(1e-4, 1e-3), n_dir=24):
+    """V19, numerical rung -- the deformation field against its first-order limit.
+
+    On a level surface delta r = -phi_1/g_0 and delta g = d phi_1/d r, so for small
+    amplitudes the solver must reproduce those, with the residual going as eps^2.
+    Both quadrupoles are present, perpendicular, and the residual is reported divided
+    by eps^2 so that the two amplitudes can share a tolerance.
+    """
+    worst = 0.0
+    for amplitude in amplitudes:
+        field = Deformation(tide=amplitude, tide_direction=(1.0, 0.0, 0.0),
+                            centrifugal=amplitude, spin_direction=(0.0, 0.0, 1.0))
+        for direction in _sphere_directions(n_dir):
+            radius = field.level_radius(direction)
+            gravity = field.surface_gravity(direction)
+            delta_r, delta_g = field.first_order_radii(direction)
+            worst = max(worst,
+                        abs(radius - (1.0 + delta_r)) / amplitude ** 2,
+                        abs(gravity - (1.0 + delta_g)) / amplitude ** 2)
+    return worst
+
+
+def check_level_surface(tide=0.03, centrifugal=0.01, n_dir=32):
+    """V20, numerical rung -- the surface is level, and the gradient is analytic.
+
+    Two properties that hold at any amplitude, and so are invisible to V19.  First,
+    Phi takes the same value at every point of the surface the solver returns.
+    Second, the analytic gradient agrees with a central difference, which is what
+    makes g_eff = |grad Phi| trustworthy rather than merely asserted.
+
+    The amplitudes are a tide-dominant pair, since eps_tide + 1.5 eps_cent is what
+    has to stay below about 0.059 for the surface to close at all.
+    """
+    field = Deformation(tide=tide, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=centrifugal, spin_direction=(0.0, 0.0, 1.0))
+    worst = 0.0
+    for direction in _sphere_directions(n_dir):
+        radius = field.level_radius(direction)
+        point = radius * direction
+        worst = max(worst, abs(float(field.potential(point)) + 1.0))
+
+        step = 1e-6
+        difference = np.array([
+            (float(field.potential(point + step * axis))
+             - float(field.potential(point - step * axis))) / (2.0 * step)
+            for axis in np.eye(3)])
+        worst = max(worst, float(np.max(np.abs(difference - field.gradient(point)))))
     return worst
