@@ -19,7 +19,7 @@ TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
 FIGURES := docs/generated/map.pdf docs/generated/uv.pdf docs/generated/convergence.pdf docs/generated/jupiter.pdf docs/generated/triaxial.pdf docs/generated/delta-visibility.pdf
 
-.PHONY: all check docs data clean distclean
+.PHONY: all check docs data gui clean distclean
 
 all: check docs
 
@@ -39,6 +39,10 @@ $(PDF): $(DOC) $(TEX) $(GENERATED) $(FIGURES) docs/refs.bib
 data:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.emit
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.figures
+
+# The interactive front end (Stage 8, D25).  Needs a display; not part of `all`.
+gui:
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.gui
 
 $(GENERATED) $(FIGURES):
 	$(MAKE) data

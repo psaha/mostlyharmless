@@ -35,6 +35,7 @@ __all__ = [
     "figure_jupiter",
     "figure_triaxial",
     "figure_stretched_sphere",
+    "figure_visibility_maps",
     "figure_delta_visibility",
     "write",
 ]
@@ -173,12 +174,12 @@ def figure_jupiter(target, l_max=20, n=241, phase=0.0):
     limits = (float(np.nanmin(panels[0][0])), float(np.nanmax(panels[0][0])))
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.6), constrained_layout=True)
     for axis, (data, title) in zip(axes.ravel(), panels):
-        drawn = axis.imshow(data, origin="lower", extent=(-1, 1, -1, 1),
+        drawn = axis.imshow(data, origin="lower", extent=(1, -1, -1, 1),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(title, fontsize=9)
-        axis.set_xlabel(r"$x_E$", fontsize=9)
+        axis.set_xlabel(r"$y$", fontsize=9)
     for axis in (axes[0, 0], axes[1, 0]):
-        axis.set_ylabel(r"$x_N$", fontsize=9)
+        axis.set_ylabel(r"$x$", fontsize=9)
     fig.colorbar(drawn, ax=axes, shrink=0.8, label=r"$I/\langle I\rangle$")
     fig.savefig(target)
     plt.close(fig)
@@ -187,22 +188,18 @@ def figure_jupiter(target, l_max=20, n=241, phase=0.0):
 # The Stage 6 star: a tidal bulge at azimuth TRIAXIAL_PHASE in the equatorial plane,
 # and a spin flattening along z, at a 3:1 ratio.  That ratio makes the perturbation
 # vanish at the tide's perpendicular, so that semi-axis sits at exactly the reference
-# radius; at these amplitudes the principal semi-axes are near (1.28, 1.000, 0.962).
-# This is essentially the last usable step: closure needs eps_tide + 1.5 eps_cent <
-# 0.148, which at 3:1 means eps_tide < 0.099, so 0.09/0.03 is 91 per cent of the way
-# and the surface is close to pinching along the tide axis.  Two consequences: the
-# ellipsoid approximation is now poor enough that the *outlines* should disagree, and
-# the projection weight r^2/(n.N) grows sharply toward the bulge tip, so the renderer's
-# own sampling becomes coarse exactly where the model is worst.  Artefact and model
-# error have to be told apart there.  Beyond the ceiling the star opens toward the
-# companion -- Roche-lobe overflow, a physical limit rather than a numerical one.
+# radius.  At these amplitudes the closure combination is
+# eps_tide + 1.5 eps_cent = 0.144 against the limit of 0.148 --- 97 per cent of the
+# way --- so the surface is close to pinching along the tide axis and the projection
+# weight r^2/(n.N) grows sharply toward the bulge tip.  Sampling artefacts and model
+# error have to be told apart there.
 # The phase matters: with the tide *in* the plane of the spin and the line of sight,
 # reflection through that plane fixes both quadrupoles, so the image keeps the mirror
 # symmetry of an axisymmetric star however triaxial the body is.  Only a phase away
 # from that plane breaks it, which is what the null test of section 8 looks for.
 # Set TRIAXIAL_TIDE = 0.0 for the pure-spin case, which is axisymmetric.
-TRIAXIAL_TIDE = 0.09
-TRIAXIAL_SPIN = 0.03
+TRIAXIAL_TIDE = 0.096
+TRIAXIAL_SPIN = 0.032
 TRIAXIAL_PHASE = np.radians(45.0)
 TRIAXIAL_INCLINATION = np.radians(60.0)
 
@@ -257,13 +254,13 @@ def figure_triaxial(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
               max(float(np.nanmax(panel[0])) for panel in panels))
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.8), constrained_layout=True)
     for axis, (data, title) in zip(axes.ravel(), panels):
-        drawn = axis.imshow(data, origin="lower", extent=(-1.3, 1.3, -1.3, 1.3),
+        drawn = axis.imshow(data, origin="lower", extent=(1.3, -1.3, -1.3, 1.3),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(title, fontsize=8)
-        axis.set_xlabel(r"$x_E$", fontsize=9)
+        axis.set_xlabel(r"$y$", fontsize=9)
         axis.set_aspect("equal")
     for axis in (axes[0, 0], axes[1, 0]):
-        axis.set_ylabel(r"$x_N$", fontsize=9)
+        axis.set_ylabel(r"$x$", fontsize=9)
     fig.colorbar(drawn, ax=axes, shrink=0.82, label=r"$g_\mathrm{eff}/g_0$")
     fig.savefig(target)
     plt.close(fig)
@@ -271,15 +268,22 @@ def figure_triaxial(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
 
 DELTA_Q_MAX = 2.0
 DELTA_GRID = 31
+# The truncation of the sphere's brightness pattern, projected onto the harmonics for
+# the analytic affine visibility.  Keeping first order in eps makes the pattern exactly
+# l = 0 and l = 2: the l = 4 content first appears at eps^2, from P_2^2.  So l_max = 2
+# is *exact* at that order rather than a truncation, and the only error left is the
+# model's own -- the ellipsoid replacing the true level surface.
+SPHERE_L_MAX = 2
 
 
 def figure_stretched_sphere(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
                             phase=TRIAXIAL_PHASE, inclination=TRIAXIAL_INCLINATION,
-                            n_samples=150000, n=241):
+                            power=1.0, n_samples=150000, n=241):
     """The actual rendering against the affine model's stretched sphere.
 
-    Rows are the two cases and columns the two hemispheres: the observer's side and the
-    far side, both through the same sky axes.  The prediction is the brightness field of
+    Rows are the two cases and columns the two hemispheres: the affine prediction
+    above, the actual star below, matching ``figure_visibility_maps``, and the
+    observer's side and the far side.  The prediction is the brightness field of
     the *same* potential evaluated on the unit sphere, then stretched by ``Lambda`` --
     the samples moved to ``Lambda x`` and the brightness divided by ``|det Lambda|``,
     which keeps the total flux while the area grows.
@@ -306,8 +310,10 @@ def figure_stretched_sphere(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
     panels = []
     for side, sense in (("observer's side", 1.0), ("far side", -1.0)):
         direction = sense * eye
-        truth = render.surface_samples(field, direction, n_samples=n_samples)
-        sphere = render.sphere_samples(field, direction, n_samples=n_samples)
+        truth = render.surface_samples(field, direction, n_samples=n_samples,
+                                       power=power)
+        sphere = render.sphere_samples(field, direction, n_samples=n_samples,
+                                       power=power)
         # The affine prediction: the sphere's image stretched in the sky plane.  The
         # samples move to Lambda x, the area each one represents grows by |det Lambda|,
         # and the brightness falls by the same factor -- so each sample carries its flux
@@ -315,10 +321,11 @@ def figure_stretched_sphere(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
         sky = np.stack([sphere[0] @ east, sphere[0] @ north], axis=-1)
         moved = sky @ stretch.T
         predicted_points = moved[:, :1] * east + moved[:, 1:] * north
-        panels.append(((contrast(render.sky_image(*truth, east, north,
-                                                  half_width=1.5, n=n)),
-                        contrast(render.sky_image(predicted_points, sphere[1] / scale,
+        # the affine row first, matching figure_visibility_maps
+        panels.append(((contrast(render.sky_image(predicted_points, sphere[1] / scale,
                                                   sphere[2] * scale, east, north,
+                                                  half_width=1.5, n=n)),
+                        contrast(render.sky_image(*truth, east, north,
                                                   half_width=1.5, n=n))),
                        side))
 
@@ -328,17 +335,17 @@ def figure_stretched_sphere(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
 
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.9), constrained_layout=True)
     for column, (pair, side) in enumerate(panels):
-        for row, (image, label) in enumerate(zip(pair, ("the star",
-                                                        "stretched sphere"))):
+        for row, (image, label) in enumerate(zip(pair, ("affine, rung 1",
+                                                        "the star"))):
             drawn = axes[row, column].imshow(
                 image, origin="lower", cmap="RdBu_r", vmin=-limit, vmax=limit,
-                extent=(-1.5, 1.5, -1.5, 1.5))
+                extent=(1.5, -1.5, -1.5, 1.5))
             axes[row, column].set_aspect("equal")
             axes[row, column].set_title(label, fontsize=9)
             if row == 1:
-                axes[row, column].set_xlabel(r"$x_E$", fontsize=9)
+                axes[row, column].set_xlabel(r"$y$", fontsize=9)
             if column == 0:
-                axes[row, column].set_ylabel(side + "\n" + r"$x_N$", fontsize=8)
+                axes[row, column].set_ylabel(side + "\n" + r"$x$", fontsize=8)
     fig.colorbar(drawn, ax=axes, shrink=0.85,
                  label=r"$g_\mathrm{eff}/\langle g_\mathrm{eff}\rangle - 1$")
     fig.savefig(target)
@@ -467,6 +474,96 @@ def figure_delta_visibility(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
     plt.close(fig)
 
 
+def figure_visibility_maps(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
+                           phase=TRIAXIAL_PHASE, inclination=TRIAXIAL_INCLINATION,
+                           power=1.0, n_samples=20000, q_max=2.0, grid=31):
+    """Re and Im of the normalised visibility: the affine model against the star.
+
+    Row 1 is the affine prediction from rung 1, ``V_sphere(Lambda^T u)``; row 2 is the
+    direct sum over the actual surface.  Columns are the real and imaginary parts, and
+    what is drawn is the difference from a *unit sphere* --- the flat disk of unit
+    radius, whose normalised visibility is the analytic ``2 J_1(x)/x``:
+
+        Delta V = V / V(0,0) - V_unit-sphere / V_unit-sphere(0,0) ,
+
+    so both rows vanish at the origin and the panels show the deformation's signature
+    alone rather than the lobe structure that all three share.  The reference is the
+    *unit* sphere, not the volume-equivalent one, so a small scale mismatch remains
+    (the star's mean radius is about 1.04); using the volume-equivalent disk would
+    isolate the deformation alone.
+
+    The largest difference between the rows, relative to the origin, is written on the
+    figure.  It is Stage 6's gate, and it is the one thing these panels cannot show by
+    eye: the disagreement is small in absolute terms even where it is clear in shape.
+    The reference cancels in that number, so it is unchanged by the subtraction.
+
+    Axes follow D24: u is North and runs vertically, v is East and increases leftward.
+    """
+    plt = _pyplot()
+    field = triaxial_field(tide, spin, phase)
+    eye = np.array([np.sin(inclination), 0.0, np.cos(inclination)])
+    east, north = render.sky_basis(eye)
+    points, brightness, weights = render.surface_samples(field, eye,
+                                                         n_samples=n_samples,
+                                                         power=power)
+    stretch = affine.projected_stretch(field, eye)
+
+    def actual(u, v):
+        return render.direct_visibility(points, brightness, weights,
+                                        east, north, u, v)
+
+    # The sphere's visibility in closed form: its pattern projected onto the harmonics,
+    # so one point costs a short mode sum instead of a sum over samples.
+    coefficients = affine.sphere_coefficients(field, l_max=SPHERE_L_MAX,
+                                              power=power, n_samples=n_samples,
+                                              inclination=inclination)
+    sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
+
+    def sphere_sum(u, v):
+        return visibility(coefficients, u, v) / sphere_flux
+
+    def modelled(u, v):
+        return affine.affine_visibility(sphere_sum, stretch, u, v)
+
+    actual_flux = actual(0.0, 0.0)
+
+    axis = np.linspace(-q_max, q_max, grid)
+    # the outer loop is u, the vertical axis, so rows are u and columns v
+    u_grid, v_grid = np.meshgrid(axis, axis, indexing="ij")
+    reference = visibility_uniform_disk(u_grid, v_grid, 1.0)
+    affine_values = np.array([[modelled(u, v) for v in axis]
+                              for u in axis]) - reference
+    actual_values = np.array([[actual(u, v) / actual_flux for v in axis]
+                              for u in axis]) - reference
+    worst = float(np.max(np.abs(affine_values - actual_values)))
+
+    rows = ((affine_values, "affine, rung 1"), (actual_values, "the star"))
+    headers = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
+    values = np.concatenate([data.ravel() for data, _ in rows])
+    limit = float(np.max(np.abs(values))) or 1e-30
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.6, 7.4), constrained_layout=True)
+    for column, header in enumerate(headers):
+        part = (lambda data: data.real) if column == 0 else (lambda data: data.imag)
+        for row, (data, label) in enumerate(rows):
+            drawn = axes[row, column].imshow(
+                part(data), origin="lower", cmap="RdBu_r", vmin=-limit, vmax=limit,
+                extent=(q_max, -q_max, -q_max, q_max))
+            axes[row, column].set_aspect("equal")
+            if row == 0:
+                axes[row, column].set_title(header, fontsize=10)
+            if row == 1:
+                axes[row, column].set_xlabel(r"$v$ (East)", fontsize=9)
+            if column == 0:
+                axes[row, column].set_ylabel(label + "\n" + r"$u$ (North)",
+                                             fontsize=8)
+        fig.colorbar(drawn, ax=axes[:, column], shrink=0.85)
+    fig.text(0.5, -0.01, rf"$\max|V_\mathrm{{affine}} - V_\mathrm{{star}}| = "
+             rf"{worst:.4f}$", ha="center", fontsize=9)
+    fig.savefig(target)
+    plt.close(fig)
+
+
 def sky_map(coeffs, back=False, n=241):
     """The map on one hemisphere, as seen down the frame's z axis.
 
@@ -482,7 +579,8 @@ def sky_map(coeffs, back=False, n=241):
     rho_squared = x_east ** 2 + x_north ** 2
     z = (-1.0 if back else 1.0) * np.sqrt(np.clip(1.0 - rho_squared, 0.0, None))
     theta = np.arccos(np.clip(z, -1.0, 1.0))
-    phi = np.arctan2(x_north, x_east)
+    # By D24 the body x axis is North, so the map's azimuth is measured from North.
+    phi = np.arctan2(x_east, x_north)
     image = np.zeros_like(x_east)
     real = coeffs.to_real()
     for l, row in enumerate(real):
@@ -512,12 +610,12 @@ def figure_map(target, l_max=16, n=241):
     limits = (float(np.nanmin(panels[0][0])), float(np.nanmax(panels[0][0])))
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.6), constrained_layout=True)
     for axis, (data, title) in zip(axes.ravel(), panels):
-        drawn = axis.imshow(data, origin="lower", extent=(-1, 1, -1, 1),
+        drawn = axis.imshow(data, origin="lower", extent=(1, -1, -1, 1),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(title, fontsize=9)
-        axis.set_xlabel(r"$x_E$", fontsize=9)
+        axis.set_xlabel(r"$y$", fontsize=9)
     for axis in (axes[0, 0], axes[1, 0]):
-        axis.set_ylabel(r"$x_N$", fontsize=9)
+        axis.set_ylabel(r"$x$", fontsize=9)
     fig.colorbar(drawn, ax=axes, shrink=0.8, label=r"$I/\langle I\rangle$")
     fig.savefig(target)
     plt.close(fig)
@@ -540,17 +638,20 @@ def figure_uv(target, l_max=16, q_max=6.0, n=301):
     u, v = np.meshgrid(axis_q, axis_q)
     flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
     values = visibility(coeffs, u, v) / flux
+    # D24: u is North, so it runs vertically (the array's first index) and v, East,
+    # increases leftward.
+    values = values.T
     limit = float(max(np.abs(values.real).max(), np.abs(values.imag).max()))
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 4.0), constrained_layout=True)
     panels = ((values.real, r"$\mathrm{Re}\;V/V(0,0)$"),
               (values.imag, r"$\mathrm{Im}\;V/V(0,0)$"))
     for axis, (data, title) in zip(axes, panels):
         drawn = axis.imshow(data, origin="lower",
-                            extent=(-q_max, q_max, -q_max, q_max),
+                            extent=(q_max, -q_max, -q_max, q_max),
                             cmap="RdBu_r", vmin=-limit, vmax=limit)
         axis.set_title(title, fontsize=10)
-        axis.set_xlabel(r"$u$ (wavelengths)", fontsize=9)
-        axis.set_ylabel(r"$v$ (wavelengths)", fontsize=9)
+        axis.set_xlabel(r"$v$ (wavelengths, East)", fontsize=9)
+        axis.set_ylabel(r"$u$ (wavelengths, North)", fontsize=9)
         axis.text(0.03, 0.97, rf"$\max|\cdot| = {np.abs(data).max():.3f}$",
                   transform=axis.transAxes, verticalalignment="top", fontsize=8,
                   bbox={"facecolor": "white", "alpha": 0.75, "edgecolor": "none"})
@@ -578,7 +679,7 @@ def figure_convergence(target, orders=(4, 8, 16), n=241):
                              constrained_layout=True)
     drawn = None
     for axis, data, l_max in zip(axes, images, orders):
-        drawn = axis.imshow(data, origin="lower", extent=(-1, 1, -1, 1),
+        drawn = axis.imshow(data, origin="lower", extent=(1, -1, -1, 1),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(rf"$l_{{max}}={l_max}$", fontsize=9)
         axis.set_xticks([])
@@ -595,7 +696,13 @@ def write(directory=None):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     written = []
-    for name, function in (("stretched-sphere.pdf", figure_stretched_sphere),):
+    # Only the figures the manual embeds are generated for now; Stage 6's figures are
+    # regenerated on request while they are still being worked on.
+    for name, function in (("map.pdf", figure_map),
+                           ("uv.pdf", figure_uv),
+                           ("convergence.pdf", figure_convergence),
+                           ("stretched-sphere.pdf", figure_stretched_sphere),
+                           ("visibility-maps.pdf", figure_visibility_maps)):
         path = directory / name
         function(path)
         written.append(path)

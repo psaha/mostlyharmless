@@ -14,21 +14,24 @@ errors enter silently.
 
 The observer frame is right-handed, with axes
 \begin{equation}
-  \hat e_E = \text{East}, \qquad
-  \hat e_N = \text{North}, \qquad
-  \hat e_{\mathrm{los}} = \text{line of sight},
+  \hat e_x = \text{North}, \qquad
+  \hat e_y = \text{East}, \qquad
+  \hat e_z = \text{toward the observer},
   \label{eq:observer-frame}
 \end{equation}
-so that $\hat e_E \times \hat e_N = \hat e_{\mathrm{los}}$.  The projected disk of
-the source is the unit disk in this frame, and a point on it is specified either
-by Cartesian direction cosines $(x_E, x_N)$ or by plane polar coordinates
+so that $\hat e_x \times \hat e_y = \hat e_z$, the third axis pointing from the sky
+toward the observer --- into the ground for an observer looking up.  The line of
+sight is $-\hat e_z$, and the disk is the unit disk seen along it.  A point on the
+disk is specified either by Cartesian direction cosines $(x, y)$ or by plane polar
+coordinates
 \begin{equation}
-  \rho = \sqrt{x_E^2 + x_N^2} = \sin\theta, \qquad
-  \varphi = \arctan(x_N, x_E),
+  \rho = \sqrt{x^2 + y^2} = \sin\theta, \qquad
+  \varphi = \arctan(y, x),
   \label{eq:disk-coords}
 \end{equation}
-where $\theta$ is the polar angle measured from $\hat e_{\mathrm{los}}$.  For a
-source of unit angular radius, $\rho \in [0,1]$.
+where $\theta$ is the polar angle measured from $-\hat e_z$, and the
+azimuth is measured from North through East, the same reference as the position
+angle (D23).  For a source of unit angular radius, $\rho \in [0,1]$.
 
 The body frame is the frame in which the surface map is specified, with $z$ along
 the spin axis.  Its orientation relative to the observer is fixed by three
@@ -37,10 +40,14 @@ of sight, and the position angle $\PA$ measured from North towards East.  The
 body-to-observer rotation is
 \begin{equation}
   R(\alpha,\beta,\PA) =
-  R_z\!\left(\tfrac{\pi}{2} - \PA\right) R_y(\beta) R_z(\alpha),
+  R_z(\PA)\, R_y(\beta)\, R_z(\alpha),
   \label{eq:body-to-observer}
 \end{equation}
-with $R_y$ and $R_z$ active right-handed rotations.
+with $R_y$ and $R_z$ active right-handed rotations.  The middle axis stays $y$:
+the inclination is applied first, and the position angle then carries the result to
+its place on the sky.  The body $z$ axis, which is the spin, maps to
+$(\sin\beta\cos\PA,\ \sin\beta\sin\PA,\ \cos\beta)$, so it tilts toward the azimuth
+$\PA$ and sits $\cos\beta$ above the sky plane.
 
 \subsection{Spherical harmonics}
 
@@ -124,7 +131,10 @@ therefore those with $l \ge 1$.
   \eqref{eq:a00-normalisation} fixes.  Left: down the spin axis, near and far
   hemispheres.  Right: the same map rotated into the observer's frame by the
   rotation of section~\ref{sec:wigner}.  The ripples at the spot's rim are
-  truncation error, the series being finite, and not structure.}
+  truncation error, the series being finite, and not structure.  The sky is drawn
+  with North up and East to the left, and azimuths are measured from North through
+  East (D23), so the spot's position on the page is quoted in that convention: a map
+  referred to East instead would show the same spot a quarter turn away.}
   \label{fig:starspot}
 \end{figure}
 
@@ -152,12 +162,16 @@ coefficient vector holds.
 The complex visibility is the Fourier transform of the sky brightness, with the
 factor $2\pi$ inside the exponent and no prefactor,
 \begin{equation}
-  V(u,v) = \int I(x_E,x_N)\, e^{-2\pi i (u x_E + v x_N)}\, dx_E\, dx_N ,
+  V(u,v) = \int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx ,
   \label{eq:visibility-definition}
 \end{equation}
-with $u$ and $v$ in \emph{wavelengths} and $x_E, x_N$ dimensionless direction
-cosines.  Thus $V(0,0)$ is the total flux.  The transform is written in plane
-polar coordinates through
+with $u$ and $v$ in \emph{wavelengths} and $y, x$ dimensionless direction
+cosines.  Here $u$ is the \emph{North} component of the baseline and $v$ the
+\emph{East} component: the reverse of the radio-interferometry convention, adopted
+deliberately (D24) so that the coordinates on the sky and on the ground share an
+orientation, and so that $\psi$ below is the position angle directly.  Thus
+$V(0,0)$ is the total flux.  The transform is written in plane polar coordinates
+through
 \begin{equation}
   q = \sqrt{u^2 + v^2}, \qquad \psi = \arctan(v,u), \qquad a = 2\pi q .
   \label{eq:uv-polar}
@@ -165,7 +179,7 @@ polar coordinates through
 Public functions take $(u,v)$; $q$, $\psi$ and $a$ are internal.
 
 The measure in \eqref{eq:visibility-definition} is the planar measure over the
-projected disk, $dx_E\,dx_N = \rho\,d\rho\,d\varphi$.  The exact solid-angle
+projected disk, $dy\,dx = \rho\,d\rho\,d\varphi$.  The exact solid-angle
 measure differs by a factor $1/n$ with $n = \sqrt{1-\rho^2}$, and is not used
 here, because the planar measure is the one in which the classical uniform-disk
 and limb-darkening results are expressed.  The difference is not cosmetic: the
@@ -181,8 +195,8 @@ symbol & meaning \\
 \hline
 $\theta,\ \varphi$ & polar and azimuthal angles on the sphere \\
 $z = \cos\theta$ & natural variable for Legendre and Jacobi polynomials \\
-$\rho = \sin\theta$ & disk radius; also $\sqrt{x_E^2+x_N^2}$ \\
-$x_E,\ x_N$ & East and North direction cosines \\
+$\rho = \sin\theta$ & disk radius; also $\sqrt{x^2+y^2}$ \\
+$x,\ y$ & direction cosines: $x$ to North, $y$ to East \\
 $u,\ v,\ w$ & baseline coordinates, in wavelengths \\
 $q = \sqrt{u^2+v^2}$ & radial baseline, in wavelengths \\
 $\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\
@@ -204,7 +218,7 @@ Two overloadings are worth stating explicitly, because both have caused errors.
 First, $u$ is a baseline coordinate here, whereas the limb-darkening literature
 uses $u, u_1, u_2$ for the coefficients of the limb-darkening law; in this
 package those coefficients are named \code{ld\_coeffs} and never $u$.  Second,
-$x_E$ and $x_N$ are what the radio-interferometry literature calls the direction
+$y$ and $x$ are what the radio-interferometry literature calls the direction
 cosines $l$ and $m$.  That notation is avoided here so that $l$ and $m$ always
 mean harmonic degree and order.
 

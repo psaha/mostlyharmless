@@ -11,6 +11,7 @@ import pytest
 
 from mostlyharmless.symbolic import affine, render
 from mostlyharmless.visylm.deformation import Deformation
+from mostlyharmless.visylm.visibility import visibility
 
 EYE = np.array([0.0, 0.0, 1.0])
 TIDE, SPIN = 0.03, 0.01
@@ -43,6 +44,85 @@ def test_a_sphere_has_unit_stretch_and_so_affine_agrees_with_the_sphere():
     for u, v in ((0.0, 0.0), (0.7, 0.0), (0.3, 0.9)):
         value = affine.affine_visibility(sphere_visibility, stretch, u, v)
         assert value == pytest.approx(sphere_visibility(u, v), rel=1e-12)
+
+
+def test_the_projected_shape_does_not_depend_on_the_tide_longitude():
+    """Rotating the body about its spin must not change the projected shape.
+
+    Built from the coordinate radii rather than the principal axes, the stretch does
+    change with longitude -- a first-order error in the shape -- and this catches it.
+    Seen down the spin the projected area is the equatorial ellipse's, whose area a
+    rotation cannot change.
+    """
+    eye = np.array([0.0, 0.0, 1.0])
+    determinants = []
+    for longitude in (0.0, np.pi / 4.0, np.pi / 2.0):
+        direction = (np.cos(longitude), np.sin(longitude), 0.0)
+        field = Deformation(tide=TIDE, tide_direction=direction,
+                            centrifugal=SPIN, spin_direction=(0.0, 0.0, 1.0))
+        determinants.append(abs(np.linalg.det(affine.projected_stretch(field, eye))))
+    assert determinants[0] == pytest.approx(determinants[1], rel=1e-12)
+    assert determinants[1] == pytest.approx(determinants[2], rel=1e-12)
+
+
+def test_the_frequency_is_reordered_into_the_stretch_basis():
+    """Lambda is in (east, north); the frequencies are (u, v) = (North, East).
+
+    A frequency due North must reach the sphere function with a zero east component and
+    the north component scaled by Lambda's north factor.  Passing (u, v) through unchanged
+    would put the whole thing on the east axis instead.
+    """
+    stretch = np.diag([2.0, 3.0])          # east scale 2, north scale 3
+    calls = []
+
+    def sphere_visibility(u, v):
+        calls.append((float(u), float(v)))
+        return 0.0
+
+    affine.affine_visibility(sphere_visibility, stretch, 1.0, 0.0)
+    # stretched: east 2*0 = 0, north 3*1 = 3, and the sphere takes (North, East)
+    assert calls[-1] == (3.0, 0.0)
+
+
+def test_the_ellipsoid_ignores_the_tide_direction_when_the_tide_is_zero():
+    """With eps_tide = 0 the tide's direction cannot matter, whatever the latitude.
+
+    Taking the principal frame from the tide axis breaks this: the axis rotates, and on
+    an oblate body the level radius along a tilted direction differs from the equatorial
+    one, so the shape would change with no physical cause.  The frame has to come from
+    the eigenvectors of the quadrupole tensor.
+    """
+    eye = np.array([np.sin(np.pi / 4.0), 0.0, np.cos(np.pi / 4.0)])
+    stretches = []
+    for latitude in (0.0, 0.4, np.pi / 2.0):
+        direction = (np.cos(latitude), 0.0, np.sin(latitude))
+        field = Deformation(tide=0.0, tide_direction=direction,
+                            centrifugal=SPIN, spin_direction=(0.0, 0.0, 1.0))
+        stretches.append(affine.projected_stretch(field, eye))
+    for other in stretches[1:]:
+        assert other == pytest.approx(stretches[0], rel=1e-12)
+
+
+def test_the_inclination_reaches_the_coefficients():
+    """The projection is in the body frame, so it must be rotated before use.
+
+    Without the rotation the pattern stays axisymmetric about the line of sight and its
+    visibility is exactly real at every frequency.  An oblate, gravity-darkened star seen
+    at pi/4 is not centrally symmetric, so the imaginary part must be non-zero somewhere.
+    The threshold is far above round-off, which is all a missing rotation can leave, and
+    far below the physical signal, which is of order the asphericity.
+    """
+    field = Deformation(tide=0.0, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=0.05, spin_direction=(0.0, 0.0, 1.0))
+    upright = affine.sphere_coefficients(field, l_max=2, n_samples=4000,
+                                         inclination=0.0)
+    tilted = affine.sphere_coefficients(field, l_max=2, n_samples=4000,
+                                        inclination=np.pi / 4.0)
+    assert np.max(np.abs(tilted.to_vector() - upright.to_vector())) > 1e-3
+
+    values = [visibility(tilted, u, v) for u in (0.0, 0.5) for v in (0.0, 0.5)]
+    flux = abs(visibility(tilted, 0.0, 0.0))
+    assert max(abs(value.imag) for value in values) > 1e-6 * flux
 
 
 def test_a_sphere_projects_to_the_unit_disk_from_any_direction():

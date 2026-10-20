@@ -528,9 +528,9 @@ def check_rotation_nonnegative_form(l_max=4, seed=20261012):
     rotated = rotate_coefficients(coeffs, alpha, beta, pa)
     worst = 0.0
     for l in range(l_max + 1):
-        # D^l_{m'm}(R) for the viewing angles is wigner_D with the zyz angles
-        # (pi/2 - PA, beta, alpha)
-        D = wigner_D(l, math.pi / 2.0 - pa, beta, alpha)
+        # D^l_{m'm}(R) for the viewing angles, with R = R_z(PA) R_y(beta) R_z(alpha):
+        # the row angle is PA and the column angle is alpha
+        D = wigner_D(l, pa, beta, alpha)
         for mp in range(l + 1):
             total = D[mp + l, l] * coeffs[l, 0].real
             for m in range(1, l + 1):
@@ -850,7 +850,7 @@ def _zonal_starspot(l_max, half_angle=0.9, depth=0.6):
 def _fft_visibility(coeffs, n_side=129):
     """The visibility by a 2-D FFT of the sampled image, in our planar measure.
 
-    The image is sampled at x_E, x_N = j h on a grid of odd length, h = 2/n_side,
+    The image is sampled at x, y = j h on a grid of odd length, h = 2/n_side,
     with the origin at the centre.  An odd length matters: it makes the sample points
     symmetric about the origin, so the discrete transform needs no phase correction.
     The measure enters as the pixel area h^2, and the ifftshift/fftshift pair puts
@@ -863,7 +863,9 @@ def _fft_visibility(coeffs, n_side=129):
     rho_squared = x_east ** 2 + x_north ** 2
     z = np.sqrt(np.clip(1.0 - rho_squared, 0.0, None))
     theta = np.arccos(np.clip(z, -1.0, 1.0))
-    phi = np.arctan2(x_north, x_east)
+    # By D24 the body x axis is North, so the harmonics' azimuth is measured from
+    # North: the same frame that psi = arctan2(v, u) lives in.
+    phi = np.arctan2(x_east, x_north)
 
     image = np.zeros_like(x_east)
     real = coeffs.to_real()
@@ -898,7 +900,9 @@ def check_full_map_fft(l_max=4, n_side=129, band=16):
     flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
 
     u_grid, v_grid = np.meshgrid(frequencies, frequencies)
-    exact = visibility(coeffs, u_grid, v_grid)
+    # _fft_visibility renders with x_east as the first meshgrid output, so the FFT's
+    # first index belongs to East, which D24 makes v.
+    exact = visibility(coeffs, v_grid, u_grid)
 
     centre = n_side // 2
     worst = abs(values[centre, centre] - exact[centre, centre]) / abs(flux)

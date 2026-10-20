@@ -66,19 +66,25 @@ real $d$ matrix.
 \label{sec:viewing-angles}
 
 The body-to-observer rotation is built from the spin phase $\alpha$, the
-inclination $\beta$ and the position angle $\PA$ of the spin axis as
+inclination $\beta$ and the position angle $\PA$ of the spin axis.  Because the
+observer's $x$ axis is North (D24), $\PA$ is measured from North through East
+directly, so no offset appears anywhere:
 \begin{equation}
-  R(\alpha,\beta,\PA) = R_z\!\left(\tfrac{\pi}{2} - \PA\right) R_y(\beta) R_z(\alpha) ,
+  R(\alpha,\beta,\PA) = R_z(\PA)\, R_y(\beta)\, R_z(\alpha) ,
   \label{eq:body-to-observer-wigner}
 \end{equation}
-which is \eqref{eq:wigner-D} with $\alpha_{\rm zyz} = \pi/2 - \PA$ and
+which is \eqref{eq:wigner-D} with $\alpha_{\rm zyz} = \PA$ and
 $\gamma_{\rm zyz} = \alpha$:
 \begin{equation}
-  D^l_{m'm}(R) = e^{-im'(\pi/2 - \PA)} \, d^l_{m'm}(\beta) \, e^{-im\alpha} .
+  D^l_{m'm}(R) = e^{-im'\PA} \, d^l_{m'm}(\beta) \, e^{-im\alpha} .
   \label{eq:D-viewing}
 \end{equation}
-Note which angle multiplies which index: $\pi/2 - \PA$ goes with the row index
-$m'$, and $\alpha$ with the column index $m$.
+Note which angle multiplies which index: $\PA$ goes with the row index $m'$, and
+$\alpha$ with the column index $m$.  The middle axis stays $y$: the inclination is
+applied first and the position angle then carries the result to its place on the
+sky.  The body $z$ axis, which is the spin, maps to
+$(\sin\beta\cos\PA,\ \sin\beta\sin\PA,\ \cos\beta)$, so it tilts toward the azimuth
+$\PA$ and sits $\cos\beta$ above the sky plane.
 
 \subsection{The transform without negative-order coefficients}
 \label{sec:rotation-nonnegative}

@@ -74,11 +74,11 @@ def test_rotation_matrix_is_a_proper_rotation():
 
 
 def test_identity_viewing_angles():
-    # alpha = 0, beta = 0, PA = pi/2 gives R = R_z(0) R_y(0) R_z(0) = I
-    assert np.allclose(rotation_matrix(0.0, 0.0, math.pi / 2), np.eye(3), atol=TOL)
+    # alpha = 0, beta = 0, PA = 0 gives R = R_z(0) R_y(0) R_z(0) = I
+    assert np.allclose(rotation_matrix(0.0, 0.0, 0.0), np.eye(3), atol=TOL)
 
     c = random_coeffs()
-    rotated = rotate_coefficients(c, 0.0, 0.0, math.pi / 2)
+    rotated = rotate_coefficients(c, 0.0, 0.0, 0.0)
     for l in range(c.lmax + 1):
         assert np.allclose(rotated.blocks[l], c.blocks[l], atol=TOL)
 

@@ -25,6 +25,8 @@ CASES = [
     ("triaxial.pdf", "figure_triaxial", {"n_samples": 3000, "n": 41}),
     ("stretched-sphere.pdf", "figure_stretched_sphere",
      {"n_samples": 3000, "n": 41}),
+    ("visibility-maps.pdf", "figure_visibility_maps",
+     {"n_samples": 1200, "grid": 7, "q_max": 1.0}),
     ("delta-visibility.pdf", "figure_delta_visibility",
      {"n_samples": 1200, "grid": 7, "q_max": 1.0}),
 ]

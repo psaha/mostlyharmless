@@ -8,13 +8,16 @@
 \label{sec:separation}
 
 The complex visibility of a map is \eqref{eq:visibility-definition}.  Write the
-disk in polar coordinates, $x_E = \rho\cos\varphi$ and $x_N = \rho\sin\varphi$,
-and the baseline likewise, so that
+disk in polar coordinates about North, $x = \rho\cos\varphi$ and
+$y = \rho\sin\varphi$, and the baseline likewise, $u = q\cos\psi$ and
+$v = q\sin\psi$, so that
 \begin{equation}
-  u x_E + v x_N = q\rho \cos(\varphi - \psi) ,
+  u x + v y = q\rho \cos(\varphi - \psi) ,
   \label{eq:phase-polar}
 \end{equation}
-with $q$ and $\psi$ from \eqref{eq:uv-polar}.  For a mode whose angular part is
+with $q$ and $\psi$ from \eqref{eq:uv-polar}.  Both azimuths are measured from
+North, so the difference $\varphi-\psi$ means what it always did; only the pairing
+of symbol with axis has changed.  For a mode whose angular part is
 $f(\rho)\,e^{im\varphi}$ the transform separates:
 \begin{equation}
   V = \int_0^1 f(\rho)\,\rho

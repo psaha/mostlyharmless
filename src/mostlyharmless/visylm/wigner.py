@@ -83,13 +83,21 @@ def wigner_D(l, alpha, beta, gamma):
 def rotation_matrix(alpha, beta, pa):
     """The 3x3 active right-handed body-to-observer rotation R(alpha, beta, PA).
 
+    By D24 the observer frame is (x, y, z) = (North, East, toward the observer), so
+    PA is measured from North through East directly and no offset is needed:
+
+        R = R_z(PA) R_y(beta) R_z(alpha) .
+
+    Check it: the body z axis, which is the spin, maps to
+    ``(sin(beta) cos(PA), sin(beta) sin(PA), cos(beta))``, so it tilts toward the
+    azimuth PA and its distance from the sky plane is ``cos(beta)``.
+
     Orthogonal, so its transpose is its inverse; the geometric certificates use
     it as the independent reference for the coefficient transform.
     """
     ca, sa = math.cos(alpha), math.sin(alpha)
     cb, sb = math.cos(beta), math.sin(beta)
-    # gamma = pi/2 - PA, so cos(gamma) = sin(PA) and sin(gamma) = cos(PA)
-    cg, sg = math.sin(pa), math.cos(pa)
+    cg, sg = math.cos(pa), math.sin(pa)
     Rz_a = np.array([[ca, -sa, 0.0], [sa, ca, 0.0], [0.0, 0.0, 1.0]])
     Ry_b = np.array([[cb, 0.0, sb], [0.0, 1.0, 0.0], [-sb, 0.0, cb]])
     Rz_g = np.array([[cg, -sg, 0.0], [sg, cg, 0.0], [0.0, 0.0, 1.0]])
@@ -99,16 +107,18 @@ def rotation_matrix(alpha, beta, pa):
 def rotate_coefficients(coeffs, alpha, beta, pa):
     """Rotate a map's coefficients from the body frame to the observer frame.
 
-    Implements ``b_{lm'} = sum_m D^l_{m'm}(R) a_{lm}`` with R = R(alpha, beta, PA),
-    equivalently ``wigner_D(l, pi/2 - pa, beta, alpha)``.  Negative orders appear
-    only as indices here; the result is folded back onto the stored non-negative
-    half, and the fold checks the reality condition.
+    Implements ``b_{lm'} = sum_m D^l_{m'm}(R) a_{lm}`` with R = R(alpha, beta, PA)
+    from :func:`rotation_matrix`, i.e. ``R_z(PA) R_y(beta) R_z(alpha)``, which is
+    ``wigner_D(l, PA, beta, alpha)``.  Negative orders appear only as indices here;
+    the result is folded back onto the stored non-negative half, and the fold checks
+    the reality condition.
     """
-    gamma = math.pi / 2.0 - pa
+    gamma = pa
+    inner = alpha
     rotated_blocks = []
     for l, block in enumerate(coeffs.unfolded()):
         m = np.arange(-l, l + 1)
-        shifted = np.exp(-1j * alpha * m) * block
+        shifted = np.exp(-1j * inner * m) * block
         rotated = wigner_d(l, beta) @ shifted
         rotated_blocks.append(np.exp(-1j * gamma * m) * rotated)
     return Coeffs.from_unfolded(rotated_blocks)

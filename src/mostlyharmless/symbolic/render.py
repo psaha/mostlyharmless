@@ -120,6 +120,21 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0):
     return (directions[visible], brightness[visible], weights[visible])
 
 
+def sphere_brightness(field, power=1.0, n_samples=20000):
+    """``|grad Phi|^power`` on the unit sphere, over the *whole* sphere.
+
+    Returns ``(directions, brightness)``.  The directions are the golden-angle spiral,
+    so each owns the same solid angle ``4 pi / n_samples`` and a projection onto the
+    harmonics is a plain weighted average.  This is the pattern the affine model puts
+    on a sphere: taken from the level set, so the contribution of the surface having
+    moved is included, but evaluated as a function of direction.
+    """
+    directions = sphere_directions(n_samples)
+    radii = field.level_radii(directions)
+    magnitudes = np.linalg.norm(field.gradient(radii[:, None] * directions), axis=-1)
+    return directions, magnitudes ** power
+
+
 def sky_image(points, brightness, weights, east, north, half_width=1.6, n=241):
     """Bin the samples onto the sky plane, as a flux-weighted mean brightness.
 
@@ -159,10 +174,11 @@ def direct_visibility(points, brightness, weights, east, north, u, v):
     impose at the limb.
 
     ``u`` and ``v`` are scalars: the phase runs over the sample array, so a grid of
-    frequencies is a loop over this, not one call.
+    frequencies is a loop over this, not one call.  By D24 ``u`` is the North component
+    of the baseline and ``v`` the East one.
     """
     x_east = points @ east
     x_north = points @ north
-    phase = np.exp(-2j * np.pi * (np.asarray(u, dtype=float) * x_east
-                                  + np.asarray(v, dtype=float) * x_north))
+    phase = np.exp(-2j * np.pi * (np.asarray(u, dtype=float) * x_north
+                                  + np.asarray(v, dtype=float) * x_east))
     return np.sum(brightness * weights * phase)
