@@ -90,7 +90,7 @@ def surface_samples(field, line_of_sight, n_samples=20000, power=1.0):
     return points[visible], brightness[visible], weights[visible]
 
 
-def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0):
+def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=False):
     """The star's brightness pattern carried onto the *unit sphere*.
 
     The affine model's counterpart to :func:`surface_samples`.  The *pattern* is the
@@ -107,8 +107,12 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0):
     eye = eye / np.linalg.norm(eye)
     directions = sphere_directions(n_samples)
 
-    radii = field.level_radii(directions)
-    magnitudes = np.linalg.norm(field.gradient(radii[:, None] * directions), axis=-1)
+    if linear:
+        brightness_here = first_order_brightness(field, directions, power)
+    else:
+        radii = field.level_radii(directions)
+        brightness_here = np.linalg.norm(
+            field.gradient(radii[:, None] * directions), axis=-1) ** power
     facing = directions @ eye
 
     visible = facing > 0.0
@@ -116,11 +120,27 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0):
         raise ValueError("nothing is visible along this line of sight")
     solid = 4.0 * np.pi / n_samples
     weights = np.where(visible, facing * solid, 0.0)
-    brightness = np.where(visible, magnitudes ** power, 0.0)
+    brightness = np.where(visible, brightness_here, 0.0)
     return (directions[visible], brightness[visible], weights[visible])
 
 
-def sphere_brightness(field, power=1.0, n_samples=20000):
+def first_order_brightness(field, directions, power=1.0):
+    """The linearised surface gravity (equation 74), ``1 + 4 phi_1``, by direction.
+
+    ``phi_1`` is the perturbation on the *undeformed* sphere, which is what a linearisation
+    about uses.  The four collects two equal first-order contributions: the perturbation's
+    own radial derivative, ``2 phi_1``, and the surface's displacement,
+    ``-2 delta r = 2 phi_1``, since ``delta r = -phi_1``.
+
+    Evaluating ``|grad Phi|`` at ``r = 1`` instead keeps only the first of those and comes
+    out about half as deep --- the trap :func:`sphere_samples` warns about.  This is the
+    correct first-order expression, not that shortcut.
+    """
+    perturbation = field.potential(directions) + 1.0
+    return (1.0 + 4.0 * perturbation) ** power
+
+
+def sphere_brightness(field, power=1.0, n_samples=20000, linear=False):
     """``|grad Phi|^power`` on the unit sphere, over the *whole* sphere.
 
     Returns ``(directions, brightness)``.  The directions are the golden-angle spiral,
@@ -128,8 +148,13 @@ def sphere_brightness(field, power=1.0, n_samples=20000):
     harmonics is a plain weighted average.  This is the pattern the affine model puts
     on a sphere: taken from the level set, so the contribution of the surface having
     moved is included, but evaluated as a function of direction.
+
+    With ``linear`` the pattern is replaced by its first-order form,
+    :func:`first_order_brightness`, from which it differs at ``O(eps^2)``.
     """
     directions = sphere_directions(n_samples)
+    if linear:
+        return directions, first_order_brightness(field, directions, power)
     radii = field.level_radii(directions)
     magnitudes = np.linalg.norm(field.gradient(radii[:, None] * directions), axis=-1)
     return directions, magnitudes ** power

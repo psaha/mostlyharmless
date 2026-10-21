@@ -2,14 +2,16 @@
 
 Stage 8, D25.  Matplotlib widgets only --- no Jupyter, and nothing added to the library.
 
-Two radio buttons, matching the four rows of the Stage 6 figures: the *view* is a rendering
-or a pair of ``(u,v)`` maps, and the *model* is the affine (analytic) one or the actual
-(numeric) surface.  The sliders cover the six parameters.  The brightness is fixed at
-von Zeipel, ``I ∝ g`` (D21), and the position angle is pinned to zero as a gauge, so North
-is vertical.
+Two radio buttons: the *view* is a rendering or a pair of ``(u,v)`` maps, and the *model* has
+three settings, so that the shape approximation and the brightness approximation can be
+varied separately.  ``numeric`` is the exact level surface; ``affine`` replaces the shape by
+the ellipsoid's stretch but carries the exact brightness pattern; ``first-order`` also
+replaces the pattern by its linearised form, equation (74) of the manual.  The sliders cover
+the five parameters.  The brightness law itself is fixed at von Zeipel, ``I ∝ g`` (D21), and
+the position angle is pinned to zero as a gauge, so North is vertical.
 
 The closure bound is explicit.  Increasing the tide's latitude *loosens* it --- at the
-equator the centrifugal quadrupole deepens the potential by 1.5 eps_cent, while along the
+equator the centrifugal quadrupole deepens the potential by 1.5 eps_spin, while along the
 spin it contributes nothing --- so the infeasible region is near latitude zero and the
 latitude slider carries a *lower* limit.  The eps sliders get upper limits from the same
 function.  Clamping is applied after every change rather than by restricting ranges, since
@@ -37,26 +39,34 @@ __all__ = ["Parameters", "closure_depth", "largest_spin", "smallest_latitude",
 # l = 2 coefficient resummed.  Not a choice to make.
 SPHERE_L_MAX = 2
 CLOSURE = 0.148
-SAMPLES = 8000
-PIXELS = 120
-GRID = 15
+# Numerical resolution: discrete levels, chosen by radio buttons, because every change
+# costs a full redraw.  Each sets the surface samples, the image pixels and the (u, v) grid
+# together, keeping the sample density per pixel roughly constant.  Only the samples are
+# physics --- the pixels are display and the grid is the (u, v) sampling --- so the control
+# trades speed against noise, which is what makes it the way to tell a sampling artefact
+# from a model error.  The finest level is chosen to match the Stage 6 figures: 150 000
+# samples for a rendering and a 31-point grid for a visibility map.
+RESOLUTIONS = ((10000, 140, 17), (30000, 220, 23), (150000, 360, 31))
+RESOLUTION_LABELS = ("coarse", "medium", "fine")
+SAMPLES, PIXELS, GRID = RESOLUTIONS[0]
 Q_MAX = 2.0
 
 
 @dataclass(frozen=True)
 class Parameters:
-    """The five free parameters.
+    """The five free parameters, in radians where they are angles.
 
-    The spin phase is deliberately absent: this front end is for a spin and tide alone, and
-    with no starspots the phase is degenerate with the tide's longitude --- only their
-    difference is observable.
+    The GUI shows degrees and converts at the widget boundary; this class and everything
+    outside the GUI stay in radians.  The spin phase is deliberately absent: this front
+    end is for a spin and tide alone, and with no starspots the phase is degenerate with
+    the tide's longitude --- only their difference is observable.
     """
 
-    tide: float = 0.0
-    spin: float = 0.05
-    inclination: float = np.pi / 4.0
+    tide: float = 0.05
+    spin: float = 0.01
+    inclination: float = np.radians(60.0)
     latitude: float = 0.0
-    longitude: float = 0.0
+    longitude: float = np.radians(45.0)
 
     def field(self):
         """The Deformation: the tidal axis tilted by latitude, swung by longitude."""
@@ -92,7 +102,7 @@ def closure_depth(tide, spin, latitude):
 
 
 def largest_spin(tide, latitude, limit=CLOSURE):
-    """The largest ``eps_cent`` that still closes, by root solve.
+    """The largest ``eps_spin`` that still closes, by root solve.
 
     Monotone in the spin, but not linear --- the depth carries the spin inside a square
     root --- so this is a root solve rather than a division.
@@ -135,7 +145,7 @@ def _view(inclination):
     return eye, render.sky_basis(eye)
 
 
-def compute_image(parameters, analytic, samples=SAMPLES, pixels=PIXELS):
+def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS):
     """The near and far hemispheres, as fractional departures from their own mean.
 
     The affine image is the sphere's image stretched in the sky plane --- exact as a
@@ -144,6 +154,7 @@ def compute_image(parameters, analytic, samples=SAMPLES, pixels=PIXELS):
     """
     field = parameters.field()
     eye, (east, north) = _view(parameters.inclination)
+    linear = model == "first-order"
     stretch = affine.projected_stretch(field, eye)
     scale = abs(float(np.linalg.det(stretch)))
 
@@ -153,21 +164,23 @@ def compute_image(parameters, analytic, samples=SAMPLES, pixels=PIXELS):
     panels = []
     for sense in (1.0, -1.0):
         direction = sense * eye
-        if analytic:
-            sphere = render.sphere_samples(field, direction, n_samples=samples)
+        if model == "numeric":
+            star = render.surface_samples(field, direction, n_samples=samples)
+            image = render.sky_image(*star, east, north, half_width=1.5, n=pixels)
+        else:
+            sphere = render.sphere_samples(field, direction, n_samples=samples,
+                                           linear=linear)
             sky = np.stack([sphere[0] @ east, sphere[0] @ north], axis=-1)
             moved = sky @ stretch.T
             points = moved[:, :1] * east + moved[:, 1:] * north
             image = render.sky_image(points, sphere[1] / scale, sphere[2] * scale,
                                      east, north, half_width=1.5, n=pixels)
-        else:
-            star = render.surface_samples(field, direction, n_samples=samples)
-            image = render.sky_image(*star, east, north, half_width=1.5, n=pixels)
         panels.append(contrast(image))
     return panels
 
 
-def compute_visibility(parameters, analytic, samples=SAMPLES, grid=GRID, q_max=Q_MAX):
+def compute_visibility(parameters, model="numeric", samples=SAMPLES,
+                       grid=GRID, q_max=Q_MAX):
     """Re and Im of Delta V against the unit sphere, for one model.
 
     Zero at the origin by construction, so the lobes the models share are gone and only
@@ -176,29 +189,29 @@ def compute_visibility(parameters, analytic, samples=SAMPLES, grid=GRID, q_max=Q
     field = parameters.field()
     eye, (east, north) = _view(parameters.inclination)
 
-    if analytic:
-        coefficients = affine.sphere_coefficients(field, l_max=SPHERE_L_MAX,
-                                                 n_samples=samples,
-                                                 inclination=parameters.inclination)
+    if model == "numeric":
+        star = render.surface_samples(field, eye, n_samples=samples)
+        flux = render.direct_visibility(*star, east, north, 0.0, 0.0)
+
+        def model_visibility(u, v):
+            return (render.direct_visibility(*star, east, north, u, v) / flux)
+    else:
+        coefficients = affine.sphere_coefficients(
+            field, l_max=SPHERE_L_MAX, n_samples=samples, eye=eye,
+            linear=(model == "first-order"))
         sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
         stretch = affine.projected_stretch(field, eye)
 
         def sphere_sum(u, v):
             return visibility(coefficients, u, v) / sphere_flux
 
-        def model(u, v):
+        def model_visibility(u, v):
             return affine.affine_visibility(sphere_sum, stretch, u, v)
-    else:
-        star = render.surface_samples(field, eye, n_samples=samples)
-        flux = render.direct_visibility(*star, east, north, 0.0, 0.0)
-
-        def model(u, v):
-            return (render.direct_visibility(*star, east, north, u, v) / flux)
 
     axis = np.linspace(-q_max, q_max, grid)
     u_grid, v_grid = np.meshgrid(axis, axis, indexing="ij")
     reference = visibility_uniform_disk(u_grid, v_grid, 1.0)
-    return np.array([[model(u, v) for v in axis] for u in axis]) - reference
+    return np.array([[model_visibility(u, v) for v in axis] for u in axis]) - reference
 
 
 def build(parameters=None):  # pragma: no cover - needs a display
@@ -207,7 +220,8 @@ def build(parameters=None):  # pragma: no cover - needs a display
     from matplotlib.widgets import RadioButtons, Slider
 
     state = {"parameters": clamped(parameters or Parameters()),
-             "analytic": False, "visibility": False}
+             "model": "numeric", "visibility": False, "refreshing": False,
+             "resolution": 0}
 
     figure = plt.figure(figsize=(9.2, 6.6))
     axes = (figure.add_axes([0.06, 0.10, 0.36, 0.36]),
@@ -226,8 +240,10 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     def _redraw():
         current = state["parameters"]
+        samples, pixels, grid = RESOLUTIONS[state["resolution"]]
         if state["visibility"]:
-            values = compute_visibility(current, state["analytic"])
+            values = compute_visibility(current, state["model"],
+                                        samples=samples, grid=grid)
             panels = (values.real, values.imag)
             titles = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
             limit = float(np.max(np.abs(values))) or 1e-30
@@ -235,9 +251,13 @@ def build(parameters=None):  # pragma: no cover - needs a display
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
         else:
-            panels = compute_image(current, state["analytic"])
-            titles = (("affine, near", "affine, far") if state["analytic"]
-                      else ("the star, near", "the star, far"))
+            panels = compute_image(current, state["model"],
+                                   samples=samples, pixels=pixels)
+            # the two analytic rows differ only in the brightness pattern: exact versus
+            # the first-order form of equation (74)
+            name = {"numeric": "the star", "affine": "affine",
+                    "first-order": "affine, linear $g$"}[state["model"]]
+            titles = (f"{name}, near", f"{name}, far")
             limit = float(np.nanmax(np.abs(np.concatenate(
                 [p.ravel() for p in panels])))) or 1e-30
             extent = (1.5, -1.5, -1.5, 1.5)
@@ -260,14 +280,38 @@ def build(parameters=None):  # pragma: no cover - needs a display
         state["colorbar"].set_label(bar_label, fontsize=8)
         figure.canvas.draw_idle()
 
-    def slider_callback(name):
+    def write_back():
+        """Show the clamped parameters in the widgets, without re-firing their callbacks.
+
+        ``clamped`` may move a different parameter from the one being dragged --- raising
+        eps_tide can push lambda up, raising eps_spin with a large tide can move it too ---
+        so every slider is refreshed, not just the active one.  ``Slider.set_val`` fires
+        ``on_changed``, hence the guard: without it the write-back would recurse.
+        """
+        state["refreshing"] = True
+        try:
+            for slider, name, in_degrees in slider_info:
+                value = getattr(state["parameters"], name)
+                shown = np.degrees(value) if in_degrees else value
+                if abs(slider.val - shown) > 1e-9:
+                    slider.set_val(shown)
+        finally:
+            state["refreshing"] = False
+
+    def slider_callback(name, in_degrees):
         def callback(value):
-            state["parameters"] = clamped(replace(state["parameters"], **{name: value}))
+            if state["refreshing"]:
+                return
+            # The widgets show degrees; Parameters holds radians.  The conversion lives
+            # here so nothing outside the GUI has to know about it.
+            updated = np.radians(value) if in_degrees else value
+            state["parameters"] = clamped(replace(state["parameters"], **{name: updated}))
+            write_back()
             redraw()
         return callback
 
     def model_callback(label):
-        state["analytic"] = label.startswith("analytic")
+        state["model"] = label
         redraw()
 
     def view_callback(label):
@@ -277,26 +321,52 @@ def build(parameters=None):  # pragma: no cover - needs a display
     # Matplotlib widgets must stay in scope: a widget with no reference is collected and
     # its callbacks stop firing, which looks like a frozen control.  Keep them on the
     # figure, where they live as long as the window does.
+    #
+    # A Slider right-aligns its label just outside its axes, so the tracks start at 0.20 of
+    # the figure width: any closer to the left edge and a TeX label is clipped.  The value
+    # readout sits at the track's right end, so the tracks stop short of the colourbar.
     sliders = []
-    for index, (name, low, high, label) in enumerate((
-            ("tide", 0.0, 0.14, r"$\epsilon_\mathrm{tide}$"),
-            ("spin", 0.0, 0.09, r"$\epsilon_\mathrm{cent}$"),
-            ("inclination", 0.0, np.pi / 2.0, r"$i$"),
-            ("latitude", -np.pi / 2.0, np.pi / 2.0, r"$\lambda$"),
-            ("longitude", 0.0, 2.0 * np.pi, r"$\varphi$"))):
-        axis_handle = figure.add_axes([0.06, 0.93 - 0.05 * index, 0.80, 0.026])
+    slider_info = []
+    for index, (name, low, high, label, in_degrees, number_format) in enumerate((
+            ("tide", 0.0, 0.14, r"$\epsilon_\mathrm{tide}$", False, "%.3f"),
+            ("spin", 0.0, 0.09, r"$\epsilon_\mathrm{spin}$", False, "%.3f"),
+            ("inclination", 0.0, 90.0, r"$i$  [deg]", True, "%.0f"),
+            ("latitude", -90.0, 90.0, r"$\lambda_\mathrm{tide}$  [deg]", True, "%.0f"),
+            ("longitude", 0.0, 360.0, r"$\varphi_\mathrm{tide}$  [deg]", True, "%.0f"))):
+        axis_handle = figure.add_axes([0.20, 0.93 - 0.05 * index, 0.64, 0.028])
+        current = getattr(state["parameters"], name)
         slider = Slider(axis_handle, label, low, high,
-                        valinit=getattr(state["parameters"], name))
-        slider.on_changed(slider_callback(name))
+                        valinit=np.degrees(current) if in_degrees else current,
+                        valfmt=number_format)
+        slider.label.set_fontsize(9)
+        slider.valtext.set_fontsize(8)
+        slider.on_changed(slider_callback(name, in_degrees))
         sliders.append(slider)
+        slider_info.append((slider, name, in_degrees))
 
-    model_radio = RadioButtons(figure.add_axes([0.90, 0.78, 0.09, 0.10]),
-                               ("numeric", "analytic"))
+    # The radios go in a row below the sliders, where they cannot cover the slider labels.
+    # Three models rather than two, so that the shape approximation and the brightness
+    # approximation can be varied separately: "numeric" is the exact surface, "affine"
+    # is the ellipsoid shape with the exact brightness pattern, and "first-order" is the
+    # ellipsoid shape with the brightness of equation (74).
+    model_radio = RadioButtons(figure.add_axes([0.06, 0.47, 0.20, 0.19]),
+                               ("numeric", "affine", "first-order"))
     model_radio.on_clicked(model_callback)
-    view_radio = RadioButtons(figure.add_axes([0.90, 0.60, 0.09, 0.10]),
+    view_radio = RadioButtons(figure.add_axes([0.32, 0.50, 0.20, 0.13]),
                               ("image", "u,v"))
     view_radio.on_clicked(view_callback)
-    figure._widgets = (sliders, model_radio, view_radio)
+
+    # Resolution: a column of labelled buttons, coarse first.  Discrete because every
+    # change costs a full redraw.
+    resolution_radio = RadioButtons(figure.add_axes([0.58, 0.47, 0.18, 0.20]),
+                                    RESOLUTION_LABELS, active=state["resolution"])
+
+    def resolution_callback(label):
+        state["resolution"] = RESOLUTION_LABELS.index(label)
+        redraw()
+
+    resolution_radio.on_clicked(resolution_callback)
+    figure._widgets = (sliders, model_radio, view_radio, resolution_radio)
 
     redraw()
     return figure, state

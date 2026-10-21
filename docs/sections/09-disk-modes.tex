@@ -1,0 +1,196 @@
+% 09-disk-modes.tex -- a disk-mode surrogate, and a possible route to limb darkening.
+% Input by mostlyharmless.tex.  No preamble here.
+% This section is a proposal to be explored, not a settled part of the derivation.
+
+\section{A disk-mode surrogate, and a possible route to limb darkening}
+\label{sec:disk-modes}
+
+This section is different from the ones before it: it derives nothing that the code
+implements yet.  It records a proposal, the measurement that motivates it, and the reason
+it may change how limb darkening is approached later.  Everything here is to be explored.
+
+\subsection{The problem it addresses}
+\label{sec:disk-modes-problem}
+
+A parameter search does not need a faithful visibility everywhere.  It needs a surrogate
+that can be evaluated at a \emph{sparse} set of baselines, many times, over many parameter
+sets, and that is good enough to locate the interesting parts of parameter space --- after
+which the numerical model is used to decide.  Percent-level fidelity is not the goal;
+being wrong by a \emph{systematic} amount large enough to move the best-fit point is.
+
+The affine model of the deformation family is the current surrogate.  Its structure is one
+2$\times$2 stretch,
+\begin{equation}
+  V_\text{aff}(u,v) \;=\; V_\text{sph}\!\left(\Lambda^{T}(u,v)\right) ,
+  \label{eq:affine-surrogate}
+\end{equation}
+where $V_\text{sph}$ is the closed-form visibility of the brightness pattern on the unit
+sphere and $\Lambda$ is the projected stretch of the principal ellipsoid.  Its cost
+structure is the attractive part: the projection onto the harmonics is paid once per
+parameter set, and each frequency then costs a short Bessel sum.
+
+\subsection{What the stretch keeps, and what it loses}
+\label{sec:disk-modes-error}
+
+Write the deformed surface as $r(n)\,n$ with $n$ a unit direction, and let $n_\perp$ be its
+component in the sky plane.  The sky position of the emitting point is
+\begin{equation}
+  \mathbf{x}_\perp(n) \;=\; r(n)\, n_\perp ,
+  \label{eq:sky-map}
+\end{equation}
+which is \emph{radial-nonlinear}: $r$ depends on the full direction, including its
+component along the line of sight, and therefore on $|n_\perp|$ in a way no constant matrix
+reproduces.  The affine model replaces \eqref{eq:sky-map} by its linear part
+$\Lambda n_\perp$.
+
+That replacement is not a second-order effect, and the difference is measurable.  Comparing
+the surrogate against a direct sum over the same samples, with the projection, the
+truncation and the normalisation all held fixed, gives a residual of $0.0437$ at the
+working amplitudes and $0.0208$ with the amplitudes halved --- a ratio of $0.48$, i.e.\ the
+error is \emph{first order} in the deformation $\epsilon$.  The same comparison with no
+deformation at all returns $0.0000$ to the precision printed, which is what shows the
+machinery itself is sound and the residual is the linearisation, not a defect in the
+projection.
+
+So the affine model is a first-order surrogate whose error is comparable to $\epsilon$
+itself.  For a search that may be acceptable.  It is worth knowing, because it says the
+surrogate cannot be improved by raising the harmonic truncation: the pattern's content above
+$l = 2$ is already $O(\epsilon^2)$, far below the error of the map.
+
+\subsection{Composing the stretch with a disk series}
+\label{sec:disk-modes-composition}
+
+Keep the stretch, and put a series \emph{inside} it.  Let $Z_M$ be a mode of the unit disk,
+with $M$ collecting its two indices, and write
+\begin{equation}
+  V(u,v) \;\propto\; \sum_M c_M\,\widehat{Z}_M\!\left(\Lambda^{T}(u,v)\right) ,
+  \label{eq:disk-mode-series}
+\end{equation}
+where $\widehat{Z}_M$ is the closed-form transform of the mode, derived below.
+
+The reason the stretch belongs inside the series is geometrical.  The silhouette of the
+deformed star is \emph{nearly} an ellipse, and $\Lambda$ is exactly the map that takes that
+ellipse to a circle.  Composing the two means the basis is applied on the domain where its
+transforms are elementary, and the residual that the stretch cannot absorb --- the departure
+of \eqref{eq:sky-map} from linearity --- is what the higher modes carry.  The affine model
+of \eqref{eq:affine-surrogate} is then the leading term of the series rather than a
+different formalism, so nothing is thrown away by extending it.
+
+The error stops being a fixed $O(\epsilon)$ and becomes a truncation in $M$, which is a
+knob: more modes, smaller error, at a cost that is still a short sum per frequency.
+
+\paragraph{How the coefficients are obtained.}  They are a projection, not a fit, and the
+formula is the disk analogue of the spherical one.  Write $\tilde I(y) = I(\Lambda
+y)\,|\det\Lambda|$ for the image pulled back to the unit disk, so that $\int\tilde
+I\,d^2y$ is the total flux.  Since
+\begin{equation}
+  V(u) \;=\; \int I(x)\,e^{-2\pi i\,u\cdot x}\,d^2x
+         \;=\; \int \tilde I(y)\,e^{-2\pi i\,u\cdot\Lambda y}\,d^2y ,
+  \label{eq:disk-pullback}
+\end{equation}
+expanding $\tilde I$ on the disk with
+$c_M = \frac{n+1}{\pi}\int_{|y|\le1}\tilde I(y)\overline{Z_M(y)}\,d^2y$ reproduces
+\eqref{eq:disk-mode-series}, the weight being the Zernike normalisation
+$\int Z_M\overline{Z_{M'}} = \frac{\pi}{n+1}\delta_{MM'}$.  Substituting $x = \Lambda y$
+turns the integral into a quadrature over the samples that already exist,
+\begin{equation}
+  c_M \;=\; \frac{n+1}{\pi}\sum_i I_i\,w_i\,\overline{Z_M\!\left(\Lambda^{-1}x_i\right)} ,
+  \label{eq:disk-coefficients}
+\end{equation}
+with $w_i$ the projected area the sample carries in
+\eqref{eq:deformation-visibility}.  So the only new ingredient is the basis function
+evaluated at the pulled-back sky position: no new sampler, no new geometry, and a cost of
+$O(NM)$ per parameter set against $O(N(l+1)^2)$ for the spherical projection.
+
+Two remarks on \eqref{eq:disk-coefficients}.  First, because the visibility is normalised at
+the origin, only the \emph{ratios} of the coefficients matter: the factor $(n+1)/\pi$, the
+$|\det\Lambda|$ and the absolute scaling of the basis all cancel, so the basis needs no
+particular normalisation.  Second, $\Lambda$ enters twice --- in the frequency argument of
+the series and in the pull-back --- and it is a \emph{preconditioner} rather than part of the
+answer: the exact series does not depend on it, only the rate of convergence does.  A
+$\Lambda$ that circularises the silhouette well is what makes a short series possible.
+
+\subsection{The transform of a disk mode}
+\label{sec:disk-modes-transform}
+
+With polar coordinates $\rho,\phi$ on the disk and $\psi$ the baseline azimuth as fixed in
+section~\ref{sec:conventions}, the plane-wave factor integrates to a Bessel function of the
+azimuthal order:
+\begin{equation}
+  \widehat{Z}_n^m(q,\psi) \;=\; 2\pi\,(-i)^m e^{im\psi}
+  \int_0^1 R_n^m(\rho)\, J_m(2\pi q\rho)\, \rho \, d\rho ,
+  \label{eq:zernike-transform}
+\end{equation}
+the angular integral being the standard representation of $J_m$.  The Zernike radial
+polynomials $R_n^m$ are those already introduced in section~\ref{sec:zernike} for the even
+family, and they carry the classical identity
+\begin{equation}
+  \int_0^1 R_n^m(\rho)\, J_m(v\rho)\, \rho\, d\rho
+  \;=\; (-1)^{(n-m)/2}\,\frac{J_{n+1}(v)}{v} ,
+  \label{eq:zernike-identity}
+\end{equation}
+with $n-m$ even.  So \emph{one mode costs one ordinary Bessel function}, and a series of $M$
+modes costs $M$ of them.  That is the same shape of result as the even family's finite
+Bessel sum, and the identity is the natural candidate for the next certificate, since it
+underpins the whole construction and is cheap to check numerically.
+
+\subsection{Why this may also be the limb-darkening route}
+\label{sec:disk-modes-limb}
+
+Limb darkening is a statement about the disk.  For a disk seen face-on, the cosine of the
+angle between the surface normal and the line of sight is
+\begin{equation}
+  \mu = \sqrt{1-\rho^2} ,
+  \label{eq:limb-mu}
+\end{equation}
+a function of the impact parameter \emph{alone}.  A limb-darkening law $I(\mu)$ is therefore
+a radial profile on the disk, and an expansion of it in Zernike modes with $m = 0$ is the
+natural representation --- indeed the classical visibility of a linearly limb-darkened disk
+is a two-term combination of ordinary Bessel functions, one term being the uniform-disk
+Airy pattern and the other the limb correction.
+
+Contrast this with working on the sphere.  There $\mu = n\cdot\hat e_\text{obs}$ is a
+degree-one factor, and re-expanding the product of that factor with the map's harmonics
+requires Clebsch--Gordan, or Gaunt, coefficients.  That is why limb darkening has been
+expected to bring Gaunt into the calculation.  On the disk the same physics needs no Gaunt
+at all: \eqref{eq:limb-mu} is already in the variable the basis is built from.
+
+If that holds up, the disk-mode surrogate and limb darkening are the same piece of
+machinery, and building the surrogate now would be building the basis that Stage~7 needs,
+with the affine model as its first term.
+
+\subsection{Caveats that decide it}
+\label{sec:disk-modes-caveats}
+
+Three things could prevent this from being as clean as it looks.
+
+\begin{enumerate}
+  \item \textbf{The silhouette is not a circle.}  Its radius varies by $O(\epsilon)$ about
+    its mean.  Either the domain is scaled to cover it, at the cost of giving up the exact
+    orthogonality that makes \eqref{eq:zernike-identity} work, or the mismatch is accepted as
+    a truncation error of the same order as the one being resolved.  The stretch removes the
+    bulk of this, but not all of it.
+  \item \textbf{$\mu$ is only radial to first order.}  On a deformed surface the normal is
+    not along $r\,n$: it tilts by $O(\epsilon)$.  So \eqref{eq:limb-mu} is exact for a
+    sphere and approximate for the bodies of interest, and the tilt is the term that will
+    limit Stage~7 once the radial part is exact.
+  \item \textbf{The frame is a choice.}  The series must be defined with respect to the same
+    $\Lambda$ that the rest of the model uses, and $\Lambda$ is built from an ellipsoid that
+    is itself an approximation.  A different but equally defensible $\Lambda$ changes the
+    coefficients, though not the series' convergence.
+\end{enumerate}
+
+\subsection{What would settle it}
+\label{sec:disk-modes-test}
+
+The test is the one the affine model already faces: project the actual projected brightness
+of a deformed surface onto the disk modes, form the series, and compare with a direct sum
+over the same samples at a sparse set of frequencies.  The affine model sits at $0.0437$ at
+the working amplitudes and scales like $\epsilon$.  A successful surrogate should (i) beat
+that residual by a clear factor at a modest mode count $M$, (ii) have a residual that falls
+as $M$ grows rather than plateauing --- plateauing would mean the residual is geometry the
+basis cannot see, not truncation --- and (iii) keep the per-frequency cost small against the
+per-parameter-set projection, which is the resource that is cheap.
+
+If all three hold, the surrogate replaces the affine model, and Stage~7 becomes a question
+of radial modes rather than of Gaunt coefficients.

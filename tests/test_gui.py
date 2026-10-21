@@ -11,7 +11,7 @@ from mostlyharmless.symbolic import gui
 
 
 def test_the_depth_reproduces_the_equatorial_combination():
-    """At latitude zero, along the tide axis, the depth is eps_tide + 1.5 eps_cent."""
+    """At latitude zero, along the tide axis, the depth is eps_tide + 1.5 eps_spin."""
     depth = gui.closure_depth(tide=0.06, spin=0.02, latitude=0.0)
     assert depth == pytest.approx(0.06 + 1.5 * 0.02, rel=1e-3)
 
@@ -56,8 +56,7 @@ def test_a_feasible_default_is_left_alone():
 
 
 def test_compute_image_returns_two_panels():
-    panels = gui.compute_image(gui.Parameters(), analytic=False, samples=2000,
-                               pixels=41)
+    panels = gui.compute_image(gui.Parameters(), "numeric", samples=2000, pixels=41)
     assert len(panels) == 2
     assert panels[0].shape == panels[1].shape
     # mean-removed, so the average over the disk is zero
@@ -66,17 +65,48 @@ def test_compute_image_returns_two_panels():
 
 def test_compute_visibility_vanishes_at_the_origin():
     """The unit-sphere reference is subtracted, so D(0,0) = 0."""
-    values = gui.compute_visibility(gui.Parameters(), analytic=False, samples=2000,
+    values = gui.compute_visibility(gui.Parameters(), "numeric", samples=2000,
                                     grid=15, q_max=1.0)
     centre = 15 // 2
     assert abs(values[centre, centre]) == pytest.approx(0.0, abs=2e-3)
 
 
+def test_all_three_models_produce_finite_panels():
+    parameters = gui.Parameters(tide=0.03, spin=0.01)
+    for model in ("numeric", "affine", "first-order"):
+        values = gui.compute_visibility(parameters, model, samples=3000, grid=9,
+                                        q_max=1.0)
+        assert np.all(np.isfinite(values))
+        panels = gui.compute_image(parameters, model, samples=3000, pixels=31)
+        assert len(panels) == 2
+
+
 def test_the_analytic_and_numeric_panels_are_similar():
     """First order in eps and l <= 2, so the two models should agree closely."""
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    analytic = gui.compute_visibility(parameters, analytic=True, samples=4000,
+    analytic = gui.compute_visibility(parameters, "affine", samples=4000,
                                       grid=11, q_max=1.0)
-    numeric = gui.compute_visibility(parameters, analytic=False, samples=4000,
+    numeric = gui.compute_visibility(parameters, "numeric", samples=4000,
                                      grid=11, q_max=1.0)
     assert np.max(np.abs(analytic - numeric)) < 0.15
+
+
+def test_the_linear_pattern_is_a_second_order_change():
+    """Equation (74) differs from the exact pattern at O(eps^2), not at O(eps).
+
+    Both models are first order in the deformation, so the difference between them is
+    second order: halving the amplitudes should quarter it.  A factor of two would mean
+    the linearisation had kept only one of its two equal first-order contributions --- the
+    radial derivative without the surface's displacement.
+    """
+    def spread(scale):
+        parameters = gui.Parameters(tide=0.02 * scale, spin=0.01 * scale)
+        exact = gui.compute_visibility(parameters, "affine", samples=4000, grid=7,
+                                       q_max=1.0)
+        linear = gui.compute_visibility(parameters, "first-order", samples=4000,
+                                        grid=7, q_max=1.0)
+        return float(np.max(np.abs(exact - linear)))
+
+    full, half = spread(1.0), spread(0.5)
+    print(f"\nlinear-pattern spread: {full:.6f} {half:.6f}  ratio {half / max(full, 1e-30):.3f}")
+    assert half < 0.4 * full

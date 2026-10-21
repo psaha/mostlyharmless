@@ -25,7 +25,7 @@ def test_v20_the_surface_is_level_and_the_gradient_is_analytic():
 
 
 # A tide-dominant pair, and a small one: the surface closes only while
-# eps_tide + 1.5 eps_cent stays below about 0.148, and for the applications in mind
+# eps_tide + 1.5 eps_spin stays below about 0.148, and for the applications in mind
 # the tidal quadrupole is the larger of the two.
 TIDE, SPIN = 0.03, 0.01
 
@@ -59,7 +59,7 @@ def test_the_tidal_case_bulges_along_its_own_axis():
 
 def test_two_perpendicular_quadrupoles_give_three_unequal_axes():
     """The triaxial figure: x takes the tidal bulge and the equatorial bulge both,
-    z only the flattening, so x > y > z is forced.  With eps_tide = 3 eps_cent the
+    z only the flattening, so x > y > z is forced.  With eps_tide = 3 eps_spin the
     perturbation vanishes along y, which puts that axis at exactly the reference
     radius however large the amplitudes are."""
     field = Deformation(tide=TIDE, tide_direction=(1.0, 0.0, 0.0),
@@ -78,7 +78,7 @@ def test_the_validity_limit_is_on_the_combination():
     """Not a bug: the quadrupole grows as r^2 and the monopole falls as 1/r, so past
     a modest amplitude Phi = -1 is unreachable along the most-stretched direction and
     the surface opens, as a Roche lobe does.  The binding combination is
-    eps_tide + 1.5 eps_cent, which must stay below about 0.148."""
+    eps_tide + 1.5 eps_spin, which must stay below about 0.148."""
     for tide, spin in ((0.1, 0.1), (0.2, 0.2), (0.2, 0.0)):
         field = Deformation(tide=tide, tide_direction=(1.0, 0.0, 0.0),
                             centrifugal=spin, spin_direction=(0.0, 0.0, 1.0))

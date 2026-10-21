@@ -9,8 +9,8 @@ the last two to first order in the perturbation.  The potential is a monopole pl
 one quadrupole per deformation, in units where GM = 1 and the unperturbed radius is 1:
 
     Phi(x) = -1/r - eps_tide  r^2 P_2(n . e_tide)
-                  + eps_cent  r^2 P_2(n . e_spin)
-                  - eps_cent  r^2 ,
+                  + eps_spin  r^2 P_2(n . e_spin)
+                  - eps_spin  r^2 ,
 
 both amplitudes positive for a tidal bulge and a centrifugal flattening.  The last
 term is the l = 0 part of the centrifugal potential: that term is not a pure
@@ -27,16 +27,16 @@ some directions and the surface opens, as a Roche lobe does.  The binding direct
 the one where the perturbation is deepest, which for positive amplitudes is the tide
 axis, where phi_1 = -E r^2 with
 
-    E = eps_tide + 1.5 eps_cent .
+    E = eps_tide + 1.5 eps_spin .
 
 The level condition along it, 1/r + E r^2 = 1, has its minimum at r^3 = 1/(2E), where
 it equals (2^(1/3) + 2^(-2/3)) E^(1/3) = 1.89 E^(1/3).  The surface closes only while
 that is below 1:
 
-    eps_tide + 1.5 eps_cent  <  0.148 .
+    eps_tide + 1.5 eps_spin  <  0.148 .
 
 So about 0.15 for the tide alone, 0.10 for the centrifugal term alone (whose
-coefficient is 1.5 eps_cent), and 0.059 for two equal amplitudes.  ``level_radius``
+coefficient is 1.5 eps_spin), and 0.059 for two equal amplitudes.  ``level_radius``
 raises rather than returning nonsense when the surface has opened, which is the
 intended way to discover it.
 """

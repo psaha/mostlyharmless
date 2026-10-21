@@ -1,0 +1,452 @@
+% 08-triaxial.tex -- the deformed source: spin and tides.
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{The deformed source: spin and tides}
+\label{sec:triaxial}
+
+Sections~\ref{sec:conventions}--\ref{sec:full-map} answer one question: given a surface
+brightness map on the unit sphere, what is its complex visibility.  This section supplies
+the map.  A star deformed by its own rotation and by a companion has a shape and a surface
+brightness that are both consequences of a single potential, and the two are not
+independent: on a level surface the normal lies along the gradient, so the surface gravity
+follows from the shape.  Everything here is dimensionless in units where $GM = 1$ and the
+undeformed radius is $1$.
+
+\subsection{The quadrupole potential}
+\label{sec:deformation-potential}
+
+Write $n = \mathbf{x}/r$ for the direction, with $\mathbf{x}$ the position in space, and
+$P_2(\xi) = \tfrac12(3\xi^2-1)$ for the Legendre polynomial.  Bold symbols are points in
+space throughout; plain $x$ and $y$ are the sky coordinates of
+section~\ref{sec:conventions}, so that $x_{N,i}$ and $x_{E,i}$ are the North and East
+components of a sample's sky position and are not components of a position vector.  The
+potential is a monopole plus two quadrupoles and one constant,
+\begin{equation}
+  \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
+    \;-\; \epsilon_\text{tide}\, r^2 P_2(n\cdot \hat e_\text{tide})
+    \;+\; \epsilon_\text{spin}\, r^2 P_2(n\cdot \hat e_\text{spin})
+    \;-\; \epsilon_\text{spin}\, r^2 .
+  \label{eq:deformation-potential}
+\end{equation}
+Both perturbations are pure $l = 2$, and the amplitudes are positive for a tidal bulge
+along $\hat e_\text{tide}$ and a centrifugal flattening about $\hat e_\text{spin}$.  The
+last term is the $l = 0$ part of the centrifugal potential: the centrifugal term is not a
+pure quadrupole, because the frame rotating with the star is not inertial, and its $l = 0$
+piece renormalises the effective monopole.  Dropping it would leave the star's mean radius
+wrong by $\epsilon_\text{spin}$.
+
+Amplitudes are quoted as $A r_0^3/GM$, so $\epsilon = 0.2$ means a twenty per cent
+deformation of the \emph{potential} at the reference radius, whatever axis ratio that
+produces.  The surface is the level set $\Phi = -1$.  The volume-equivalent sphere is a
+separate quantity, since the deformation changes the volume, and the two should not be
+confused when quoting an axis ratio.
+
+\subsection{The level surface, and when it closes}
+\label{sec:deformation-closure}
+
+Along a direction $n$ the level condition is one equation in one unknown,
+\begin{equation}
+  \frac{1}{r} + E(n)\, r^2 \;=\; 1 ,
+  \label{eq:level-condition}
+\end{equation}
+where the depth of the perturbation there is
+\begin{equation}
+  E(n) \;=\; \epsilon_\text{tide} P_2(n\cdot\hat e_\text{tide})
+           - \epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr] .
+  \label{eq:level-depth}
+\end{equation}
+The sign of the spin term is negative because its coefficient in
+\eqref{eq:deformation-potential} is positive while it \emph{lowers} the potential.
+
+The left side of \eqref{eq:level-condition} is not monotone in $r$: the monopole falls and
+the quadrupole grows.  Its minimum is at $r^3 = 1/(2E)$ and equals
+$1.89\,E^{1/3}$, so a solution exists only while
+\begin{equation}
+  E(n) \;<\; 0.148 \qquad \text{for every } n ,
+  \qquad 0.148 = (1/1.89)^3 .
+  \label{eq:closure}
+\end{equation}
+Past that the surface opens along the deepest direction, as a Roche lobe does.  This is a
+\emph{physical} limit of the model, not a numerical one, and the amplitude that triggers it
+is the useful result: in the perpendicular case, where the depth along the tide axis is
+\begin{equation}
+  E \;=\; \epsilon_\text{tide} + 1.5\,\epsilon_\text{spin} ,
+  \label{eq:equatorial-depth}
+\end{equation}
+the bound reads $0.148$ for the tide alone, $0.099$ for the spin alone (whose coefficient
+is $1.5\epsilon_\text{spin}$), and $0.059$ for two equal amplitudes.  A twenty per cent
+deformation of the potential, which was the first target, is therefore not attainable in
+this model at all.
+
+When the two axes are not perpendicular but separated by an angle $\theta$, the deepest
+direction is found from the quadratic form \eqref{eq:depth-form} below, and the depth
+becomes
+\begin{equation}
+  E_\text{max} \;=\; \tfrac34\Bigl[(\epsilon_t-\epsilon_s)
+    + \sqrt{(\epsilon_t-\epsilon_s)^2 + 4\epsilon_t\epsilon_s\cos^2\theta}\Bigr]
+    + \tfrac{3\epsilon_s-\epsilon_t}{2} ,
+  \label{eq:depth-latitude}
+\end{equation}
+which reduces to \eqref{eq:equatorial-depth} at $\theta = \pi/2$ and to
+$\epsilon_\text{tide}$ alone at $\theta = 0$.  A tide aligned with the spin costs nothing in
+the centrifugal term, which has no gradient along the spin axis, so tilting the tide
+\emph{loosens} the bound.  That is the opposite of the intuition that a more oblique system
+is more constrained, and it is what makes the latitude a useful parameter rather than a
+nuisance.
+
+\subsection{The principal axes and the ellipsoid}
+\label{sec:deformation-axes}
+
+Expanding the Legendre polynomials in \eqref{eq:level-depth} and simplifying puts the depth
+in monomial form,
+\begin{equation}
+  E(n) \;=\; \tfrac32\Bigl[\epsilon_\text{tide}\,(n\cdot\hat e_\text{tide})^2
+    - \epsilon_\text{spin}\,(n\cdot\hat e_\text{spin})^2\Bigr]
+    + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} ,
+  \label{eq:depth-form}
+\end{equation}
+every direction now entering as a squared projection.  Since
+$(n\cdot\hat e)^2 = n^{T}(\hat e\hat e^{T})n$, the bracket is the quadratic form
+$n^{T}Mn$ built from
+\begin{equation}
+  M \;=\; \tfrac32\Bigl(\epsilon_\text{tide}\,\hat e_\text{tide}\hat e_\text{tide}^{T}
+    - \epsilon_\text{spin}\,\hat e_\text{spin}\hat e_\text{spin}^{T}\Bigr) ,
+  \label{eq:depth-tensor}
+\end{equation}
+and the depth is
+\begin{equation}
+  E(n) \;=\; n^{T}Mn + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} .
+  \label{eq:depth-quadratic}
+\end{equation}
+The constant does not spoil the identification.  On the unit sphere it equals $c\,n^{T}In$
+with $c = \tfrac12(3\epsilon_\text{spin}-\epsilon_\text{tide})$, so
+$E(n) = n^{T}(M + cI)\,n$: adding $cI$ shifts every eigenvalue by the same $c$ and moves no
+eigenvector.  The principal directions are therefore the eigenvectors of $M$ itself, and the
+constant only shifts the depths along them.
+The principal axes of the level surface are those eigenvectors, and the radii along them
+are the exact level radii from \eqref{eq:level-condition}.  Taking the ellipsoid through
+those three points gives the shape the affine model of section~\ref{sec:deformation-affine}
+needs.
+
+The temptation is to use the tide axis itself as the frame.  That is wrong whenever the
+tide is weak or absent: with $\epsilon_\text{tide} = 0$ the tide's direction has no effect
+on the potential, yet it would still rotate the frame, and on an oblate body the level
+radius along a tilted direction differs from the equatorial one.  The shape would then
+change with a parameter that cannot physically affect it.  The eigenvectors of
+\eqref{eq:depth-tensor} do not have that defect, and when the equatorial eigenvalues are
+degenerate the freedom they leave is harmless, because the radii there are equal.
+
+\subsection{Surface brightness}
+\label{sec:deformation-brightness}
+
+The surface gravity is $g = |\nabla\Phi|$ evaluated on the level surface, and it equals
+$1$ for the undeformed star, so the brightness falls out dimensionless:
+\begin{equation}
+  I \;\propto\; g^{p} , \qquad g = |\nabla\Phi| .
+  \label{eq:brightness-law}
+\end{equation}
+
+The gradient is worth writing out explicitly.  The $\Phi$ of
+\eqref{eq:deformation-potential} simplifies once $r^2(n\cdot\hat e)^2 =
+(\mathbf{x}\cdot\hat e)^2$ is used to move the $r$-dependence out of the Legendre
+polynomials:
+\begin{equation}
+  \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
+    \;+\; \tfrac12(\epsilon_\text{tide} - 3\epsilon_\text{spin})\,r^2
+    \;-\; \tfrac32\epsilon_\text{tide}\,(\mathbf{x}\cdot\hat e_\text{tide})^2
+    \;+\; \tfrac32\epsilon_\text{spin}\,(\mathbf{x}\cdot\hat e_\text{spin})^2 ,
+  \label{eq:deformation-potential-quadratic}
+\end{equation}
+which differentiates term by term to
+\begin{equation}
+  \nabla\Phi \;=\; \frac{\mathbf{x}}{r^3}
+    \;+\; (\epsilon_\text{tide} - 3\epsilon_\text{spin})\,\mathbf{x}
+    \;-\; 3\epsilon_\text{tide}\,(\mathbf{x}\cdot\hat e_\text{tide})\,\hat e_\text{tide}
+    \;+\; 3\epsilon_\text{spin}\,(\mathbf{x}\cdot\hat e_\text{spin})\,\hat e_\text{spin} .
+  \label{eq:deformation-gradient}
+\end{equation}
+Evaluating \eqref{eq:deformation-gradient} at $\mathbf{x} = r(n)\,n$, with $r(n)$ from
+\eqref{eq:level-condition}, and taking its norm gives $g(n)$.  The direction of
+$\nabla\Phi$ is of course the outward normal used for the visibility sign in
+section~\ref{sec:deformation-exact}, so the same expression serves both purposes.
+
+Two checks.  With both amplitudes zero the first term survives and $|\nabla\Phi| = 1/r^2$,
+which is $1$ at $r = 1$ as required.  And to first order the perturbation reaches $g$ by two
+routes.  Holding $r$ fixed, the amplitude's own radial derivative contributes
+$\partial_r\phi_1 = 2\phi_1$, since $\phi_1 \propto r^2$.  And the surface itself moves,
+$\delta r = -\phi_1$, which the monopole's $1/r^2$ turns into a further $-2\delta r = 2\phi_1$.
+The two are equal, so
+\begin{equation}
+  \delta g \;=\; 2\phi_1 - 2\,\delta r \;=\; 4\phi_1 ,
+  \label{eq:deformation-gravity-shift}
+\end{equation}
+the four being a quadrupole signature rather than a coincidence: for a perturbation
+$\phi_1 \propto r^n$ the same argument gives $\delta g = (n+2)\phi_1$, so an octupole would
+give five.  Writing $\phi_1$ out,
+\begin{equation}
+  g \;\approx\; 1 - 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
+    + 4\epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr] ,
+  \label{eq:deformation-gravity-first-order}
+\end{equation}
+to first order in both amplitudes jointly, products and squares discarded.  This is the same
+order as the rest of the deformation model --- $\delta r = -\phi_1$ is linear too --- so it
+introduces no inconsistency.  It is a check on the exact gradient rather than a substitute
+for it: the code evaluates $|\nabla\Phi|$ from \eqref{eq:deformation-gradient}, and this is
+what certificate \vtag{19} compares it against.  The sign is the physically expected one: a
+rotating star is brightest at its poles and dimmest at its equator, six
+$\epsilon_\text{spin}$ below the undeformed value there.
+The bolometric von Zeipel law is $p = 1$.  Physically motivated laws have $p \le 1$: a
+convective envelope is nearer to $p \approx 0.3$, because the flux there is carried by
+convection and so responds to gravity more weakly.  Thus $p = 1$ is an upper bound rather
+than a convenient default, and it is the one the code uses.
+
+Limb darkening is \emph{absent} by construction: \eqref{eq:brightness-law} depends only on
+gravity, not on the angle between the surface normal and the line of sight.  That is a
+deliberate scope restriction until the limb-darkening stage, and any figure caption or
+comparison with a resolved observation has to say so.
+
+\subsection{Parameters, frames, and what is a gauge}
+\label{sec:deformation-frames}
+
+The model has two amplitudes, and the geometry of the observation is fixed by the
+inclination $i$ between the spin axis and the line of sight, the position angle $\PA$ of the
+spin on the sky, and two angles locating the tide: its latitude $\lambda$ measured from the
+equator and its longitude $\varphi$ measured about the spin from the body $x$ axis.
+
+The sky conventions are those of section~\ref{sec:conventions}.  Position angles run from
+North through East, and with $u$ along North and $v$ along East the baseline azimuth
+$\psi = \operatorname{atan2}(v,u)$ \emph{is} the position angle, so $\PA = \psi$ and no
+offset appears anywhere.  The frame is $(x,y,z) = (\text{North}, \text{East},
+\text{toward the observer})$ with $x\times y = z$ and the line of sight along $-z$.  Body to
+observer is the rotation
+\begin{equation}
+  R \;=\; R_z(\PA)\,R_y(\beta)\,R_z(\alpha) ,
+  \label{eq:deformation-rotation}
+\end{equation}
+so that $R\hat z = (\sin\beta\cos\PA, \sin\beta\sin\PA, \cos\beta)$: the middle axis stays
+$y$, and the spin's projection on the sky makes the angle $\PA$ with North.
+
+Two of these angles are gauges in the present model.  For a single observation the sky's
+orientation is a choice, so $\PA$ can be pinned; and with a smooth deformation and no
+starspots, the spin phase $\alpha$ is degenerate with the tide's longitude $\varphi$,
+because only their difference is observable --- a rotation of the star cannot be told from a
+rotation of the perturbation.  Both stop being gauges as soon as the surface carries
+structure of its own: spots see $\alpha$, and a non-synchronous tide makes it independent.
+
+Finally, the normalisation.  The observable is the visibility normalised at the origin,
+\begin{equation}
+  \Delta V(u,v) \;=\; \frac{V(u,v)}{V(0,0)} - \frac{V_\text{ref}(u,v)}{V_\text{ref}(0,0)} ,
+  \label{eq:deformation-normalisation}
+\end{equation}
+so that $\Delta V(0,0) = 0$ and the reference's lobes are removed.  The reference is
+normally the uniform disk of section~\ref{sec:uniform-disk}.  Subtracting the reference's
+own normalised visibility rather than a bare measurement removes everything the two models
+have in common --- the Airy lobes of the disk --- and leaves the deformation's signature.
+
+\subsection{The exact visibility}
+\label{sec:deformation-exact}
+
+With the surface and the brightness fixed, the visibility is the sum over the sampled
+surface that section~\ref{sec:mode-visibility} defines, weighted by the sky-plane area each
+sample projects to:
+\begin{equation}
+  V(u,v) \;=\; \sum_i I(n_i)\,\frac{(N_i\cdot\hat e_\text{obs})\, r_i^2}{n_i\cdot N_i}\,
+    \Delta\Omega_i \; e^{-2\pi i (u x_{N,i} + v x_{E,i})} .
+  \label{eq:deformation-visibility}
+\end{equation}
+Two properties of a level surface make this cheap.  The outward normal $N$ \emph{is} the
+gradient direction, so visibility is the sign of $N\cdot\hat e_\text{obs}$: there is no
+z-buffer and no nested root find.  And for modest deformation the body is convex, so the
+map from direction to sky position is one-to-one and the near hemisphere is simply the set of
+directions with $N\cdot\hat e_\text{obs} > 0$.
+
+Equation~\eqref{eq:deformation-visibility} is a quadrature, not a periodic transform, so its
+error is ordinary discretisation error that falls with the sampling.  It carries none of the
+Gibbs ringing at the limb that an FFT would impose, which is why the direct sum, and not an
+FFT, is the reference for every certificate in this part.  The level radii come from a
+bisection that brackets the \emph{inner} crossing of \eqref{eq:level-condition}: the left
+side is not monotone, and the outer branch is the far side of the lobe.
+
+\subsection{Rung 1: the affine model}
+\label{sec:deformation-affine}
+
+The first rung replaces the map \eqref{eq:deformation-visibility} by a linear one.  For an
+ellipsoid the projection onto the sky is exact and is an ellipse, so it is captured by a
+single $2\times2$ positive-definite matrix,
+\begin{equation}
+  \Lambda \;=\; \sqrt{A A^{T}} , \qquad A = P\,(\text{frame}\cdot\text{radii}) ,
+  \label{eq:deformation-stretch}
+\end{equation}
+with $P$ the two rows $(\text{east},\text{north})$ projecting onto the sky and the radii
+taken along the principal directions of \eqref{eq:depth-tensor}.  Writing $V_\text{sph}$ for
+the visibility of a sphere carrying the same brightness pattern, the surrogate is
+\begin{equation}
+  V_\text{affine}(u,v) \;=\; V_\text{sph}\!\left(\Lambda^{T}(u,v)\right) .
+  \label{eq:deformation-affine}
+\end{equation}
+There is \emph{no flux factor}.  The change of variables that stretches the image puts
+$1/|\det\Lambda|$ on the brightness and $|\det\Lambda|$ on the measure, and the two cancel;
+in the normalised quantity \eqref{eq:deformation-normalisation} the determinant cancels
+again.  So only the shape is modelled, while the brightness pattern --- gravity darkening
+included --- is carried exactly.
+
+Two orderings have to be kept apart, and getting either wrong produces an error that looks
+plausible.  The first is $\Lambda$'s own: it is expressed in the sky's
+$(\text{east},\text{north})$ order, the order section~\ref{sec:conventions} gives the sky
+axes and the order the image path uses, whereas the frequencies are $(u,v) =
+(\text{North},\text{East})$.  The frequency is therefore reordered into the sky's order
+before the stretch acts, and the result read back as $(\text{North},\text{East})$.  One
+$2\times2$ matrix cannot serve both orders.  Using it in the wrong one transposes the
+stretch, which is invisible for a nearly circular $\Lambda$ --- the pure-spin case --- and
+wrong by order the anisotropy for anything else.
+
+$V_\text{sph}$ is the mode sum of section~\ref{sec:mode-visibility}, evaluated on the
+brightness pattern projected onto the harmonics.  Keeping $l \le 2$ is not a compromise: at
+first order in the deformation the pattern is exactly $l = 0$ and $l = 2$, since the
+$l = 4$ content first appears at second order from $P_2^2$.
+
+No odd $l$ appears at any order, and the reason is symmetry rather than truncation.  Every
+term of \eqref{eq:deformation-potential} is even under $n \to -n$ --- the monopole depends
+on $r$ alone, and the others are squares of projections --- so $r(n)$ and $g(n)$ are even
+functions of direction.  Since $Y_l^m(-n) = (-1)^l Y_l^m(n)$, an even function carries only
+even $l$, and the argument is frame-independent because the point reflection is.  Spin and
+the first-order tide therefore produce $l = 0$ and $l = 2$ and nothing else, in the body
+frame and the observer frame alike; an $l = 1$ term would be a photocentre displacement,
+which a deformation with this reflection symmetry cannot generate.  (A projection loop that
+runs over $l = 1$ will still fill that slot, but with quadrature noise: it should shrink
+with the sample count, and anything that does not is a real asymmetry and a bug.)
+
+\paragraph{The coefficients in closed form.}  To first order the pattern is a constant plus
+two quadrupoles --- \eqref{eq:deformation-gravity-first-order} with $p = 1$ ---
+\begin{equation}
+  I \;=\; (1 - 4\epsilon_\text{spin})
+    \;-\; 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
+    \;+\; 4\epsilon_\text{spin}\,P_2(n\cdot\hat e_\text{spin}) ,
+  \label{eq:first-order-pattern}
+\end{equation}
+and each $P_2(n\cdot\hat e)$ is proportional to a zonal $l = 2$ harmonic about its own
+axis.  The addition theorem,
+$\sum_m Y_l^m(n)\overline{Y_l^m(\hat e)} = \frac{2l+1}{4\pi}P_l(n\cdot\hat e)$, therefore
+gives the coefficients directly in the observer frame:
+\begin{equation}
+  a_{00} \;=\; (1 - 4\epsilon_\text{spin})\sqrt{4\pi} , \qquad
+  a_{2m} \;=\; -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,
+      \overline{Y_2^m(\hat e_\text{tide})}
+    \;-\; \epsilon_\text{spin}\,\overline{Y_2^m(\hat e_\text{spin})}\Bigr] ,
+  \label{eq:first-order-coefficients}
+\end{equation}
+every other coefficient being zero, with the two axes referred to the observer frame by the
+same rule as a sampled direction, \eqref{eq:observer-angles}.  So this row of the model
+needs \emph{no projection at all}: ten harmonic evaluations and one constant, with only the
+level radii entering $\Lambda$ still numerical.  Certificate \vtag{21} compares
+\eqref{eq:first-order-coefficients} with the quadrature that projects the same pattern, so a
+wrong sign, constant or frame would show up as a residual of order the coefficients rather
+than the $10^{-5}$ that discretisation leaves.
+
+The radii could be linearised too, replacing the bisection by $\delta r = -\phi_1$ and making
+the row analytic all the way through.  That is exact only to first order, however, and the
+next term is not always small: expanding \eqref{eq:level-condition} gives
+\begin{equation}
+  \delta r \;=\; E + 3E^2 + \cdots ,
+  \label{eq:radius-series}
+\end{equation}
+so at the amplitude ceiling, where $E = \epsilon_\text{tide} + 1.5\epsilon_\text{spin}$ reaches
+$0.144$ against the pinch at $0.148$, the linearised radius is $0.144$ where the cubic gives
+$0.366$ --- a bulge barely two fifths of the true one.  The series is asymptotic, and the
+ceiling is precisely where it diverges.  So the model uses the exact radii and linearises only
+the brightness, which keeps the difference between the two analytic rows a genuine
+``$O(\epsilon^2)$'' comparison rather than a shape error in disguise.
+
+Each frequency therefore costs a
+handful of Bessel functions, which is the whole point: the projection is paid once per
+parameter set and the per-frequency cost is negligible, so a search over orientations is
+cheap even at a sparse set of baselines.
+
+The second ordering is the projection's, and it is worth stating because it is the point at
+which the surrogate has most often gone wrong.  The pattern must be projected in the
+\emph{observer} frame, not the body frame.  Let $(\text{north},\text{east})$ be the sky axes
+of section~\ref{sec:conventions} for the viewing direction, and take as polar axis
+\begin{equation}
+  \hat n \;=\; \text{north} \times \text{east} ,
+  \label{eq:observer-polar-axis}
+\end{equation}
+which is not a free choice: a harmonic azimuth runs from a frame's $+x$ axis towards its
+$+y$ axis, so $\hat n$ must be $\text{north}\times\text{east}$ for that azimuth to run from
+North towards East, the sense the mode sum's $\psi = \operatorname{atan2}(v,u)$ uses.  Then
+for each sampled direction $\mathbf{x}_i$,
+\begin{equation}
+  \theta_i = \arccos(\mathbf{x}_i\cdot\hat n) , \qquad
+  \varphi_i = \operatorname{atan2}(\mathbf{x}_i\cdot\text{east},\, \mathbf{x}_i\cdot\text{north}) ,
+  \label{eq:observer-angles}
+\end{equation}
+and $a_{lm} = \frac{4\pi}{N}\sum_i I_i \overline{Y_{lm}(\theta_i,\varphi_i)}$ is a plain
+quadrature, exactly as in section~\ref{sec:mode-visibility}.
+
+Projecting in the body frame and rotating the coefficients afterwards does not do instead.
+A rotation such as $R_y(i)$ fixes where $\hat z$ goes and leaves the azimuthal reference
+somewhere else, so the frame is wrong by a rotation: the real and imaginary parts of $V$
+then differ from the direct sum by a quarter turn.  In the axisymmetric case it fails more
+quietly still --- the pattern stays axisymmetric about the line of sight and its visibility
+is exactly real, so the imaginary part vanishes identically rather than being wrong.  Both
+failures are what the undeformed null test and the direct-sum comparison of
+section~\ref{sec:triaxial-register} are for.
+
+The approximation is nonetheless \emph{first order}, and that is worth stating precisely
+because it is easy to assume otherwise.  Comparing \eqref{eq:deformation-affine} against
+\eqref{eq:deformation-visibility} on the same samples gives a residual of $0.0437$ at the
+working amplitudes and $0.0208$ with the amplitudes halved, a ratio of $0.48$; with the
+deformation switched off entirely the residual is zero to printed precision.  The error
+therefore scales as $\epsilon$, not $\epsilon^2$, and it is the linearisation of the map
+\eqref{eq:deformation-visibility} --- a stretch cannot reproduce a map that is
+radial-nonlinear --- rather than a defect in the projection.  For a surrogate used to locate
+the interesting part of parameter space that is acceptable; for deciding between models it
+is not, and the numerical model is what decides.
+
+\subsection{Rung 2, and what it would not fix}
+\label{sec:deformation-rung2}
+
+The second rung expands the level surface \eqref{eq:level-condition} to second order in the
+deformation instead of stopping at the ellipsoid.  That brings $l = 4$ into the shape, and
+it is the natural next order in the potential.
+
+It is worth being clear about what it would and would not buy.  It would improve the shape
+at large amplitude, where the ellipsoid's outlines visibly disagree with the level surface.
+It would \emph{not} repair the surrogate's error, because that error is first order and
+comes from the stretch, not from the shape's second-order terms: a better ellipsoid does not
+make a linear map able to reproduce a radial-nonlinear one.  Since rung 1's error is
+tolerable for the search it exists for, rung 2 stays documented rather than implemented.
+
+Should the surrogate itself need to improve, the productive direction is the basis rather
+than the order in $\epsilon$: section~\ref{sec:disk-modes} composes the stretch with a
+disk-mode series, which turns a fixed first-order error into a truncation the user controls.
+
+\subsection{Register}
+\label{sec:triaxial-register}
+
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+tag & what is checked & kind \\
+\hline
+\vtag{19} & the first-order relations between $\delta r$, $\delta g$ and $\phi_1$ & algebraic \\
+\hline
+\vtag{20} & the surface really is level, and $\nabla\Phi$ matches a central difference & numerical \\
+\hline
+\vtag{21} & the closed-form first-order harmonics against the quadrature & numerical \\
+\hline
+\end{tabular}
+\end{center}
+
+Certificate \vtag{19} pins the two relations of the header of this section: on a level
+surface $\delta r = -\phi_1/g_0$ and $\delta g = \partial_r\phi_1$, with the two contributions
+to the gravity perturbation carrying the same sign, because the surface's displacement
+lowers the gravity and the quadrupole's gradient raises it.  Certificate \vtag{20} is the
+numerical anchor: it evaluates $\Phi$ on the returned surface and checks that the gradient
+there agrees with a finite difference, so a wrong sign in \eqref{eq:deformation-potential}
+would fail it immediately.
+
+The strongest check in this part is not a tagged certificate but the null case: a zero
+deformation must render as the uniform disk, with flux $\pi$ and the profile
+$2J_1(x)/x$ of section~\ref{sec:uniform-disk}.  The oblate case then reproduces both the
+equatorial bulge and the reduced equatorial gravity from the one field, which is the
+statement that shape and gravity are not independent.

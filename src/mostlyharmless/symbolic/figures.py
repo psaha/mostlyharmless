@@ -189,7 +189,7 @@ def figure_jupiter(target, l_max=20, n=241, phase=0.0):
 # and a spin flattening along z, at a 3:1 ratio.  That ratio makes the perturbation
 # vanish at the tide's perpendicular, so that semi-axis sits at exactly the reference
 # radius.  At these amplitudes the closure combination is
-# eps_tide + 1.5 eps_cent = 0.144 against the limit of 0.148 --- 97 per cent of the
+# eps_tide + 1.5 eps_spin = 0.144 against the limit of 0.148 --- 97 per cent of the
 # way --- so the surface is close to pinching along the tide axis and the projection
 # weight r^2/(n.N) grows sharply toward the bulge tip.  Sampling artefacts and model
 # error have to be told apart there.
@@ -516,7 +516,7 @@ def figure_visibility_maps(target, tide=TRIAXIAL_TIDE, spin=TRIAXIAL_SPIN,
     # so one point costs a short mode sum instead of a sum over samples.
     coefficients = affine.sphere_coefficients(field, l_max=SPHERE_L_MAX,
                                               power=power, n_samples=n_samples,
-                                              inclination=inclination)
+                                              eye=eye)
     sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
 
     def sphere_sum(u, v):

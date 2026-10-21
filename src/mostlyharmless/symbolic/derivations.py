@@ -82,6 +82,7 @@ __all__ = [
     "check_full_map_fft",
     "check_deformation_first_order",
     "check_level_surface",
+    "check_first_order_coefficients",
 ]
 
 THETA, PHI = sp.symbols("theta phi", real=True)
@@ -955,7 +956,7 @@ def check_level_surface(tide=0.03, centrifugal=0.01, n_dir=32):
     Second, the analytic gradient agrees with a central difference, which is what
     makes g_eff = |grad Phi| trustworthy rather than merely asserted.
 
-    The amplitudes are a tide-dominant pair, since eps_tide + 1.5 eps_cent is what
+    The amplitudes are a tide-dominant pair, since eps_tide + 1.5 eps_spin is what
     has to stay below about 0.059 for the surface to close at all.
     """
     field = Deformation(tide=tide, tide_direction=(1.0, 0.0, 0.0),
@@ -973,3 +974,54 @@ def check_level_surface(tide=0.03, centrifugal=0.01, n_dir=32):
             for axis in np.eye(3)])
         worst = max(worst, float(np.max(np.abs(difference - field.gradient(point)))))
     return worst
+
+
+# --------------------------------------------------------------------------
+# V21 -- the first-order coefficients in closed form
+# --------------------------------------------------------------------------
+
+def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000):
+    """V21, numerical rung -- the closed-form first-order harmonics against quadrature.
+
+    To first order the pattern is a constant plus two quadrupoles, so its harmonics are
+    explicit by the addition theorem.  With the orthonormal basis of section 2,
+
+        a_00 = (1 - 4 eps_spin) sqrt(4 pi) ,
+        a_2m = -(16 pi / 5) [ eps_tide conj(Y_2^m(t_hat))
+                              - eps_spin conj(Y_2^m(s_hat)) ] ,
+
+    every other coefficient zero --- no odd order at all, since the pattern is even under
+    n -> -n.  The axes are expressed in the observer frame exactly as a sampled direction
+    is: theta from north x east, phi from North towards East.
+
+    The comparison is against the quadrature that projects the same pattern, so only
+    discretisation error should remain.  A wrong sign, a wrong constant or a wrong frame
+    would show as a residual of order the coefficients themselves, some 1e-2, rather than
+    the 1e-5 or so that quadrature leaves.
+    """
+    from mostlyharmless.symbolic import affine, render
+
+    eye = np.array([np.sin(np.pi / 3.0), 0.0, np.cos(np.pi / 3.0)])
+    field = Deformation(tide=tide, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=centrifugal, spin_direction=(0.0, 0.0, 1.0))
+    projected = affine.sphere_coefficients(field, l_max=2, n_samples=n_samples,
+                                           eye=eye, linear=True)
+
+    east, north = render.sky_basis(eye)
+    polar = np.cross(north, east)
+    polar = polar / np.linalg.norm(polar)
+
+    def angles(direction):
+        return (float(np.arccos(np.clip(direction @ polar, -1.0, 1.0))),
+                float(np.arctan2(direction @ east, direction @ north)))
+
+    tide_axis, spin_axis = field.axes()
+    expected = [np.zeros(l + 1, dtype=complex) for l in range(3)]
+    expected[0][0] = (1.0 - 4.0 * centrifugal) * np.sqrt(4.0 * np.pi)
+    for m in range(3):
+        tide_term = sph_harm(2, m, *angles(tide_axis))
+        spin_term = sph_harm(2, m, *angles(spin_axis))
+        expected[2][m] = -(16.0 * np.pi / 5.0) * (
+            tide * np.conjugate(tide_term) - centrifugal * np.conjugate(spin_term))
+    closed = Coeffs(tuple(expected))
+    return float(np.max(np.abs(closed.to_vector() - projected.to_vector())))

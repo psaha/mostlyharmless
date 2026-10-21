@@ -41,11 +41,13 @@ In the zyz convention, with $R = R_z(\alpha) R_y(\beta) R_z(\gamma)$,
 \end{equation}
 the $d$ matrix is real, and its explicit form is
 \begin{equation}
-  d^l_{m'm}(\beta) =
-  \sqrt{(l+m')!\,(l-m')!\,(l+m)!\,(l-m)!}\;
-  \sum_s \frac{(-1)^{m'-m+s}}{(l+m-s)!\,s!\,(m'-m+s)!\,(l-m'-s)!}\;
-  \cos^{2l+m-m'-2s}\!\tfrac{\beta}{2}\;
+\begin{split}
+  d^l_{m'm}(\beta) = {}&
+  \sqrt{(l+m')!\,(l-m')!\,(l+m)!\,(l-m)!} \\
+  &\times \sum_s \frac{(-1)^{m'-m+s}}{(l+m-s)!\,s!\,(m'-m+s)!\,(l-m'-s)!} \\
+  &\times \cos^{2l+m-m'-2s}\!\tfrac{\beta}{2}\;
   \sin^{m'-m+2s}\!\tfrac{\beta}{2},
+\end{split}
   \label{eq:wigner-d-explicit}
 \end{equation}
 summed over the $s$ for which every factorial is defined.  Certificate \vtag{4}
