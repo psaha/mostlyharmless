@@ -157,7 +157,10 @@ def test_the_affine_prediction_matches_the_direct_sum():
 
         flux = render.direct_visibility(points, brightness, weights, east, north, 0.0, 0.0)
         worst = 0.0
-        for u, v in ((0.4, 0.0), (0.0, 0.4), (0.3, 0.3)):
+        # Baselines of both signs, so that a conjugation of the mode sum cannot hide in
+        # points whose imaginary part happens to be small: the first three would pass a
+        # conjugated model without complaint.
+        for u, v in ((0.4, 0.0), (0.0, 0.4), (0.3, 0.3), (0.35, -0.3), (-0.4, 0.25)):
             modelled = affine.affine_visibility(sphere_visibility, stretch, u, v)
             summed = (render.direct_visibility(points, brightness, weights,
                                                east, north, u, v) / flux)

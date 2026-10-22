@@ -137,7 +137,9 @@ def figure_map(target, l_max=16, n=241):
     limits = (float(np.nanmin(panels[0][0])), float(np.nanmax(panels[0][0])))
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.6), constrained_layout=True)
     for axis, (data, title) in zip(axes.ravel(), panels):
-        drawn = axis.imshow(data, origin="lower", extent=(1, -1, -1, 1),
+        # East increases to the left (D24): the extent draws column 0 on the left, so the
+        # array is flipped once here rather than built mirrored
+        drawn = axis.imshow(data[:, ::-1], origin="lower", extent=(1, -1, -1, 1),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(title, fontsize=9)
         axis.set_xlabel(r"$y$", fontsize=9)
@@ -173,7 +175,7 @@ def figure_uv(target, l_max=16, q_max=6.0, n=301):
     panels = ((values.real, r"$\mathrm{Re}\;V/V(0,0)$"),
               (values.imag, r"$\mathrm{Im}\;V/V(0,0)$"))
     for axis, (data, title) in zip(axes, panels):
-        drawn = axis.imshow(data, origin="lower",
+        drawn = axis.imshow(data[:, ::-1], origin="lower",
                             extent=(q_max, -q_max, -q_max, q_max),
                             cmap="RdBu_r", vmin=-limit, vmax=limit)
         axis.set_title(title, fontsize=10)
@@ -206,7 +208,9 @@ def figure_convergence(target, orders=(4, 8, 16), n=241):
                              constrained_layout=True)
     drawn = None
     for axis, data, l_max in zip(axes, images, orders):
-        drawn = axis.imshow(data, origin="lower", extent=(1, -1, -1, 1),
+        # East increases to the left (D24): the extent draws column 0 on the left, so the
+        # array is flipped once here rather than built mirrored
+        drawn = axis.imshow(data[:, ::-1], origin="lower", extent=(1, -1, -1, 1),
                             cmap="magma", vmin=limits[0], vmax=limits[1])
         axis.set_title(rf"$l_{{max}}={l_max}$", fontsize=9)
         axis.set_xticks([])

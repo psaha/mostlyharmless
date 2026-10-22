@@ -116,7 +116,7 @@ def test_the_fitted_image_carries_the_right_flux():
 
     image = fitted.model_image(fit.coefficients, stretch, half_width=1.5, n=241)
     cell = (3.0 / 240.0) ** 2
-    model_flux = float(np.sum(image)) * cell
+    model_flux = float(np.nansum(image)) * cell       # the rim is NaN, like sky_image
     numeric_flux = float(np.sum(weights * brightness))
     print(f"\nflux: numeric {numeric_flux:.6f}, fitted image {model_flux:.6f}")
     assert abs(model_flux - numeric_flux) < 0.02 * abs(numeric_flux)

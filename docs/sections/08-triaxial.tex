@@ -426,12 +426,18 @@ which the surrogate has most often gone wrong.  The pattern must be projected in
 \emph{observer} frame, not the body frame.  Let $(\text{north},\text{east})$ be the sky axes
 of section~\ref{sec:conventions} for the viewing direction, and take as polar axis
 \begin{equation}
-  \hat n \;=\; \text{north} \times \text{east} ,
+  \hat n \;=\; \text{north} \times \text{east} \;=\; \hat e_\text{obs} ,
   \label{eq:observer-polar-axis}
 \end{equation}
-which is not a free choice: a harmonic azimuth runs from a frame's $+x$ axis towards its
-$+y$ axis, so $\hat n$ must be $\text{north}\times\text{east}$ for that azimuth to run from
-North towards East, the sense the mode sum's $\psi = \operatorname{atan2}(v,u)$ uses.  Then
+the direction \emph{toward} the observer.  That identity is not free: it holds only when the
+sky's North is the projection of the body's North axis and the sky's East is
+$\hat e_\text{obs}\times\text{North}$, the pairing section~\ref{sec:conventions} fixes.  Taking
+East from a helper axis instead gives a North that is the projection of \emph{minus} North ---
+the same handedness, but rotated by $\pi$ in the sky plane.  The consequence is a reflection of
+the sphere, and since $Y_l^m(\pi-\theta,\varphi) = (-1)^{l+m}Y_l^m(\theta,\varphi)$ it leaves
+every $|a_{lm}|$ unchanged while negating the $m = 1$ coefficients and leaving $m = 2$ alone:
+the coefficients look plausible, every imaginary part has the wrong sign, and only a
+diagnostic that compares two routes to the same number shows it.  Then
 for each sampled direction $\mathbf{x}_i$,
 \begin{equation}
   \theta_i = \arccos(\mathbf{x}_i\cdot\hat n) , \qquad
@@ -493,7 +499,7 @@ value: the opaque convention absorbs the viewing cosine into the area element,
 $d^{2}x = (\hat n\cdot\hat e)\,d\Omega$, so the image at a sky position is the brightness there, and
 \begin{equation}
   \Phi_{lm}(x,y) \;=\; Y_l^m(n) ,
-  \qquad n \;=\; \bigl(x,\; y,\; \sqrt{1-\rho^{2}}\,\bigr) ,
+  \qquad n \;=\; x\,\text{east} + y\,\text{north} + \sqrt{1-\rho^{2}}\;\hat e_\text{obs} ,
   \label{eq:disk-harmonic}
 \end{equation}
 with $Y_l^m$ evaluated in the observer frame by the rule of \eqref{eq:observer-angles}.  There is no

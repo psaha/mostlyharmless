@@ -212,7 +212,14 @@ def model_image(coefficients, stretch, half_width=1.5, n=241):
         for m in range(1, l + 1):
             phi = disk_harmonic(l, m, disk_east, disk_north)
             image = image + 2.0 * (block[m] * phi).real
-    return image / abs(float(np.linalg.det(stretch)))
+    image = image / abs(float(np.linalg.det(stretch)))
+
+    # Outside the silhouette, NaN rather than zero: that is what ``sky_image`` returns, and
+    # the display divides by the *mean of the finite pixels*.  A zero rim would be counted,
+    # diluting the mean by the disk-to-square area ratio and amplifying the contrast by
+    # roughly three --- which looks like a plausible pattern in the wrong colours.
+    silhouette = disk_east**2 + disk_north**2 > 1.0
+    return np.where(silhouette, np.nan, image)
 
 
 def residual_of(coefficients, samples, stretch, east, north, l_max=4):

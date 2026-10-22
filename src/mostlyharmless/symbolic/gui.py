@@ -278,10 +278,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
              "resolution": 0, "stale": False, "timer": None}
 
     figure = plt.figure(figsize=(9.2, 6.6))
-    axes = (figure.add_axes([0.06, 0.10, 0.36, 0.36]),
-            figure.add_axes([0.50, 0.10, 0.36, 0.36]))
-    # a fixed slot for the shared colourbar, clear of the radio buttons
-    colorbar_axis = figure.add_axes([0.90, 0.10, 0.015, 0.36])
+    # The panels sit in the middle band and the radios in a band of their own below them:
+    # a radio row placed at the panels' top overlapped their titles, which are set just
+    # above the axes and are not part of the rectangle.
+    axes = (figure.add_axes([0.06, 0.26, 0.36, 0.36]),
+            figure.add_axes([0.50, 0.26, 0.36, 0.36]))
+    colorbar_axis = figure.add_axes([0.90, 0.26, 0.015, 0.36])
     state["colorbar"] = None
 
     def redraw(*_):
@@ -331,15 +333,18 @@ def build(parameters=None):  # pragma: no cover - needs a display
         if state["visibility"]:
             values = compute_visibility(current, state["model"],
                                         samples=samples, grid=grid)
-            panels = (values.real, values.imag)
+            # East increases to the *left* (D24), and the extent draws column 0 on the
+            # left, so the arrays are flipped once, here, rather than being built mirrored
+            panels = (values.real[:, ::-1], values.imag[:, ::-1])
             titles = VISIBILITY_TITLES
             limit = float(np.max(np.abs(values))) or 1e-30
             extent = (Q_MAX, -Q_MAX, -Q_MAX, Q_MAX)
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
         else:
-            panels = compute_image(current, state["model"],
-                                   samples=samples, pixels=pixels, report=report)
+            panels = [panel[:, ::-1] for panel in
+                      compute_image(current, state["model"],
+                                    samples=samples, pixels=pixels, report=report)]
             # the two analytic rows differ only in the brightness pattern: exact versus
             # the first-order form of equation (74)
             name = MODEL_TITLES[state["model"]]
@@ -441,16 +446,16 @@ def build(parameters=None):  # pragma: no cover - needs a display
     # the exact surface, "affine" the ellipsoid shape with the exact brightness pattern,
     # "first-order" the ellipsoid shape with the brightness of equation (74), and "fitted"
     # the ellipsoid shape with the coefficients chosen rather than projected.
-    model_radio = RadioButtons(figure.add_axes([0.06, 0.47, 0.20, 0.21]),
+    model_radio = RadioButtons(figure.add_axes([0.06, 0.02, 0.20, 0.21]),
                                MODEL_LABELS)
     model_radio.on_clicked(model_callback)
-    view_radio = RadioButtons(figure.add_axes([0.32, 0.50, 0.20, 0.13]),
+    view_radio = RadioButtons(figure.add_axes([0.32, 0.06, 0.18, 0.13]),
                               ("image", "u,v"))
     view_radio.on_clicked(view_callback)
 
     # Resolution: a column of labelled buttons, coarse first.  Discrete because every
     # change costs a full redraw.
-    resolution_radio = RadioButtons(figure.add_axes([0.58, 0.47, 0.18, 0.20]),
+    resolution_radio = RadioButtons(figure.add_axes([0.56, 0.02, 0.18, 0.21]),
                                     RESOLUTION_LABELS, active=state["resolution"])
 
     def resolution_callback(label):

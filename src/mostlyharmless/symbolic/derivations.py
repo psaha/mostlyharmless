@@ -1128,7 +1128,7 @@ def check_first_order_frame(tide=0.03, centrifugal=0.01, inclination=0.9):
     # the body-to-observer rotation: the observer axes as columns, then transposed, because
     # a body vector's observer components are its projections onto those axes
     east, north = render.sky_basis(eye)
-    polar = np.cross(north, east)
+    polar = np.cross(north, east)          # right-handed, for the rotation below
     polar = polar / np.linalg.norm(polar)
     rotation = np.stack([north, east, polar], axis=-1).T
 

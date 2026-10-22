@@ -174,3 +174,32 @@ def test_every_title_is_mathtext_the_backend_can_parse():
     parser = MathTextParser("agg")
     for title in list(gui.MODEL_TITLES.values()) + list(gui.VISIBILITY_TITLES):
         parser.parse(title)                      # raises on an unknown symbol
+
+
+def test_the_imaginary_part_keeps_its_sign_between_the_rows():
+    """A conjugate looks plausible and is wrong, so compare Im where it is largest.
+
+    The mode sum and the direct sum are independent routes to the same complex number, so
+    their agreement where ``|Im Delta V|`` is a sizeable fraction of the map's range is
+    what rules out a sign flip; an O(eps) discrepancy is the model, not the convention.
+    """
+    parameters = gui.Parameters(tide=0.03, spin=0.01)
+    affine = gui.compute_visibility(parameters, "affine", samples=8000, grid=9, q_max=1.0)
+    numeric = gui.compute_visibility(parameters, "numeric", samples=8000, grid=9, q_max=1.0)
+
+    fitted_row = gui.compute_visibility(parameters, "fitted, l = 0,2,4",
+                                        samples=8000, grid=9, q_max=1.0)
+    first_order = gui.compute_visibility(parameters, "first-order", samples=8000,
+                                         grid=9, q_max=1.0)
+
+    index = np.unravel_index(np.argmax(np.abs(numeric.imag)), numeric.shape)
+    print(f"\nIm at {index}: numeric {numeric.imag[index]:+.4f}, "
+          f"affine {affine.imag[index]:+.4f}, "
+          f"fitted {fitted_row.imag[index]:+.4f}, "
+          f"first-order {first_order.imag[index]:+.4f}")
+    for name, values in (("affine", affine), ("fitted", fitted_row),
+                         ("first-order", first_order)):
+        assert np.sign(values.imag[index]) == np.sign(numeric.imag[index]), name
+        # the rows differ by the shape model and the truncation, both O(eps); a convention
+        # error is O(1) and would show here long before the tolerance
+        assert abs(values.imag[index] - numeric.imag[index]) < 0.02, name
