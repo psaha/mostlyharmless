@@ -119,14 +119,16 @@ coefficients of a real function.
 \label{sec:harmonics-register}
 
 \begin{center}
-\begin{tabular}{lll}
+\begin{tabular}{l p{0.52\textwidth} l}
 \hline
 tag & claim & rung \\
 \hline
 \vtag{1} & Legendre orthogonality & exact, $l \le 5$ \\
          & implementation orthonormality & numerical, $l \le 4$ \\
          & convention against SymPy \code{Ynm} & numerical, $30$ digits \\
-\vtag{3} & addition theorem, real form \eqref{eq:addition} & numerical, $40$ digits, $l \le 5$ \\
+\vtag{2} & the extension \eqref{eq:ylm-extension}, and the implementation reproduces it & exact \\
+\vtag{3} & addition theorem, complex form and real form \eqref{eq:addition} & numerical, $40$ digits, $l \le 5$ \\
+\vtag{25} & the real basis \eqref{eq:real-basis}: orthonormal on the grid, and equal to the complex one & numerical, $l \le 4$ \\
 \hline
 \end{tabular}
 \end{center}

@@ -30,10 +30,10 @@ from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.spherical_harmonics import sph_harm
 
 __all__ = ["principal_axes", "projected_stretch", "sphere_coefficients",
-           "affine_visibility"]
+           "first_order_coefficients", "affine_visibility"]
 
 
-def principal_axes(field, first_order=False):
+def principal_axes(field):
     """The ellipsoid's principal directions and the radii along them.
 
     The directions are the **eigenvectors of the quadrupole tensor**
@@ -47,12 +47,16 @@ def principal_axes(field, first_order=False):
     the ellipsoid would change for no physical reason.
 
     The radii are then measured along those directions, and are *not* taken from the
-    tensor, so the degeneracy of the equatorial pair costs nothing.
+    tensor, so the degeneracy of the equatorial pair costs nothing.  They come from the level
+    condition, solved directly.
 
-    With ``first_order`` the radii are the linearised ones, ``1 + delta r`` with
-    ``delta r = -phi_1``.  That is closed form --- no root-find at all --- and differs from
-    the exact radii only at ``O(eps^2)``, below the affine model's own ``O(eps)`` shape
-    error, so it costs nothing.  It makes the first-order row of the model fully analytic.
+    Linearising them instead, ``1 + delta r`` with ``delta r = -phi_1``, removes the last
+    root-find and is closed form --- but it is exact only to first order, and the next term is
+    not small near the closure limit: at the amplitude ceiling it gives a bulge two fifths of
+    the true one.  Since the saving is three bisections per parameter set, some fifty scalar
+    evaluations, it buys nothing measurable and is not worth the hazard.  Linearising the
+    *brightness* is a different matter and is what the first-order row of the model does; that
+    is exact at first order with no such divergence.
 
     Returns ``(frame, radii)`` with the directions as the frame's *columns*.
     """
@@ -60,32 +64,64 @@ def principal_axes(field, first_order=False):
     tensor = 1.5 * (field.tide * np.outer(tide, tide)
                     - field.centrifugal * np.outer(spin, spin))
     _, frame = np.linalg.eigh(tensor)
-    if first_order:
-        radii = np.array([1.0 + field.first_order_radii(direction)[0]
-                          for direction in frame.T])
-    else:
-        radii = np.array([field.level_radius(direction) for direction in frame.T])
+    radii = np.array([field.level_radius(direction) for direction in frame.T])
     return frame, radii
 
 
-def projected_stretch(field, line_of_sight, first_order=False):
+def projected_stretch(field, line_of_sight):
     """Lambda, the 2x2 stretch of the sky plane, in the sky's own ``(east, north)`` order.
 
     That order is what the image path uses, since ``sky_basis`` returns east and north and
     the samples' sky positions are their projections.  The frequencies are ``(u, v) =
     (North, East)``, so :func:`affine_visibility` reorders them before applying Lambda; one
     matrix cannot serve both orders.
-
-    ``first_order`` takes the ellipsoid's radii from their linearisation instead of the
-    level condition; see :func:`principal_axes`.
     """
     east, north = sky_basis(line_of_sight)
     projection = np.stack([east, north])                 # sky order
-    frame, radii = principal_axes(field, first_order=first_order)
+    frame, radii = principal_axes(field)
     shape = projection @ (frame * radii)                 # 2 x 3, columns scaled
     gram = shape @ shape.T                               # 2 x 2
     values, vectors = np.linalg.eigh(gram)
     return vectors @ np.diag(np.sqrt(np.maximum(values, 0.0))) @ vectors.T
+
+
+def first_order_coefficients(field, eye):
+    """The first-order brightness pattern's harmonics, in closed form (eq. 82).
+
+    To first order the pattern is a constant plus two quadrupoles, so the addition theorem
+    gives its coefficients directly:
+
+        a_00 = (1 - 4 eps_spin) sqrt(4 pi) ,
+        a_2m = -(16 pi / 5) [ eps_tide conj(Y_2^m(t_hat))
+                              - eps_spin conj(Y_2^m(s_hat)) ] ,
+
+    every other coefficient zero --- no odd order at all, since the pattern is even under
+    n -> -n.  The two axes are referred to the same observer frame as a sampled direction:
+    theta from ``north x east``, phi from North towards East.  That frame rule is not
+    optional; it is what makes these coefficients the ones :func:`visibility` expects.
+
+    No quadrature: ten harmonic evaluations and one constant, against ``n_samples``
+    evaluations for the projection in :func:`sphere_coefficients`.  Certificate V21 checks
+    the two agree, so this is the fast path and that is the reference.
+    """
+    east, north = sky_basis(np.asarray(eye, dtype=float))
+    polar = np.cross(north, east)
+    polar = polar / np.linalg.norm(polar)
+
+    def angles(direction):
+        return (float(np.arccos(np.clip(direction @ polar, -1.0, 1.0))),
+                float(np.arctan2(direction @ east, direction @ north)))
+
+    tide_axis, spin_axis = field.axes()
+    blocks = [np.zeros(l + 1, dtype=complex) for l in range(3)]
+    blocks[0][0] = (1.0 - 4.0 * field.centrifugal) * np.sqrt(4.0 * np.pi)
+    for m in range(3):
+        tide_term = sph_harm(2, m, *angles(tide_axis))
+        spin_term = sph_harm(2, m, *angles(spin_axis))
+        blocks[2][m] = -(16.0 * np.pi / 5.0) * (
+            field.tide * np.conjugate(tide_term)
+            - field.centrifugal * np.conjugate(spin_term))
+    return Coeffs(tuple(blocks))
 
 
 def sphere_coefficients(field, l_max=16, power=1.0, n_samples=20000, eye=None,

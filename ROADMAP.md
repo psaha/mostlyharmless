@@ -25,7 +25,7 @@ still open.
 | D11 | **Non-spherical sources: perturb in a deformation field.** The surface is `r(n) = R[1 + sum eps_lm Y_lm(n)]`, with an independent brightness perturbation, rather than a single flattening scalar; the `eps_lm` are the fitting parameters. The first-order visibility correction has **two** pieces — the interior integrand change and a **limb boundary term** from the moving silhouette — and both are required. Shape and gravity darkening enter at the same order and must be included together. Validate by the `eps^2` scaling of the residual, not merely by agreement. The reference implementation is a direct sky-plane ray-trace, chosen because it shares no algebra with the perturbation. |
 | D12 | **Triaxiality is required** — spinning stars in a binary — so a single flattening parameter will not do. Rotational and tidal quadrupoles about different axes are the natural input; the deformation-field parameterisation of D11 covers this. |
 | D13 | **Coefficients are half-complex and negative-order-free.** A real map is stored as `a_l0 = c_l0` and `a_lm = (c_lm - i s_lm)/sqrt(2)` for `m > 0`, one complex array per degree of length `l+1`, equivalently `I = sum_l [a_l0 Y_l0 + sum_{m>0} 2 Re(a_lm Y_lm)]`. The map is real by construction — there is no second set of stored coefficients to disagree with the first — and no unphysical direction for an optimiser to populate. Fitting goes through a flat real vector of exactly `(l+1)^2` numbers. The order is non-negative wherever it occurs, so the magnitude appears nowhere. |
-| D14 | **Negative orders are indices, never coefficients.** `Y_l^-m` is *defined* as `(-1)^m conj(Y_l^m)`, which coincides with the standard convention, and is used only in the rotation machinery, where the order indexes the representation. Coefficients are formed only for `m >= 0`; where the rotation would call for a negative-order coefficient its value is substituted, so the transform reads `b_lm' = D^l_{m'0} a_l0 + sum_{m=1..l} [ D^l_{m'm} a_lm + (-1)^m D^l_{m',-m} conj(a_lm) ]` with `m' >= 0`. The `m = 0` term appears once, not twice, because `a_l0` is real. The classical Wigner `d` and `D` therefore stay in the manual, rather than being relegated to the certificates. |
+| D14 | **Negative orders are indices, never coefficients.** `Y_l^-m` is *defined* as `(-1)^m conj(Y_l^m)`, which coincides with the standard convention, and is used only in the rotation machinery, where the order indexes the representation. Coefficients are formed only for `m >= 0`; where the rotation would call for a negative-order coefficient its value is substituted, so the transform reads `a_lm' = D^l_{m'0} A_l0 + sum_{m=1..l} [ D^l_{m'm} A_lm + (-1)^m D^l_{m',-m} conj(A_lm) ]` with `m' >= 0`. The `m = 0` term appears once, not twice, because `A_l0` is real. (The letters were renamed to match the manual: capital `A` is body-frame, lower case `a` observer-frame, and the visibility always takes the latter. This entry originally wrote `a` for body-frame and `b` for observer-frame, which collided with the rest of the document.) The classical Wigner `d` and `D` therefore stay in the manual, rather than being relegated to the certificates. |
 | D15 | **Flux, mean intensity, and normalisation.** With the convention of D8 (no prefactor), `V(0,0)` is the total flux — a linear functional of *all* the coefficients, not of `a_00` alone, because the disk integral weights each harmonic by the foreshortening factor `cos(theta)` rather than being orthogonal as the sphere integral is. Normalising the visibility to unity at the origin therefore means dividing by the instantaneous flux, which for a rotating spotted star is time-dependent and discards the light-curve information; the unnormalised convention is kept. Separately, `a_00` is `sqrt(4*pi)` times the mean intensity over the **sphere** — not the mean over the visible disk, and not the flux. Fixing `a_00` is a choice of overall brightness scale and does not by itself make `V(0,0) = 1` unless the map is constant. Where a flux constraint is wanted, its row is the mode visibilities at `q = 0`, which Stage 2 produces anyway. |
 | D16 | **No convenience features the user can add trivially, and `a_00 = 1`.** Two assumptions do the work that parameters, helper methods or wrappers otherwise would: the sphere has **unit radius**, and maps are normalised so that **`a_00 = 1`**, which makes every other coefficient a mode amplitude relative to uniform brightness. Both are documented assumptions rather than code constraints or conveniences such as `normalised()`, because a wrapper reduces the readability of the code for no real gain. The convention is preserved by rotation, the `l = 0` block being untouched by it, so the free coefficients of a map are those with `l >= 1`. The container itself stays general — it still holds arbitrary maps, including the zero map — and it is the modelling convention, not the container, that fixes `a_00`. |
 | D17 | **No `special/` package.** Bessel functions come straight from scipy and sympy, with no convention of ours to protect; the classical anchors — the uniform disk, and later the limb-darkened disk — are visibility functions and live in `visylm/visibility.py`. A module with one customer and no convention of its own is folded in rather than kept. |
@@ -34,9 +34,11 @@ still open.
 | D20 | **The application is intensity (HBT) interferometry.** The measured quantity is `|V|^2`, so the phase of `V` is not observable — but it is retained throughout, both for visualisation and because discarding it early would make the intermediate results harder to check, and squared only at the end. Two design consequences: the deliverable for deformed sources is a *diagnostic* evaluable on a sparse set of `(u,v)` points rather than an image, since a fitting loop over orientations makes a numerical transform per model too expensive; and the (u,v) sampling being sparse means the high-frequency behaviour of the transform is not the design driver. |
 | D21 | **Brightness is proportional to `g`, for now.** The surface brightness of the deformed star is set by the bolometric von Zeipel law, `T_eff^4 ∝ g` and hence `I ∝ g`, which is the simplest law that is also the standard one for radiative envelopes. The literature favours a weaker dependence — `T_eff ∝ g^beta` with `beta ≈ 0.25` radiative but nearer 0.08 for convective envelopes, so `I ∝ g^(4 beta)` and about `g^0.3` in the convective case, a much flatter law. This is recorded rather than acted on: the brightness law enters the renderer as a single exponent, so changing it later is a parameter and not a rewrite, and the figures will say which exponent they use. |
 | D22 | **The observable is normalised at the origin.** Intensity interferometry measures `|V|^2` in units of the zero-baseline correlation, so what is modelled is `V/V(0,0)`, which is 1 at the origin by definition. Every difference is therefore taken between *normalised* visibilities, so `Delta V(0,0) = 0` by construction, and the absolute flux — which the normalisation removes — is not modelled at all. This also settles the normalisation rung 1 had left open: the affine model is normalised by its own origin, and the unobservable flux difference between the star and its reference is divided out rather than carried. The *squared* difference `|V_tri|^2 - |V_ref|^2` is deliberately not used: the phase is retained, and the difference is taken on `V` itself. Worth recording why the normalisation is needed even against a volume-equivalent reference: the flux is the *projected area*, not the volume, so the two agree only for a sphere, and the deformed star's projected area depends on the viewing direction. |
-| D23 | **The azimuth reference is North, through East.** Position angles are measured from the observer's North toward East, the astronomical convention, which fixes both the reference axis and the sense. With `u` along North and `v` along East (D24), `psi = arctan2(v, u)` *is* the position angle, so `PA = psi` and no offset appears anywhere. Had the older convention been kept — `u` along East — the consequence would have been `PA = pi/2 - psi`, the other sign corresponding to North-through-West, and the two differ by a *reflection* rather than a rotation, flipping every odd-`m` sign and changing the meaning of the mirror symmetry of section 8. The body's longitude zero remains the body `x` axis, which is already the convention for the harmonic azimuth. The real-basis branch labelling (section 7 item 1) is a separate convention and is untouched by this. |
+| D23 | **The azimuth reference is North, through East.** Position angles are measured from the observer's North toward East, the astronomical convention, which fixes both the reference axis and the sense. With `u` along North and `v` along East (D24), `psi = arctan2(v, u)` *is* the position angle, so `PA = psi` and no offset appears anywhere. Had the older convention been kept — `u` along East — the consequence would have been `PA = pi/2 - psi`, the other sign corresponding to North-through-West, and the two differ by a *reflection* rather than a rotation, flipping every odd-`m` sign and changing the meaning of the mirror symmetry of section 8. The body's longitude zero remains the body `x` axis, which is already the convention for the harmonic azimuth. The real-basis branch labelling (T2) is a separate convention and is untouched by this. |
 | D24 | **The sky's orientation is shared by the ground and the image, departing from the radio convention.** `u` is the **North** component of the baseline and `v` the **East** component, so `V(u,v) = ∫ I(x_E, x_N) exp(-2 pi i (u x_N + v x_E))`. The third axis points from the sky *toward* the observer — into the ground for an observer looking up — so (North, East, toward the observer) is right-handed *given* the sky convention that North is up and East is to the left. The point of the swap is that `psi` becomes the position angle directly (D23), and that the coordinates on the sky and on the ground have the same orientation. The cost is deliberate: radio interferometry takes `u` as East-West and `v` as North-South, so this is a departure, justified only because our `(u,v)` are used throughout as *sky-plane* coordinates rather than as baseline hardware coordinates. Every image is therefore drawn with North vertical and East horizontal increasing leftward, images and `(u,v)` planes alike. *Status: decided, not yet implemented.* The obstacle is that the mode reduction's `psi` is tied to the harmonics' `phi`, which is measured from the body `x` axis; relabelling `(u,v)` alone rotates `psi` by `pi/2` while `phi` stays put, and V15 detects exactly that as a 0.14 residual. Doing it properly means re-referencing the body `x` axis to North as well — so the display maps the body `x` to the vertical — together with the transform and the V15 pairing. |
 | D25 | **The interactive GUI is a separate, optional front end.** Matplotlib widgets, since there is no Jupyter here, and nothing added to the library. Two radio buttons: the view is image or `(u,v)`, and the model has **three** settings so that the shape and the brightness approximations are varied separately --- `numeric` (exact level surface), `affine` (ellipsoid shape, exact brightness pattern) and `first-order` (ellipsoid shape, brightness linearised as in the manual's equation 74). The three-by-two split replaces the figures' four rows and adds the comparison the figures cannot make: the first-order pattern differs from the exact one at `O(eps^2)`, so that pair isolates the *brightness* approximation while `numeric` against `affine` isolates the *shape* one at `O(eps)`. The spin's position angle is *pinned to zero*, because for a single observation the sky's orientation is a gauge; the model keeps it for real data. The light is **fixed at the von Zeipel law**, `I ∝ g` (D21), with the exponent to be exposed as a slider later; and the analytic row keeps **only `l <= 2`**, discarding `l = 4` and above. Note what that is and is not: it is *not* "first order in `eps`". The `l = 4` content first appears at `eps^2` from `P_2^2`, so dropping it *is* the `eps^2` truncation — but the projection keeps the `l = 2` coefficient to all orders, including its own `eps^2` correction, so the retained set is "`l <= 2`, resummed in `eps`". The difference from a true first-order truncation is itself `O(eps^2)`, below the model's error, so the simpler and more accurate choice is `l <= 2`: `SPHERE_L_MAX = 2`, with no further decision to make. The free parameters are `eps_tide`, `eps_spin`, `i`, `lambda_tide` and `phi_tide`. The spin phase `alpha` is deliberately *absent*: this front end is for a spin and tide alone, and with no starspots the phase is degenerate with the tide's longitude — only their difference is observable — so a slider for it would move a gauge. The **latitude slider is constrained** rather than the amplitudes, and in the direction that is easy to get backwards: raising `lambda` *loosens* the bound, since at the equator the centrifugal quadrupole deepens the potential by `1.5 eps_spin` while along the spin it contributes nothing, so the infeasible region is near `lambda = 0` and the limit on the slider is a **lower** one. The eps sliders get upper limits from the same function. Clamping is applied after every change rather than by restricting ranges, because the feasible set is a polygon in the amplitudes rather than a box. Sliders show **degrees**; the conversion lives at the widget boundary, so the model and everything outside the GUI stay in radians. *Implemented so far:* single-threaded redraws, with a **numerical resolution control** of three labelled radio buttons in a column --- coarse, medium, fine. Discrete rather than continuous because every change costs a full redraw. Each level sets the surface samples, the image pixels and the `(u,v)` grid together (10 000/140/17, 30 000/220/23, 150 000/360/31), keeping the sample density per pixel roughly constant; only the samples are physics, so the control trades speed against noise, which is what makes it the way to tell a sampling artefact from a model error. The finest level matches the Stage 6 figures --- 150 000 samples for a rendering, a 31-point grid for a visibility map --- so it is publication quality at the cost of a visible pause, since the numeric `(u,v)` row costs `grid^2 x samples`, about fifty times the coarsest level. Widget references are held on the figure so that they are not collected; and clamping is written **back into the widgets**, so the thumb tracks the state rather than sitting where it was dragged. That last one matters because the clamp often moves a parameter other than the one being dragged --- raising `eps_tide` pushes `lambda` up --- so every slider is refreshed, with a guard flag to stop `Slider.set_val` re-firing its own callback. *Planned, not yet done:* coalescing updates --- numpy cannot be interrupted, so the intent is a worker thread, a latest-values slot holding the newest parameters, and stale results discarded, with the GUI thread only drawing --- and caching the level radii and brightness pattern across orientation changes, since they depend on the deformation alone. |
+| D26 | **The linearised level radii are not offered.** Taking the ellipsoid's radii from `delta r = -phi_1` instead of the level condition would remove the last root-find from the analytic rows and make them fully closed form. It is exact only to first order, and the next term is not small where it matters: `delta r = E + 3E^2 + ...` diverges as the closure bound is approached, giving a bulge of 0.144 where the cubic gives 0.366 at the ceiling. The saving is three bisections per parameter set --- some fifty scalar evaluations against the 10^5 the replaced quadrature cost --- so a shortcut that is safe only in a corner and buys nothing measurable is a hazard rather than an option. The brightness is linearised instead, which is exact at first order with no such divergence, and `principal_axes` always solves the level condition. |
+| D27 | **The surrogate is fitted in `(x,y)`, not in `(u,v)`.** By Plancherel an image-space fit is an `L2` fit over *all* `(u,v)`, so the answer no longer depends on which baselines were sampled --- which is what left the sparse-`(u,v)` least-squares underdetermined, since the coefficient count at `l <= 4` is comparable to a sparse baseline count. The procedure: unstretch the numerical image, `I'(y) = |det Lambda| I_num(Lambda y)` (the inverse of the manual's eq. 81), then project `I'` onto the *projected* harmonics on the unit disk --- the section 6 objects, with `exp(i m phi)` angular dependence and a Jacobi radial part. Their Gram matrix depends only on the mode count: not on `Lambda` and not on the node, so it is computed and inverted once, and a node costs one quadrature over the samples the numeric model already produced. Three consequences: `A_lm` becomes a linear functional of the image samples and therefore smooth in the parameters, which is what the interpolant needs; the sampling-driven part of the conditioning disappears, leaving only the intrinsic mode near-dependence, now a single `Lambda`-independent condition number checked once; and because the unstretched image should be supported inside the unit disk, the overshoot is a free diagnostic on `Lambda`. *Caveat recorded:* this is not a noise-weighted fit to real baselines. If the surrogate is used inside a fit to actual interferometric data, the `(u,v)` metric with those weights matches the use better; for interpolating the model, the image metric is the more robust choice because it is uniform in baseline rather than in sampling. |
 
 ---
 
@@ -60,13 +62,20 @@ Status: **derived** = worked out and checked during design discussion; **new** =
 | F12 | Odd family: parity doubling, Legendre recurrence, the `K` identity, the collapse | derived | 05 |
 | F13 | Odd result: single spherical Bessel `j_l(2 pi q)/q` with double-factorial coefficient | derived | 05 |
 | F14 | Zernike `R_n^m` from Jacobi; orthogonality on the disk | derived | 06 |
-| F15 | Zernike projection coefficients for the even family | structure derived; table to build | 06 |
+| F15 | Zernike projection coefficients for the even family | derived, table built (V12, V14) | 06 |
 | F16 | Zernike–Hankel identity: `int R_n^m J_m rho drho = (-1)^((n-m)/2) J_{n+1}(a)/a` | derived | 06 |
 | F17 | Even result: finite sum of odd-order ordinary Bessels | derived | 06 |
 | F18 | Full-map visibility by linearity over modes | trivial | 07 |
-| F19 | Limb-darkening profile and its `m = 0` harmonic coefficients | **new** | 08 |
-| F20 | Product identity / Gaunt coupling; limb darkening raised in order | **new** | 08 |
-| F21 | Anchors: uniform disk `2 J_1(x)/x`; linearly limb-darkened disk | known classically | 09 |
+| F19 | Limb-darkening profile and its `m = 0` harmonic coefficients | **new** | 11 |
+| F20 | Product identity / Gaunt coupling; limb darkening raised in order | **new** | 11 |
+| F21 | Anchors: the uniform disk `2 J_1(x)/x`, and the linearly limb-darkened disk | uniform disk derived (V16); limb-darkened **new** | 04, 11 |
+| F22 | Deformation field: a tidal plus centrifugal quadrupole with its `l = 0` piece, the level condition, and the closure bound | derived | 08 |
+| F23 | First-order relations `delta r = -phi_1` and `delta g = 4 phi_1` | derived | 08 |
+| F24 | First-order brightness and its coefficients in closed form, body and observer frames | derived | 08 |
+| F25 | Rung 1: `Lambda = sqrt(A A^T)`, `V = V_sphere(Lambda^T u)`, and the image-space counterpart | derived | 08 |
+| F26 | The half-complex pairing of the map and of the visibility, and the closed-form per-mode contribution | derived | 10 |
+| F27 | The disk-mode surrogate: `V ~ sum_M c_M Zhat_M(Lambda^T u)`, with the projection for `c_M` | proposed, not implemented | 09 |
+| F28 | The fitted rung: the disk harmonics `Phi_lm = Y_lm(n)(n.e)` with `n` the lifted direction, their Gram matrix, the unstretched-image fit and its two-way residual | derived and implemented | 08 |
 
 ---
 
@@ -81,15 +90,17 @@ src/mostlyharmless/
 │   ├── coefficients.py           # the Coeffs container (D13)
 │   ├── wigner.py                 # F4-F8
 │   ├── zernike.py                # F14
-│   ├── visibility.py             # F9-F13, F15-F18, plus the classical anchors
+│   ├── visibility.py             # F9-F18, plus the classical anchor
 │   └── deformation.py            # the potential, its level surface, the gravity there
 └── symbolic/
     ├── __init__.py
     ├── derivations.py            # one function per certificate, returning a residual
     ├── render.py                 # the reference ray renderer of Stage 6
-    ├── affine.py                 # rung 1: the projected stretch and its visibility
-    ├── emit.py                   # LaTeX fragments for the manual; run as a module
-    └── figures.py                # the figures of docs/generated/; run as a module
+    ├── affine.py                 # rung 1, and the closed-form first-order row
+    ├── fitted.py                 # rung 1 with fitted coefficients: disk harmonics, the fit
+    ├── emit.py                   # the LaTeX fragment; run as a module
+    ├── figures.py                # the figures of docs/generated/; run as a module
+    └── gui.py                    # the interactive model of D25; imports only the library
 ```
 
 ### `mostlyharmless.visylm`
@@ -98,69 +109,103 @@ src/mostlyharmless/
 # --- F1-F3 ---------------------------------------------------------------
 sph_harm(l, m, theta, phi)                  -> complex   # CS phase, theta polar
 real_sph_harm(l, m, theta, phi)             -> float     # cos/sin basis
-sph_harm_addition(l, th1, ph1, th2, ph2)    -> complex   # theorem LHS, for checks
+sph_harm_addition(l, th1, ph1, th2, ph2)    -> complex   # theorem LHS, for the checks
+normalisation(l, m) / associated_legendre(l, m, x)       # the pieces, public for the checks
+m_values(l) / factorial_ratio(l, m)
 
 # --- F4-F8 ---------------------------------------------------------------
 wigner_d(l, beta)                           -> ndarray   # d^l, index [m'+l, m+l]
 wigner_D(l, alpha, beta, gamma)             -> ndarray   # full D
-rotate_coefficients(coeffs, alpha, beta, pa) -> Coeffs   # body -> observer, our (alpha, beta, PA)
+rotation_matrix(alpha, beta, pa)            -> ndarray   # R = R_z(PA) R_y(beta) R_z(alpha)
+rotate_coefficients(coeffs, alpha, beta, pa) -> Coeffs   # body -> observer
 
 # --- F14-F15 -------------------------------------------------------------
 zernike_radial(n, m, rho)                   -> ndarray   # R_n^m, numeric, via Jacobi
 zernike_polynomial(n, m)                    -> sympy expr # R_n^m, exactly
 mode_polynomial(l, m)                       -> sympy expr # P_l^m(sqrt(1-rho^2)) = rho^m A(rho^2)
+zernike_coefficients(l, m)                  -> tuple     # even-family c_k, exact rationals
 
 # --- F9-F18 --------------------------------------------------------------
-visibility_mode(l, m, u, v)                 -> ndarray   # complex, Y_l^m, m >= 0
+visibility_mode(l, m, u, v)                 -> ndarray   # complex, Y_l^m, m >= 0, dispatches on parity
 visibility(coeffs, u, v)                    -> ndarray   # full map, by linearity
-radial_integral(l, m, q)                    -> ndarray   # the quadrature reference
-zernike_coefficients(l, m)                  -> tuple     # even-family c_k, exact rationals
+radial_integral(l, m, q, n_nodes=None)      -> ndarray   # the quadrature reference
+visibility_uniform_disk(u, v, theta_d)      -> ndarray   # the anchor, 2 J_1(x)/x
 
 # --- the deformation field (Stage 6) -------------------------------------
 Deformation(tide, tide_direction, centrifugal, spin_direction)
+    .axes()                                  # (tide axis, spin axis)
     .potential(x) / .gradient(x)             # Phi and grad Phi, analytic
     .level_radius(direction)                 # the inner crossing of Phi = -1
+    .level_radii(directions)                 # vectorised, on a common bracket
     .surface_gravity(direction)              # |grad Phi| there
     .axis_lengths() / .volume() / .equivalent_radius()
     .first_order_radii(direction)            # for comparison with the solver
-
-# --- classical anchors ---------------------------------------------------
-visibility_uniform_disk(u, v, theta_d)      -> ndarray   # 2 J_1(x)/x
-visibility_limb_darkened(u, v, theta_d, ld_coeffs) -> ndarray   # F21
 ```
 
 Public entry points take `(u, v)`; `q` and `psi` are derived internally (D9) and never appear in a
-caller's code. The intermediate `radial_integral(l, m, q)` is the workhorse and is deliberately
-public, because it dispatches on the parity of `l + m` and so keeps the odd and even paths
-separately visible and separately tested. `visibility_mode` applies the closed-form azimuthal and
-phase factors; `visibility` sums over modes.
+caller's code.
 
-A `Coeffs` container holds the ragged `(l, m)` coefficient set so that the ordering and the
-parity split are not the caller's problem. Kept inspectable (D5).
+The parity dispatch lives in `visibility_mode`, which is why the odd and even closed forms stay
+separately visible and separately tested. `radial_integral` is the **quadrature reference** those
+closed forms are checked against, not a production path: nothing in the library calls it, and the
+certificates do.
+
+A `Coeffs` container holds the ragged `(l, m)` coefficient set so that the ordering and the parity
+split are not the caller's problem. Kept inspectable (D5).
 
 **Naming collision to settle.** The limb-darkening literature uses `u`, `u_1`, `u_2` for the
-coefficients of the law, which clashes with `u` as a baseline coordinate. The signatures above use
-`ld_coeffs`, and the manual will need the same distinction stated explicitly.
+coefficients of the law, which clashes with `u` as a baseline coordinate. The manual will need that
+distinction stated explicitly when limb darkening (T1) lands, and the anchor function will have to
+carry it.
 
-The classical anchors live in `visylm/visibility.py` rather than in a special-functions module.
-The Bessel functions come straight from scipy and sympy, and the anchors are visibility functions,
-so a separate module would have a single customer and no convention of its own (D17).
+The classical anchor lives in `visylm/visibility.py` rather than in a special-functions module.
+The Bessel functions come straight from scipy and sympy, and the anchor is a visibility function, so
+a separate module would have a single customer and no convention of its own (D17). The
+limb-darkened anchor is F21 and is not written yet.
 
 ### `mostlyharmless.symbolic`
 
 ```python
-check_odd_collapse(l_max)                   -> residual
-check_zernike_jacobi(n_max)                 -> residual
-check_zernike_hankel(n_max)                 -> residual
-check_rotation_operator(l_max)              -> residual
-odd_case_expression(l, m)                   -> sympy expression
-even_case_coefficients(l, m)                -> list[Fraction]
-generate_table(l_max, path)                 -> None
-emit_latex_table(l_max)                     -> str
+# --- render.py, the reference ray renderer of Stage 6 --------------------
+sphere_directions(n_samples) / sky_basis(line_of_sight)
+surface_samples(field, eye, n_samples=..., power=...)   -> points, brightness, weights
+sphere_samples(field, eye, ..., linear=False)           -> the same, on the reference sphere
+first_order_brightness(field, directions, power) / sphere_brightness(field, power, ...)
+sky_image(points, brightness, weights, east, north, half_width, n)  -> array
+direct_visibility(points, brightness, weights, east, north, u, v)   -> complex
+
+# --- affine.py, rung 1 and the closed-form row ---------------------------
+principal_axes(field)                       -> (frame, radii)
+projected_stretch(field, eye)               -> ndarray   # 2x2 Lambda, sky order (east, north)
+sphere_coefficients(field, l_max=..., power=..., n_samples=..., eye=..., linear=False) -> Coeffs
+first_order_coefficients(field, eye)        -> Coeffs    # the closed form of section 8.7
+affine_visibility(sphere_visibility, stretch, u, v) -> ndarray
+
+# --- fitted.py, the fitted rung (manual section 8.8) --------------------
+disk_harmonic(l, m, east, north)            -> ndarray   # Phi_lm, the projection onto the disk
+design(l_max=4) / gram(l_max=4) / block_condition(l_max=4)
+fit_image(samples, stretch, east, north, l_max=4) -> Fit  # coefficients, residual, conditioning
+residual_of(coefficients, samples, stretch, east, north, l_max=4) -> (residual, norm)
+model_image(coefficients, stretch, half_width=..., n=...)  -> ndarray  # [north, east]
+
+# --- derivations.py -----------------------------------------------------
+check_*                                     -> residual  # thirty functions; tags in section 4
+
+# --- emit.py and figures.py, both run as modules ------------------------
+coefficients_table(l_max=...) / write(directory=None)
+cap_coefficients / sky_map   # the maps the figures and tests build
+figure_map / figure_uv / figure_convergence / write(directory=None)
+
+# --- gui.py, D25 --------------------------------------------------------
+Parameters [field]                          # the five sliders
+closure_depth / largest_spin / smallest_latitude / clamped
+compute_image(parameters, model=..., ...) / compute_visibility(parameters, model=..., ...)
+build(parameters) / main()
 ```
 
-Plus a CLI so the Makefile can drive emission:
-`python -m mostlyharmless.symbolic emit --lmax 10`.
+`emit` and `figures` are run as modules by the `data` target --- `python -m
+mostlyharmless.symbolic.emit` and `... .figures` --- and neither takes arguments: the defaults *are*
+the committed artifacts, which is what keeps the staleness test meaningful.
 
 ---
 
@@ -169,8 +214,7 @@ Plus a CLI so the Makefile can drive emission:
 | artifact | contents | notes |
 |---|---|---|
 | `docs/generated/coefficients.tex` | the even-family coefficients for the manual | emitted by `symbolic/emit.py` from the just-in-time coefficients (D19); printed to `l <= 3` |
-| `docs/generated/verification.tex` | register of certificates: tag, statement, function, rung, scope | emitted from the test list |
-| `docs/generated/*.pdf` | the starspot on both hemispheres, Re and Im V(u,v) normalised, the l_max convergence, and for Stage 6 the triaxial star with its gravity darkening and the visibility difference from its volume-equivalent sphere | emitted by `symbolic/figures.py`; rendered by the test suite at small size |
+| `docs/generated/*.pdf` | `map.pdf` (the starspot on both hemispheres), `uv.pdf` (Re and Im V(u,v), normalised) and `convergence.pdf` (the `l_max` sweep) | emitted by `symbolic/figures.py`; rendered by the test suite at small size. `figure_triaxial` and `figure_delta_visibility` are written by nothing --- see C11 |
 
 There is no `data/` directory and no coefficient data file. Coefficients are computed just in
 time in exact rational arithmetic (D19), so nothing has to read a table, and the emitters are the
@@ -185,7 +229,9 @@ size instead.
 
 ## 4. Certificates
 
-One tag, one function, one row in the register, one citation in the text.
+One tag, one claim, one citation in the text, and one register row per check. A tag may cover
+a small group when the checks share one claim --- V1 is three rows --- but no check should be
+left outside every tag. The table below lists tags, not functions.
 
 | tag | claim | rung |
 |---|---|---|
@@ -209,6 +255,13 @@ One tag, one function, one row in the register, one citation in the text.
 | V18 | the `K` identity, in our Condon–Shortley convention | numerical, `l <= 6` |
 | V19 | the deformation field against its first-order relations | numerical, residual/`eps^2` below 50 |
 | V20 | the level surface is level, and the analytic gradient matches a difference | numerical, `1e-8` |
+| V21 | the closed-form first-order harmonics against the quadrature that projects the same pattern | numerical, residual `~1e-5` |
+| V22 | the Zernike transform identity, against the library's `R_n^m`, by Gauss-Legendre | numerical, `n <= 8`, 400 nodes |
+| V23 | the mode at opposite baselines, `V_l^m(-u,-v) = (-1)^m V_l^m(u,v)` | algebraic, `1e-12` |
+| V24 | the first-order coefficients in the body and observer frames, through the rotation law | algebraic, `1e-12` |
+| V25 | the real basis is orthonormal, and matches the complex one up to the phase | numerical, `l <= 4` |
+| V26 | the fit returns a synthetic image's own coefficients | algebraic, `1e-12` |
+| V27 | the Gram matrix: analytic entry `1/4`, block structure, midpoint rule | numerical, `5e-3` |
 
 Two habits, from D10: prefer exact expansion and coefficient comparison to `simplify`; and
 state the rung and the scope next to every claim, in the register and in the text.
@@ -228,16 +281,17 @@ docs/
     05-odd.tex              F12-F13, lemmas 1-4
     06-even.tex             F14-F17, the Zernike route
     07-full-map.tex         F18
-    08-triaxial.tex         the deformation field, the affine model, rung 2
+    08-triaxial.tex         the deformation field, the affine model, rung 1, the closed form
     09-disk-modes.tex       a disk-mode surrogate, and a possible route to limb darkening
-    10-limb-darkening.tex   F19-F20
-    11-numerics.tex         accuracy, range of validity
+    10-pairing.tex          the half-complex pairing, map against visibility
+    11-limb-darkening.tex   F19-F20
+    12-numerics.tex         accuracy, range of validity
   generated/                emitted fragments
   refs.bib
 ```
 
-Every derivation section opens with a conventions preamble pulled from section 01, and each
-checked step carries its tag. Section 05 is the template for the compressed lemma style:
+Sections 01--10 exist; 11 and 12 are planned. Every derivation section opens with a conventions
+preamble pulled from section 01, and each checked step carries its tag. Section 05 is the template for the compressed lemma style:
 structural steps in full, mechanical algebra delegated to a named certificate.
 
 ---
@@ -322,7 +376,7 @@ truncation error is visible.
    bracket. Products: `surface_samples`, `sky_image`, and `direct_visibility`, a quadrature, so no
    Gibbs ringing at the limb. Tests include the decisive null case — a zero deformation rendering
    as the uniform disk, flux `pi` and `2 J_1(x)/x`. Brightness is `g^power` with the exponent a
-   parameter (D21); limb darkening is absent by construction until Stage 7, and the captions must
+   parameter (D21); limb darkening is absent by construction until T1, and the captions must
    say so.
 3. **The two figures.** Both are **done**: `figure_triaxial` and `figure_delta_visibility` in
    `symbolic/figures.py`. The render shows the star down the spin axis and inclined by 60
@@ -331,25 +385,26 @@ truncation error is visible.
    antipodal surface point rather than the mirrored one. A convex body's silhouette is the same
    from either side, so the two panels of a view share an outline and differ only in the shading,
    which is where the gravity darkening lives and so where the triaxiality shows.
-   The default is `eps_tide = 0.09`, `eps_spin = 0.03` — a 3:1 pair, which makes the perturbation
+   The default is `eps_tide = 0.096`, `eps_spin = 0.032` — a 3:1 pair, which makes the perturbation
    vanish at the tide's perpendicular, putting that semi-axis at exactly the reference radius — at
-   orbital `phase = 45` degrees and inclination 60, with principal semi-axes near
-   `(1.28, 1.00, 0.962)`. This is essentially the last usable step. *Ceiling:* closure needs
-   `eps_tide + 1.5 eps_spin < 0.148`, which at 3:1 means `eps_tide < 0.099`, so 0.09/0.03 is 91
-   per cent of the way and the surface is close to pinching along the tide axis. Two consequences
+   orbital `phase = 45` degrees and inclination 60. This is essentially the last usable step.
+   *Ceiling:* closure needs `eps_tide + 1.5 eps_spin < 0.148`, which at 3:1 means
+   `eps_tide < 0.099`, so 0.096/0.032 is 97 per cent of the way and the surface is close to
+   pinching along the tide axis. Two consequences
    worth expecting: the ellipsoid approximation is poor enough that the *outlines* should
    disagree, and the projection weight `r^2/(n.N)` grows sharply toward the bulge tip, so the
    renderer's own sampling is coarsest exactly where the model is worst — artefact and model
    error have to be told apart there. Beyond the ceiling the star opens toward the companion,
    which is Roche-lobe overflow rather than a numerical failure.
-   `figure_stretched_sphere` shows the actual rendering against the affine prediction — the same
-   potential's brightness evaluated on the unit sphere and stretched in the sky plane, samples
-   moved to `Lambda x`, their area grown by `|det Lambda|` and their brightness divided by it so
-   each carries its flux. Both rows are shown with their **mean removed**, which is D22 in image
-   space: the affine model conserves total flux while the render does not (it sets `I ∝ g` with no
-   renormalisation), so the two would otherwise differ by a uniform factor of order the area ratio
-   that swamps the pattern entirely. What remains is the departure from uniform brightness, which
-   is what the model actually claims to reproduce.
+   Two further figures, `stretched-sphere.pdf` and `visibility-maps.pdf`, were written and then
+   **dropped**: both compared the rendering against the affine prediction, which the GUI now shows
+   interactively in its image pane, and neither was ever included in the manual. The comparison
+   they made survives as a *measurement* --- the affine residual test prints the worst
+   `|V_affine - V_star|` at the working amplitudes and at the ceiling --- which is where I2's
+   two numbers come from. One point they made is worth keeping in view: the two must be compared
+   with their **mean removed**, which is D22 in image space, because the affine model conserves
+   total flux while the render does not (it sets `I ∝ g` with no renormalisation), so otherwise
+   they differ by a uniform factor of order the area ratio that swamps the pattern entirely.
    *The phase is not cosmetic.* With the tidal axis *in* the plane of the spin and the line of
    sight, reflection through that plane fixes both quadrupoles, so the image keeps the mirror
    symmetry of an axisymmetric star however triaxial the body is, and the null test has nothing to
@@ -359,8 +414,8 @@ truncation error is visible.
    the potential's units, where the undeformed `g` is 1, so all four panels share one colour scale.
    The sampler splats each sample bilinearly over four pixels, a nearest-pixel deposit having
    speckled at the earlier sampling.
-4. **Rung 1, the affine model.** **Done.** `symbolic/affine.py` has `body_axes`,
-   `projected_stretch` and `affine_visibility`. `Lambda = sqrt(A A^T)` with `A = P diag(a, b, c)`
+4. **Rung 1, the affine model.** **Done.** `symbolic/affine.py` has `principal_axes`,
+   `projected_stretch`, `sphere_coefficients`, `first_order_coefficients` and `affine_visibility`. `Lambda = sqrt(A A^T)` with `A = P diag(a, b, c)`
    and `P` the two rows (east, north): the projection is exact for an ellipsoid, so the only
    approximation is that the deformed body *is* one. `V_affine(u) = V_sphere(Lambda^T u)` carries
    **no flux factor**, the `1/|det Lambda|` that the change of variables puts on the image
@@ -371,72 +426,110 @@ truncation error is visible.
 5. **Rung 2**, documented in section 8, implemented only if rung 1's error demands it.
 
 *Gate:* the affine model against the ray-trace over a sweep of `eps`, inclinations and orientations,
-with the error *measured* and reported, and the oblate certificate of item 1. The reference for the
+with the error *measured* and reported, and the oblate certificate of its own item 1. The reference
+for the
 certificate is the **direct Fourier sum over the sampled surface**, not an FFT: an FFT imposes the
 periodicity of the picture and so Gibbs ringing at the limb, which no refinement removes. The FFT
 stays for filling the (u,v) plane in the figures, where low `(u,v)` — where HBT operates — is
 trustworthy.
 
-**Stage 7 — limb darkening.** F19–F20. Genuinely new; this is where Clebsch–Gordan / Gaunt
-enters. Not to be started before stages 1–5 are closed.
+**Stage 7 — the interactive GUI.** D25. **Done.** A separate module, matplotlib widgets only, no
+new dependency, and nothing added to the library: `compute_image` and `compute_visibility` are the
+compute path, `build` is the interface, and `Parameters` holds the five sliders, in degrees. Three
+models are offered --- numerical, affine and first-order --- over either the image or a sparse
+`(u,v)` set, at three resolutions. The latitude slider is clamped by the closure bound and the
+position angle is a gauge, so neither can be set to something the model cannot render; brightness
+is von Zeipel, and the analytic rows keep only `l <= 2`.
 
-**Stage 8 — the interactive GUI.** D25. A separate module, matplotlib widgets, no new
-dependency, and nothing added to the library. Two radio buttons select the four combinations the
-Stage 6 figures lay out; sliders cover the five parameters, with the latitude slider constrained
-by the closure bound and the position angle pinned as a gauge. Brightness is fixed at von Zeipel
-and the analytic row keeps only `l <= 2`, which is the `eps^2` truncation of the higher
-multipoles with the `l = 2` coefficient resummed — no further truncation to choose.
-Caching separates the cheap orientation sweeps from the expensive deformation changes, and stale
-updates are discarded rather than queued.
-*Gate:* the compute path is factored out of the widgets and tested headlessly — the four
-combinations render at preview settings within a stated time budget, and the closed-form closure
-bound agrees with the numerical scan in `level_radii`, which is a certificate worth having
-regardless of the GUI.
+The interface is deliberately not described further here. D25 records what was built and the
+layout is obvious from running it (`make gui`); prose that restates widget state is prose that goes
+stale, which is how this section came to describe a version with two radio buttons.
+
+*Gate:* the compute path is tested headlessly by eleven tests, including that the closed-form
+closure bound agrees with the numerical scan in `level_radii` --- a certificate worth having
+regardless of the GUI --- and that the linearised-brightness row differs from the affine one only
+at `O(eps^2)`.
 
 ---
 
-## 7. Open items
+## 7. Work outstanding
 
-1. **`real_sph_harm` labelling.** The manual labels the real basis `(l, m, c)` and `(l, m, s)`
+Three lists, by kind: what will be done and whose design is settled; what is deliberately undecided;
+and what may or may not be pursued. Entries are labelled rather than numbered --- `T` to be
+implemented, `O` for an open decision, `I` for an idea --- so that inserting one cannot break a
+cross-reference elsewhere.
+
+### Yet to be implemented
+
+**T1 — limb darkening.** Required, not optional: without it the model is wrong for real data,
+because the brightness law of section 8 depends on `g` alone. It is the *route* that is open, not
+the need. Two candidates. **On the sphere**, multiply the pattern by `f(mu)` with
+`mu = N_hat . e_obs`, a product of harmonics, so the coefficient update is a Clebsch--Gordan /
+Gaunt sum --- and a small one, because `f` is zonal about the line of sight, which leaves only the
+`m`-diagonal terms: a sum over `l` and `k` at fixed `m`, not the general triple product. **On the
+disk**, `mu = sqrt(1 - rho^2)` is radial, so limb darkening is a Zernike expansion with `m = 0` and
+no angular coupling at all --- manual section 9.5, and the reason this may re-scope from a Gaunt
+problem into the same piece of work as the disk surrogate.
+
+Three things bear on that choice. (i) **It breaks the rotation trick**: `mu` is defined relative to
+the observer, so a limb-darkened coefficient set cannot be rotated from one orientation to another,
+and the factor must be applied *after* the rotation. (ii) **The zonal property is exact only for a
+sphere, or for a configuration axisymmetric about the line of sight.** A deformed star tilts its
+normal, so `mu` varies with azimuth at fixed `rho`; the disk route is then exact only to `O(eps)`,
+which is the affine model's own accuracy rather than a new error. (iii) **Exactness for a deformed
+star cannot come from factorisation**: `mu` must be computed from the actual normal, per sample and
+per view, which is what the numeric row does --- and for a surrogate the right home is the
+*targets*, not the analytic layer.
+
+*What would settle it:* whether a modest mode count beats the affine model on the existing
+certificate while keeping the per-frequency cost small against the setup, and whether the radial
+basis really removes the Gaunt requirement once the normal tilts. F19--F20; the manual plans it as
+section 11, and the classical linearly limb-darkened disk is a two-term Bessel combination worth
+reproducing as an anchor (F21).
+
+**T2 — `real_sph_harm` labelling.** The manual labels the real basis `(l, m, c)` and `(l, m, s)`
    with `m > 0`, while the code reaches the sine branch as `real_sph_harm(l, -m, ...)`. The two
    agree under D14. D18 has much reduced the stakes: the real basis is no longer in the visibility
    path, so the call sites are the real-basis certificates, the tests and the figures. Worth doing
    for the call sites' sake, not urgent.
-2. **Triaxial ellipsoid sources.** Now Stage 6, planned in sections 6 and 8 rather than open as a
-   question: the dipole flux weight, the coupling of the families and the two rungs are recorded
-   there. What remains undecided about it is the target case (item 5) and the diagnostic (item 4).
-3. **The reference direction of the baseline azimuth.** `psi = arctan2(v, u)` is measured from
-   `+u` = East towards `+v` = North, whereas a sky position angle is measured from North towards
-   East. Two variants have been raised and neither is settled. The first is simply to shift by
-   `pi/2`: the packed phase of a complex mode, `(-i)^m exp(i m psi) = exp(i m (psi - pi/2))`, then
-   has no stray factor. The second is to adopt the astronomical reference throughout, `psi` as a
-   position angle, which achieves the same tidying. Both cost something: the body azimuth `phi` is
-   a longitude, and the mode formulas pair `cos(m phi)` with `cos(m psi)`, so re-expressing `psi`
-   as a position angle makes the cosine branch contribute `cos(m pi/2 - m PA)`, which is
-   `+/- sin(m PA)` for odd `m` and `+/- cos(m PA)` for even `m` --- the branch names would
-   alternate meaning with `m`. Deliberately left open.
-4. **The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
+
+### Decisions deliberately left open
+
+**O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
    candidate: the `psi`-antisymmetric part of `|V|^2` about the projected spin axis, zero for an
    oblate star and `O(eps)` for a triaxial one. Alternatives — the phase of the azimuthal structure,
    or a fit of the low-order azimuthal harmonics — have not been compared against it, and the
    comparison should account for what the sparse sampling can actually constrain.
-5. **The target case for Stage 6.** A synchronous circular binary is the clean case, the tidal and
-   spin quadrupoles being perpendicular. A general oblique, eccentric or non-synchronous system
-   gives an arbitrary angle between them and, in the spin frame, a deformation that rotates with the
-   phase. To be settled before the figures, since it fixes what they show.
-6. **Spectral scope.** Gravity darkening is temperature-dependent, and intensity interferometry can
+
+### Further ideas
+
+**I1 — Spectral scope.** Gravity darkening is temperature-dependent, and intensity interferometry can
    observe in more than one band, so a *ratio* of `|V|^2` between bands would isolate the
    temperature variation from the shape. In scope now or later.
-7. **A disk-mode surrogate, and whether Stage 7 needs Gaunt.** The affine model's error is measured
-   to be **first order in `eps`**, not second: against the direct sum it is 0.0437 at the working
-   amplitudes, 0.0208 at half of them, and 0.0000 for the undeformed sphere (ratio 0.48, so the
-   projection machinery is sound and the residual is the 2x2 stretch's own linearisation of a
-   radial-nonlinear sky map). Since the purpose is a fast search over **sparse `(u,v)`** rather than
+
+**I2 — A disk-mode surrogate, and whether limb darkening needs Gaunt.** The affine model's error is measured
+   to be **first order in `eps`**, not second: against the direct sum over three baselines it is
+   0.0437 at `E = 0.0325`, 0.0208 at half of it, and 0.0000 for the undeformed sphere (ratio
+   0.48, so the projection machinery is sound and the residual is the 2x2 stretch's own
+   linearisation of a radial-nonlinear sky map). It is **not simply proportional** to `eps`
+   either. On one and the same 31 x 31 grid out to `q = 2`, the amplitude ceiling
+   `E = eps_tide + 1.5 eps_spin = 0.144` gives **0.3975** against **0.0645** at `E = 0.033`:
+   a factor 6.2 for a factor 4.4 in amplitude, i.e. a coefficient rising from about `2 E` to
+   `2.8 E` as the pinch at 0.148 is approached --- the behaviour of an asymptotic series whose
+   next term is `3 E^2`. That number is also *grid-sensitive*: the difference of two oscillating
+   visibilities peaks between coarse grid points, so a 7 x 7 grid over the same range reports
+   about 0.16 for the same model, and the grid must be quoted with the number. The 0.0437 above
+   is a different measurement, over three baselines; it is the one that shows the first-order
+   scaling cleanly, halving as the amplitude halves, and it is not to be compared with the
+   ceiling number directly. The surrogate is therefore a
+   few-per-cent instrument for `eps` below about 0.03 and a forty-per-cent one at the ceiling,
+   which is the strongest argument for the disk-mode series that follows. Since the purpose is a
+   fast search over **sparse `(u,v)`** rather than
    percent-level accuracy, the option to explore is composing the stretch with a **disk-mode
    series** in the stretched frame, `V ∝ sum_M c_M Z_M(Lambda^T u)`: the stretch maps the elliptical
    silhouette to a circle, where the Zernike transforms are closed forms in `J_{n+1}`, so one mode
    costs one Bessel function, the affine model becomes the leading term, and the residual becomes a
-   mode-count truncation the user controls. The reason this may also **re-scope Stage 7** is that
+   mode-count truncation the user controls. The reason this may also **re-scope limb darkening (T1)** is that
    limb darkening is radial in the disk --- `mu = sqrt(1 - rho^2)` --- so it *is* a Zernike
    expansion with `m = 0`, and the classical linearly limb-darkened disk visibility is a two-term
    Bessel combination. Staying on the sphere makes `mu = n . e_obs` a degree-1 factor and therefore
@@ -446,8 +539,123 @@ regardless of the GUI.
    Gaunt requirement once the surface is deformed --- there the normal tilts by `O(eps)`, so `mu` is
    only radial to first order. Written up in section 9 of the manual.
 
+**I3 — An amortised surrogate for a family of atmosphere models.** Suppose a family of
+   stellar-atmosphere models becomes available, parameterised by `s` and evaluated at time `t`, so
+   that `V(u,v,t,s)` is computable but expensive per parameter set. Then a **network that outputs
+   the low-dimensional pair `(b_lm, Lambda)`**, with the analytic layer `V = sum_lm b_lm V_lm(Lambda^T
+   (u,v))` supplying the rest, makes the family cheap to search: the network learns a handful of
+   numbers, and the exact basis relation fixes the behaviour in `(u,v)`. That inductive bias is the
+   point for **sparse `(u,v)`**: between and beyond the sampled baselines the surrogate still
+   behaves like the basis functions rather than like a black box. Four rules follow from the design
+   discussion, and each changes what is built. (i) **Targets by rule, not by fit**: `b` comes from
+   projecting the lifted near-side image, which is linear and exact, and `Lambda` is *defined* ---
+   the image's second-moment ellipse is the natural choice --- because a fitted `Lambda` is only
+   weakly identifiable, its value drifting with truncation. (ii) **The loss is on `V`, not on the
+   coefficients**, since `b` is non-unique (the kernel is the invisible far side) and `Lambda` is
+   truncation-dependent, so coefficient-space error can be meaningless. (iii) **Factor the rotation
+   out** analytically with the `D` matrices, so the network carries only the slowly varying part
+   instead of spending capacity on sine waves. (iv) **Pin the mode count and the `Lambda` rule as
+   part of the definition**, without which `Lambda(t,s)` is not a well-defined target.
+   *Speculative, and dependent on an atmosphere model we do not have; it would also benefit from
+   I2's disk basis, which converges in few modes.* What would settle it: a cost-accuracy
+   comparison against direct projection at a fixed residual on a fixed `(u,v)` set, including the
+   failure mode that matters --- behaviour at baselines outside the training set. Two pieces of
+   the procedure are settled: the fit is in image space rather than in `(u,v)` (D27), and the
+   first candidate for the surrogate is a **sparse-grid or Chebyshev interpolant** of the residual
+   against the first-order expectation, with a network reserved for the case where the target
+   turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
 
+* **The fitted rung was implemented (was T3).** `symbolic/fitted.py` carries the disk harmonics
+  `Phi_lm = Y_lm(n)`, the design plan and its Gram matrix, `fit_image` with both residual routes,
+  `residual_of` for comparing against a projection, and `model_image` for display.  It is the model's
+  fourth row, labelled *fitted, `l = 0,2,4`*, with the residual in the panel titles; the Gram
+  conditioning is printed once at startup, being a property of the basis and not of the parameters.
+  Certificates V26 and V27.
+* **O1 was not an open decision.** "The reference direction of the baseline azimuth" presented `u`
+  along East as the status quo and the task as a `pi/2` shift. D23 had already fixed the opposite ---
+  `u` along North, `v` along East --- so `psi = arctan2(v, u)` *is* the position angle with no offset
+  anywhere; and D23 records the North-through-West alternative as *rejected*, which is what the item
+  had mistaken for the current convention. Nothing else needed changing: the manual is consistent
+  throughout (section 1 on the axes and the azimuth reference, section 3 on PA, section 4 on the
+  baseline direction, section 8 on the reordering), and so is the code --- every axis label in the
+  figures and in the GUI reads `u` (North) and `v` (East).
+* **Two open items retired as stale.** "Triaxial ellipsoid sources" was superseded by Stage 6 and
+  said so in its own text, and "the target case for Stage 6" was to be settled "before the figures"
+  --- figures that have since been deleted. Both were describing future work that had happened.
+* **Limb darkening left the build order.** It was Stage 7, with a question rather than a design and
+  a precondition that is now satisfied; it is T1, where the obligation and the two candidate routes
+  are set out. The GUI moves from Stage 8 to Stage 7, so the build order now ends with a completed
+  stage. Section 7 is split into three labelled lists --- T to be implemented, O open decisions,
+  I ideas --- so that a cross-reference cannot be broken by inserting an entry.
+* **Section 8 was a stale design annex.** It opened "not yet scheduled" though the work was done,
+  quoted an `O(eps^2)` residual of 1 per cent where the measurement is 13, and left the rung-1 flux
+  question open that D22 settled. The duplicated parts are gone; what remains is the cost argument
+  (build the image once, FFT once, interpolate), the binary-specific consequences --- two independent
+  angles, orientation as a frame change, orbital phase as a fitting axis, reflex motion --- and an
+  honest statement of which prior art is and is not surveyed. The subsection that held the cleanup
+  list is retired with it, the list being empty. Was cleanup C10.
+* **The Jupiter caricature was a relic.** `figure_jupiter`, `jupiter_coefficients`, the
+  `JUPITER_*` constants, the `_banded_moments` helper and the rendering test are gone; it was in
+  `__all__` and in the Makefile's figure list but written by nothing and included nowhere, and it
+  never earned its place. `eval_legendre` stays, since `cap_coefficients` uses it. Was cleanup C12.
+* **Two more figures were tested but written nowhere.** `figure_triaxial` and
+  `figure_delta_visibility` are gone, with `triaxial_field`, the `TRIAXIAL_*` constants and the
+  `DELTA_*` defaults that only they used, and with their rendering tests. Superseded by the GUI in
+  the same way as the pair C1 removed: they showed the deformed star against the affine prediction,
+  which the GUI now does interactively. `SPHERE_L_MAX` stays, since the GUI imports it. Was cleanup
+  C11.
+* **The `data` target listed figures nothing wrote.** `FIGURES` in the Makefile named six PDFs;
+  `figures.write()` emits three. `triaxial.pdf` and `delta-visibility.pdf` went with C11, and
+  `jupiter.pdf` was never written at all, so the list is now the three that exist. `figure_jupiter`
+  remains in the module, tested and unused --- logged as C12.
+* **`docs/generated/verification.tex` was promised and never built.** Dropped rather than
+  implemented: the registers now live at the end of the sections that make the claims, so a
+  generated global register would be a second copy --- and a copy that can drift, which is what
+  cleanup C9 was about. Two sentences elsewhere assumed such a thing existed, in section 1.5 and in
+  the preamble comment, and now say what is true: each tag resolves to a named function, and the
+  register of the section that cites it lists it. Was cleanup C6.
+* **`V2` was cited nowhere, and part of section 2 was untagged.** `V2` now has its citation where the
+  extension is defined, in section 1, and its row in section 2's register; the real basis gets a tag
+  of its own, `V25`, covering both of its checks; and `V3`'s row now says that it covers the complex
+  and real forms of the addition theorem, since two functions sit behind it. All thirty checks are
+  now behind a tag, and every tag is both registered and cited. Was cleanup C9.
+* **The formula inventory was stale and incomplete.** F15 now records that its table is built and
+  certified by V12 and V14; F19--F21 point at the sections that exist, with the anchors split
+  between the uniform disk (derived, V16, section 4) and the limb-darkened one (new, section 11);
+  and six entries were added for material the inventory claimed to cover but did not --- the
+  deformation field and its closure bound, the first-order relations, the closed-form coefficients,
+  rung 1 with its image-space counterpart, the pairing, and the disk-mode surrogate. Was cleanup C8.
+* **Stage 8 (now Stage 7) described a superseded GUI.** It spoke of two radio buttons and four combinations; the
+  interface has three models, a radio for image against `(u,v)` and one for resolution, with the
+  sliders in degrees. Rather than chase the current layout, the paragraph now records only what is
+  stable --- the compute path, the three models, the clamps, the mode count --- and points at D25
+  and at `make gui` for the rest. Was cleanup C5.
+* **Stage 6 named a renamed function and quoted superseded defaults.** It said `body_axes`,
+  which is `principal_axes`, and gave `eps_tide = 0.09`, `eps_spin = 0.03` with everything
+  downstream of that arithmetic. The defaults are now 0.096 and 0.032, the fraction of the
+  closure bound recomputed at 97 per cent, and the three principal semi-axes dropped: they were
+  tied to the old amplitudes and cannot be re-derived without running `axis_lengths()`. Was
+  cleanup C4.
+* **The documentation plan numbered the sections wrongly.** It listed `10-limb-darkening.tex`
+  and `11-numerics.tex`, sketching a manual without the pairing section. Section 5 now reads
+  10-pairing, 11-limb-darkening, 12-numerics, matches the ten sections that exist, and notes
+  which two are still to come. Was cleanup C2.
+* **The API listing described a package that did not exist.** Section 2 now names what the tree
+  contains: `gui.py` is in the layout, the five functions that were never written are gone
+  (`visibility_limb_darkened`, `odd_case_expression`, `even_case_coefficients`,
+  `generate_table`, `emit_latex_table`), and the `render`, `affine`, `emit`, `figures` and
+  `gui` entry points are listed. Two prose claims went with them: that `radial_integral`
+  dispatches on parity (it is the quadrature reference; `visibility_mode` dispatches), and
+  that there is a `--lmax` CLI (both modules are run bare, and their defaults are the
+  committed artifacts). Was cleanup C3.
+* **The certificates table stopped at V20.** V21--V24 are now in section 4, matching the manual's
+  registers word for word, and the rule above the table was corrected to describe what is
+  actually done: a tag may cover a group of checks, as V1 does. Was cleanup C7.
+* **The two superseded Stage 6 figures.** `stretched-sphere.pdf` and `visibility-maps.pdf` are
+  gone, with their renderers and their rendering tests: the GUI shows the same comparison
+  interactively, neither figure was ever included in the manual, and the number they printed is
+  now asserted by the affine residual test. Was cleanup C1.
 * **`make docs` strictness.** Settled by D6 as amended: `make all` checks before it documents and
   stops if the certificates fail, while `make docs` stays the plain LaTeX path.
 * **A bibliography.** `docs/refs.bib` with six entries, natbib in author-year style and `bibtex`
@@ -460,149 +668,39 @@ regardless of the GUI.
 
 ---
 
-## 8. Non-spherical sources: triaxiality and the deformation field
+## 8. Non-spherical sources: what is left of the design notes
 
-Approach agreed (D11, D12); not yet scheduled. The analysis below is retained in full because it is
-what the approach rests on.
-
-**Parameterisation.** A triaxial ellipsoid is an affine image of the sphere: `P = L n` with
-`|n| = 1`, where `L` is the stretch (symmetric positive definite in the body axes). The surface
-map is defined on the unit sphere and inherited, which keeps the spherical-harmonic expansion
-meaningful.
-
-**What survives.** Three structural features carry over unchanged:
-
-- the visible region in `n` is still a **hemisphere**, with axis the stretched line of sight
-  `L^{-1} e_los`, so the domain does not degenerate into an awkward region;
-- the kernel is still a **plane wave** in `n`, with a linearly stretched frequency
-  `w = L^T u_2D`. This is the part the "stretch u,v" intuition gets right;
-- the flux element is still **linear in `n`**:
-  `dx_E dx_N = |det L| (n . q) dOmega` with `q = L^{-1} e_los`. For `L = I` this reduces to the
-  familiar `cos(theta)`, so the formulation is a strict generalisation of what we already have.
-
-Note the consistency check that comes free: the weight vanishes exactly where the visible region
-ends, which is where the limb must be.
-
-**What breaks.**
-
-- The entry-point map is the larger root of a quadratic, hence **nonlinear**, so the projected
-  image is a nonlinear warp of the spherical image. There is no exact relation of the form
-  `V_ellipsoid(u,v) = V_sphere(M u, M v)`.
-- The flux weight is a **dipole** (a pure `l = 1` harmonic) rather than `n_z`. Multiplying by it
-  couples `l` to `l +- 1` through the spherical-harmonic product rule (Gaunt / Clebsch-Gordan),
-  which **flips the parity** and therefore couples the odd and even families. Expect finite sums
-  of spherical Bessels, not a single term.
-
-**Cases where stretching is exact.** Uniform brightness — the silhouette is an ellipse, so the
-visibility is the elliptical-disk transform, which is literally a stretched uniform disk. And any
-model defined directly on the sky plane rather than on the surface, where the Fourier scaling
-theorem applies. The second is a modelling choice worth weighing.
-
-**Related physics.** The surface normal is no longer radial, so limb darkening — a function of the
-angle between the normal and the line of sight — changes meaning and must be handled consistently
-or the law will be wrong. Gravity darkening is a separate multiplicative factor; for a rotating
-star it is axisymmetric about the spin axis, but a tidal term perturbs the surface gravity too, so
-the brightness field needs the same generality as the shape field (D11).
-
-**Prior art.** Interferometry of rapidly rotating, oblate, gravity-darkened stars is a mature
-area — Domiciano de Souza and collaborators, notably the Achernar work. To be surveyed before
-anything is built, since the value added here is closed form and speed, not feasibility.
-
-**Measured, not guessed.** A first-order perturbation leaves an `O(eps^2)` residual: about 1% at
-`eps = 0.1` and 4% at `eps = 0.2`, against interferometric precisions often better than 1%. The
-usable range is therefore to be *measured* by sweeping `eps` at fixed `(u,v)` and finding where the
-residual crosses the accuracy target, rather than assumed.
-
-**Agreed approach** (D11, D12), cheapest first.
-
-1. **Perturbation in a deformation field** about the sphere, carrying both a shape field and a
-   brightness field, each expanded in spherical harmonics. Covers oblateness, tides and general
-   small asphericity. This is Stage 6, ahead of limb darkening: it is cheap to evaluate pointwise,
-   which is what a fitting loop over orientations needs, whereas limb darkening is the harder
-   consistency problem.
-2. **Reference implementation: direct sky-plane ray-trace.** For each node in the silhouette, solve
-   the line–ellipsoid quadratic, take the entry point, evaluate the map there, and accumulate the
-   Fourier sum. Chosen over the hemisphere formulation precisely because it shares no algebra with
-   the derivation it validates. Converge its grid before drawing conclusions from any comparison.
-   Sum the series directly at the chosen `(u,v)` rather than transforming a rendered image: an FFT
-   imposes periodicity on a picture whose limb is a discontinuity, and the Gibbs ringing that
-   follows does not shrink with the grid, whereas direct summation converges with the sampling.
-3. **Exact treatment via the dipole / Gaunt coupling** — the honest generalisation, held in reserve
-   in case the measured range from item 1 proves too small to be useful.
-
-**The deformation field, and where it comes from.** The shape and the brightness are not
-independent. For a body whose surface is an equipotential, both follow from one potential
-perturbation `phi_1`, because on a level surface the normal is along `grad Phi`:
-
-    g_eff = |grad Phi| ,   delta r = -phi_1 / g_0 ,   delta g = d phi_1 / d r ,
-
-to first order in `phi_1`, with `phi_1` defined so that `-grad phi_1` is the extra acceleration.
-For uniform rotation `phi_1 = -(1/2) Omega^2 varpi^2`, which gives the equatorial bulge and the
-reduced equatorial gravity, both as they should be. Gravity darkening then enters multiplicatively,
-`T_eff ∝ g^beta` with `beta = 0.25` for radiative envelopes and near `0.08` for convective ones, so
-the brightness perturbation has the same angular dependence as `phi_1`: a separable
-`phi_1 = f(r) Y_l^m` gives a brightness perturbation that is also a pure `Y_l^m`. Rotation
-contributes `l = 2, m = 0` about the spin axis. The tidal quadrupole's axis is the companion's
-direction, generally at an angle to the spin, so *in the spin frame* it carries `m = 0, +-1, +-2`;
-only in the body's principal-axis frame is the triaxial figure diagonal, hence `m = 0, +-2` alone.
-Which frame matters, since our coefficients live in the spin frame, where `m = +-1` is what a tilt
-looks like. Three unequal axes need the two quadrupoles non-parallel; in a synchronous circular
-binary they are perpendicular, synchronous rotation putting the companion's direction in the orbital
-plane at right angles to the spin, and that is the clean triaxial case. Note also that the
-centrifugal term is not a pure quadrupole: its `l = 0` piece renormalises the effective monopole.
-That is why truncating the deformation at `l = 2` is physical rather than crude. A smooth,
-gravity-darkened, deformed star is then the monopole plus a handful of modes, and its visibility is a
-short sum of the mode visibilities of section 7. Caveat: the surface is assumed an equipotential,
-which holds for uniform rotation and no meridional circulation; under differential rotation the shape
-and the gravity are independent fields.
-
-**The two rungs.** Rung 1 is the **affine model**: the deformed brightness pattern is the linear
-image of the undeformed one, so `V(u) = V_sphere(Lambda^T u)` with `Lambda` the stretch. It is exact
-for the projected shape of a uniform ellipsoid, one line at the call site, pointwise, and cheap
-enough for a million orientations. It is a *model*, not a controlled approximation of a
-surface-mapped ellipsoid: its difference from the ray-trace is first order in the deformation, and
-that difference is to be *measured*, not assumed. Whether the stretch preserves flux or surface
-brightness is left unspecified, the applications being insensitive to it. Rung 2 is the first-order
-surface perturbation in the stretched parameterisation: the frequency stretch is a directional
-derivative of the `V` we already have, and the only genuinely new object is the transverse part of
-the dipole weight, which needs the solid-angle sibling of our radial integrals. Documented now,
-implemented only if rung 1's measured error demands it.
-
-**What the application wants.** The measured quantity is `|V|^2`, so the phase is unavailable (D20)
-and the target is a *diagnostic* for a sparse set of baselines, not an image. The candidate is a
-null test on mirror symmetry: an axisymmetric star's visible-hemisphere image is symmetric under
-reflection in the plane containing the line of sight and the spin axis, so `|V|^2` has only cosine
-harmonics in the azimuth measured from the projected spin axis. A triaxial figure is not invariant
-under that reflection, so the antisymmetric part appears at `O(eps)`. That needs only pairs of
-baselines mirrored about an axis, not a filled plane, and a null is easier to measure than an
-amplitude. Rotation or orbital phase modulates it, which is the rotation-synthesis idea. For the
-difference against a spherical reference, use the *volume-equivalent* sphere, `R = (abc)^(1/3)`:
-same volume, so the same flux for uniform brightness, hence `Delta V(0,0) = 0` and only asphericity
-shows.
+The approach (D11, D12) is now **implemented**, and the account of it is section 8 of the manual:
+the deformation field, the level surface, the first-order relations, the closed-form coefficients and
+rung 1. The measured error is I2 above. What follows is only what the manual does not carry, the
+rest having been removed as duplicated.
 
 **Cost, and its mitigation.** A numerical silhouette integral is milliseconds per `(u,v)`, which is
-hopeless inside a fitting loop (`10^4` data points x `10^6` samples). But the image does not depend
-on `(u,v)`: build it once per model evaluation and FFT it to obtain the whole uv plane, then
-interpolate to the sampled points. Not as fast as the closed form, which costs `O(number of modes)`
-Bessel evaluations per point, but it keeps the numerical route viable as a fallback.
+hopeless inside a fitting loop (`10^4` data points x `10^6` samples). But the image does not depend on
+`(u,v)`: build it once per model evaluation and FFT it to obtain the whole uv plane, then interpolate
+to the sampled points. Not as fast as the closed form, which costs `O(number of modes)` Bessel
+evaluations per point, but it keeps the numerical route viable as a fallback --- and it is the thing
+any surrogate of I3 would be checked against.
 
 **Binary-specific consequences.** Orbit and spin introduce structure the spherical case lacks.
 
 - **Two independent angles.** The surface map rotates with the spin phase; the tidal bulge is
-  oriented by the orbital phase. For non-synchronous rotation these differ, and conflating them
-  would be wrong.
+  oriented by the orbital phase. For non-synchronous rotation these differ, and conflating them would
+  be wrong.
 - **Orientation is a frame-change problem.** The deformation is naturally defined in the co-rotating
-  frame, so presenting it to the observer is exactly the rotation already handled by the Wigner D
-  machinery of section 03. That machinery is not only for surface maps.
+  frame, so presenting it to the observer is exactly the rotation the Wigner D machinery of manual
+  section 3 already handles. That machinery is not only for surface maps.
 - **Orbital phase becomes a fitting axis.** The ellipsoidal term varies with orbital phase, and the
-  classical photometric ellipsoidal modulation runs at twice the orbital frequency; the same
-  harmonic content appears in the visibility.
+  classical photometric ellipsoidal modulation runs at twice the orbital frequency; the same harmonic
+  content appears in the visibility.
 - **Reflex motion.** The star's wobble about the system barycentre is a sky-plane offset, hence a
   linear phase ramp in `(u,v)`. Trivial to include, but it must not be mistaken for structure in the
   visibility amplitude.
 
-**Prior art for the binary case.** Tidally and rotationally distorted stars in close binaries are
-the classical ellipsoidal variables, where this same expansion in spherical harmonics is the
-standard framework in the photometric domain. Worth surveying before deriving: the harmonic
-conventions and the standard coefficients may already exist in a form we can adopt, and it provides
-a well-defined comparison for the photometric limit (`q -> 0`).
+**Prior art, one half done.** The single-star literature is covered to the extent the manual's
+`dholakia2025` citation reaches it --- closed-form visibilities for a rotating, spotted, spherical
+star. Two things are not surveyed: rapidly rotating oblate gravity-darkened stars (Domiciano de
+Souza and collaborators, notably the Achernar work), and the ellipsoidal variables of close
+binaries, where this same expansion in spherical harmonics is the standard photometric framework and
+the conventions may already exist in a form we could adopt. In both cases the value added here is
+closed form and speed, not feasibility.

@@ -3,10 +3,11 @@
 Stage 8, D25.  Matplotlib widgets only --- no Jupyter, and nothing added to the library.
 
 Two radio buttons: the *view* is a rendering or a pair of ``(u,v)`` maps, and the *model* has
-three settings, so that the shape approximation and the brightness approximation can be
-varied separately.  ``numeric`` is the exact level surface; ``affine`` replaces the shape by
-the ellipsoid's stretch but carries the exact brightness pattern; ``first-order`` also
-replaces the pattern by its linearised form, equation (74) of the manual.  The sliders cover
+four settings, so that the shape approximation, the brightness approximation and the choice of
+coefficients can be varied separately.  ``numeric`` is the exact level surface; ``fitted`` keeps
+the ellipsoid's stretch but fits the coefficients at ``l <= 4`` instead of projecting the
+pattern (section 8.8 of the manual); ``affine`` carries the exact brightness pattern at
+``l <= 2``; ``first-order`` also replaces the pattern by its linearised form, equation (74).  The sliders cover
 the five parameters.  The brightness law itself is fixed at von Zeipel, ``I ∝ g`` (D21), and
 the position angle is pinned to zero as a gauge, so North is vertical.
 
@@ -28,16 +29,31 @@ from dataclasses import dataclass, replace
 import numpy as np
 from scipy.optimize import brentq
 
-from mostlyharmless.symbolic import affine, render
+from mostlyharmless.symbolic import affine, fitted, render
 from mostlyharmless.visylm.deformation import Deformation
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
 
 __all__ = ["Parameters", "closure_depth", "largest_spin", "smallest_latitude",
-           "clamped", "compute_image", "compute_visibility", "build", "main"]
+           "clamped", "compute_image", "compute_visibility", "fitted_report", "build",
+           "main"]
 
 # D25: the analytic row keeps l <= 2, the eps^2 truncation of the l >= 4 content with the
 # l = 2 coefficient resummed.  Not a choice to make.
 SPHERE_L_MAX = 2
+# The fitted row's truncation (manual section 8.8).  Wider than the analytic row's two,
+# because the point of it is to measure what the truncation costs.
+FIT_L_MAX = 4
+# The model radio, in order.  The fitted row sits last, below first-order, because it is the
+# one that replaces the coefficients rather than the shape or the brightness.
+MODEL_LABELS = ("numeric", "affine", "first-order", "fitted, l = 0,2,4")
+# The panel titles.  Module level rather than inline because mathtext is parsed at draw
+# time, so an unsupported symbol crashes the draw rather than a callback --- and draw-time
+# code cannot be covered by a headless test unless the strings are reachable.
+MODEL_TITLES = {"numeric": "the star",
+                "affine": "affine",
+                "first-order": "affine, linear $g$",
+                "fitted, l = 0,2,4": "fitted, l = 0,2,4"}
+VISIBILITY_TITLES = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
 CLOSURE = 0.148
 # Numerical resolution: discrete levels, chosen by radio buttons, because every change
 # costs a full redraw.  Each sets the surface samples, the image pixels and the (u, v) grid
@@ -145,8 +161,13 @@ def _view(inclination):
     return eye, render.sky_basis(eye)
 
 
-def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS):
+def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS,
+                  report=None):
     """The near and far hemispheres, as fractional departures from their own mean.
+
+    ``report``, if given, is filled with the near side's fit when the row is the fitted
+    one.  That is what the panel titles print: recomputing it would render the samples a
+    second time, and would also report a slightly different fit from the one displayed.
 
     The affine image is the sphere's image stretched in the sky plane --- exact as a
     coordinate stretch, no per-point sum --- and the numeric one samples the level
@@ -164,7 +185,15 @@ def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS):
     panels = []
     for sense in (1.0, -1.0):
         direction = sense * eye
-        if model == "numeric":
+        if model.startswith("fitted"):
+            # Lambda still comes from the level surface; only the coefficients are chosen.
+            star = render.surface_samples(field, direction, n_samples=samples)
+            fit = fitted.fit_image(star, stretch, east, north, l_max=FIT_L_MAX)
+            if report is not None and sense > 0.0:
+                report["fit"] = fit                     # the near side is the reported one
+            image = fitted.model_image(fit.coefficients, stretch, half_width=1.5,
+                                       n=pixels)
+        elif model == "numeric":
             star = render.surface_samples(field, direction, n_samples=samples)
             image = render.sky_image(*star, east, north, half_width=1.5, n=pixels)
         else:
@@ -196,9 +225,18 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
         def model_visibility(u, v):
             return (render.direct_visibility(*star, east, north, u, v) / flux)
     else:
-        coefficients = affine.sphere_coefficients(
-            field, l_max=SPHERE_L_MAX, n_samples=samples, eye=eye,
-            linear=(model == "first-order"))
+        if model.startswith("fitted"):
+            star = render.surface_samples(field, eye, n_samples=samples)
+            fitted_fit = fitted.fit_image(star, affine.projected_stretch(field, eye),
+                                          east, north, l_max=FIT_L_MAX)
+            coefficients = fitted_fit.coefficients
+        elif model == "first-order":
+            # the closed form of (83): no quadrature, ten harmonic evaluations.  The
+            # ellipse is still the exact one, so only the brightness is linearised.
+            coefficients = affine.first_order_coefficients(field, eye)
+        else:
+            coefficients = affine.sphere_coefficients(
+                field, l_max=SPHERE_L_MAX, n_samples=samples, eye=eye)
         sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
         stretch = affine.projected_stretch(field, eye)
 
@@ -214,6 +252,22 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
     return np.array([[model_visibility(u, v) for v in axis] for u in axis]) - reference
 
 
+def fitted_report(parameters, samples=SAMPLES):
+    """The fitted row's diagnostics for the near side (manual section 8.8).
+
+    The residual is the point of the row: with ``Lambda`` fixed it is the truncation floor
+    given the ellipsoidal shape, so comparing it with the affine row's error separates the
+    truncation from the shape model's own.  ``residual`` and ``residual_direct`` are the
+    same quantity by two routes and must agree; ``condition`` is a property of the basis
+    alone and does not depend on the parameters.
+    """
+    field = parameters.field()
+    eye, (east, north) = _view(parameters.inclination)
+    star = render.surface_samples(field, eye, n_samples=samples)
+    return fitted.fit_image(star, affine.projected_stretch(field, eye), east, north,
+                            l_max=FIT_L_MAX)
+
+
 def build(parameters=None):  # pragma: no cover - needs a display
     """The widget window; returns (figure, state) with the live parameters in ``state``."""
     from matplotlib import pyplot as plt
@@ -221,7 +275,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     state = {"parameters": clamped(parameters or Parameters()),
              "model": "numeric", "visibility": False, "refreshing": False,
-             "resolution": 0}
+             "resolution": 0, "stale": False, "timer": None}
 
     figure = plt.figure(figsize=(9.2, 6.6))
     axes = (figure.add_axes([0.06, 0.10, 0.36, 0.36]),
@@ -231,38 +285,75 @@ def build(parameters=None):  # pragma: no cover - needs a display
     state["colorbar"] = None
 
     def redraw(*_):
-        # A widget callback that raises would otherwise fail silently.
+        """Mark the view stale and schedule *one* redraw.
+
+        A slider fires its callback on every mouse motion while it is dragged, and each
+        change costs a full render.  Rendering inside the callback therefore enqueues work
+        faster than the event loop can drain it, and the window stops responding --- which
+        looks like a hang but is a backlog.  So: mark stale, restart a short timer, and
+        render once when the motion stops.  Without a timer (a non-interactive canvas) it
+        renders at once, as before.
+        """
+        state["stale"] = True
+        if state["timer"] is None:
+            _draw()
+        else:
+            state["timer"].stop()
+            state["timer"].start()
+
+    def _draw(*_):
+        """One render, if the view is stale.  A callback that raises must not vanish."""
+        if not state["stale"]:
+            return
+        state["stale"] = False
         try:
             _redraw()
         except Exception:                                   # pragma: no cover
             import traceback
             traceback.print_exc()
 
+    # Coalescing timer: one render per pause in the motion, not one per event.  It must be
+    # wired after ``_draw`` exists --- naming a local before its ``def`` runs is an
+    # UnboundLocalError, not a forward reference --- and some backends have no timer at
+    # all, in which case ``redraw`` falls back to drawing inline.
+    try:
+        timer = figure.canvas.new_timer(interval=200)
+    except Exception:                       # a backend without timers draws inline
+        timer = None
+    if timer is not None:
+        timer.add_callback(_draw)
+        state["timer"] = timer
+
     def _redraw():
         current = state["parameters"]
         samples, pixels, grid = RESOLUTIONS[state["resolution"]]
+        report = {}                     # filled by compute_image for the fitted row
         if state["visibility"]:
             values = compute_visibility(current, state["model"],
                                         samples=samples, grid=grid)
             panels = (values.real, values.imag)
-            titles = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
+            titles = VISIBILITY_TITLES
             limit = float(np.max(np.abs(values))) or 1e-30
             extent = (Q_MAX, -Q_MAX, -Q_MAX, Q_MAX)
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
         else:
             panels = compute_image(current, state["model"],
-                                   samples=samples, pixels=pixels)
+                                   samples=samples, pixels=pixels, report=report)
             # the two analytic rows differ only in the brightness pattern: exact versus
             # the first-order form of equation (74)
-            name = {"numeric": "the star", "affine": "affine",
-                    "first-order": "affine, linear $g$"}[state["model"]]
+            name = MODEL_TITLES[state["model"]]
             titles = (f"{name}, near", f"{name}, far")
             limit = float(np.nanmax(np.abs(np.concatenate(
                 [p.ravel() for p in panels])))) or 1e-30
             extent = (1.5, -1.5, -1.5, 1.5)
             labels = (r"$y$ (East)", r"$x$ (North)")
             bar_label = r"$g/\langle g\rangle - 1$"
+        if "fit" in report:
+            # the residual is the point of the row: at fixed Lambda it is the truncation
+            # floor, so it is not a defect of the fit but the price of l <= 4
+            titles = tuple(f"{title}  (residual {report['fit'].residual:.1e})"
+                           for title in titles)
         for axis_handle, data, title in zip(axes, panels, titles):
             axis_handle.clear()
             drawn = axis_handle.imshow(data, origin="lower", cmap="RdBu_r",
@@ -345,12 +436,13 @@ def build(parameters=None):  # pragma: no cover - needs a display
         slider_info.append((slider, name, in_degrees))
 
     # The radios go in a row below the sliders, where they cannot cover the slider labels.
-    # Three models rather than two, so that the shape approximation and the brightness
-    # approximation can be varied separately: "numeric" is the exact surface, "affine"
-    # is the ellipsoid shape with the exact brightness pattern, and "first-order" is the
-    # ellipsoid shape with the brightness of equation (74).
-    model_radio = RadioButtons(figure.add_axes([0.06, 0.47, 0.20, 0.19]),
-                               ("numeric", "affine", "first-order"))
+    # Four models rather than two, so that the shape approximation, the brightness
+    # approximation and the choice of coefficients can be varied separately: "numeric" is
+    # the exact surface, "affine" the ellipsoid shape with the exact brightness pattern,
+    # "first-order" the ellipsoid shape with the brightness of equation (74), and "fitted"
+    # the ellipsoid shape with the coefficients chosen rather than projected.
+    model_radio = RadioButtons(figure.add_axes([0.06, 0.47, 0.20, 0.21]),
+                               MODEL_LABELS)
     model_radio.on_clicked(model_callback)
     view_radio = RadioButtons(figure.add_axes([0.32, 0.50, 0.20, 0.13]),
                               ("image", "u,v"))
@@ -367,8 +459,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     resolution_radio.on_clicked(resolution_callback)
     figure._widgets = (sliders, model_radio, view_radio, resolution_radio)
+    print("fitted row: Gram condition numbers by order --- "
+          + ", ".join(f"m={m}: {c:.1f}"
+                      for m, c in enumerate(fitted.block_condition(FIT_L_MAX))))
 
-    redraw()
+    redraw()          # mark stale
+    _draw()           # and paint once, without waiting for the timer
     return figure, state
 
 

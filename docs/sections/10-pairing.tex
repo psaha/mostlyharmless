@@ -1,0 +1,120 @@
+% 10-pairing.tex -- the half-complex pairing, map against visibility.
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{The coefficient pairing}
+\label{sec:pairing}
+
+A map and its visibility are expanded with the \emph{same} stored coefficients, and by the
+same pairing.  This section collects that correspondence in one place, because it is used by
+every later section, it is easy to get wrong, and the two bases do not treat negative orders
+the same way.  Nothing here is new: it assembles results of
+sections~\ref{sec:harmonics}, \ref{sec:wigner} and \ref{sec:visibility}.
+
+\subsection{The map}
+\label{sec:pairing-map}
+
+The stored coefficients are those of order $m \ge 0$, and the map is real, so the negative
+orders are determined rather than stored:
+\begin{equation}
+  a_{l,-m} \;=\; (-1)^m\,\overline{a_{lm}} .
+  \label{eq:pairing-reality}
+\end{equation}
+Expanding over all orders and folding the negative ones back onto the stored half gives
+\begin{equation}
+  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_l^0(n)
+    \;+\; \sum_{m=1}^{l}\Bigl( a_{lm}\,Y_l^m(n)
+    \;+\; (-1)^m\,\overline{a_{lm}}\,Y_l^{-m}(n) \Bigr) \Bigr] ,
+  \label{eq:pairing-map}
+\end{equation}
+and because the harmonics obey
+\begin{equation}
+  Y_l^{-m} \;=\; (-1)^m\,\overline{Y_l^m} ,
+  \label{eq:pairing-y-negative}
+\end{equation}
+the two terms are conjugates of one another and
+\begin{equation}
+  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_l^0(n)
+    \;+\; \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl( a_{lm}\,Y_l^m(n) \bigr) \Bigr] .
+  \label{eq:pairing-map-real}
+\end{equation}
+
+\subsection{The visibility}
+\label{sec:pairing-visibility}
+
+The same coefficients, the same pairing, and the same stored half give
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_l^0(u,v)
+    \;+\; \sum_{m=1}^{l}\Bigl( a_{lm}\,V_l^m(u,v)
+    \;+\; (-1)^m\,\overline{a_{lm}}\,V_l^{-m}(u,v) \Bigr) \Bigr] .
+  \label{eq:pairing-visibility}
+\end{equation}
+Here, however, the negative orders obey a different rule,
+\begin{equation}
+  V_l^{-m} \;=\; \overline{V_l^m} ,
+  \label{eq:pairing-v-negative}
+\end{equation}
+so the second term is \emph{not} the conjugate of the first, and the $(-1)^m$ survives.  It
+combines with the mode's own phase to leave
+\begin{equation}
+  a_{lm}V_l^m + (-1)^m\overline{a_{lm}}\,\overline{V_l^m}
+  \;=\; 4\pi(-i)^m N_{lm}R_{lm}(q)\,\mathrm{Re}\bigl(a_{lm}e^{im\psi}\bigr) ,
+  \label{eq:pairing-contribution}
+\end{equation}
+which is the contribution quoted in section~\ref{sec:visibility}.  So
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_l^0(u,v)
+    \;+\; \sum_{m=1}^{l} 4\pi(-i)^m N_{lm}R_{lm}(q)\,
+      \mathrm{Re}\bigl( a_{lm}\,e^{im\psi} \bigr) \Bigr] .
+  \label{eq:pairing-visibility-real}
+\end{equation}
+
+\subsection{Why the two negative orders differ}
+\label{sec:pairing-why}
+
+Equation~\eqref{eq:pairing-y-negative} is a definition of the basis.  For the visibility the
+instruction ``take the mode at order $-m$'' contains a second operation: conjugating a
+harmonic also conjugates its phase, and a plane wave whose phase is conjugated is the wave at
+the opposite baseline.  What saves the derivation is
+\begin{equation}
+  V_l^m(-u,-v) \;=\; (-1)^m\,V_l^m(u,v) ,
+  \label{eq:pairing-baseline-sign}
+\end{equation}
+which follows from $\psi \to \psi + \pi$ in \eqref{eq:mode-visibility}: the order-$m$ mode
+picks up $e^{im\pi} = (-1)^m$.  Combined with the conjugation, the two signs cancel and leave
+plain conjugation, \eqref{eq:pairing-v-negative}.  That cancellation is the whole reason the
+map carries a $(-1)^m$ and the visibility does not, and the reason the mode sum shows a
+$(-i)^m$ phase at all.
+
+\subsection{What the pairing buys}
+\label{sec:pairing-buys}
+
+Three consequences, each used constantly:
+
+\begin{itemize}
+  \item only $m \ge 0$ is stored, halving the coefficient set, and half of what remains is
+    real ($a_{l0}$);
+  \item each stored coefficient costs exactly one mode evaluation, and the mode is a closed
+    form (section~\ref{sec:odd} or~\ref{sec:even}), so the cost of a visibility is set by
+    the number of modes and not by any sampling;
+  \item the pairing is unchanged by rotation, since \eqref{eq:coefficient-rotation} delivers
+    observer-frame coefficients in the same half-complex form.  A rotated map therefore
+    needs no re-derivation, only a new coefficient set.
+\end{itemize}
+
+Identity \eqref{eq:pairing-baseline-sign} is \textbf{certificate \vtag{23}}: it is checked
+directly against \eqref{eq:mode-visibility} at the two baselines, with no coefficients and no
+pairing involved, so the identity is isolated rather than inferred.  That isolation is the
+point.  The Hermitian symmetry of a real map, $V(-u,-v) = \overline{V(u,v)}$, also depends on
+it, but only in combination with the pairing, so a sign error common to both would satisfy
+the symmetry and still be wrong.  Certificate \vtag{23} would fail instead, and it would fail
+loudly if the sense of the azimuth were ever changed again --- which it has been.
+
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+tag & what is checked & kind \\
+\hline
+\vtag{23} & the mode at the opposite baseline, against \eqref{eq:mode-visibility} & algebraic \\
+\hline
+\end{tabular}
+\end{center}

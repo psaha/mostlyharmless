@@ -70,8 +70,10 @@ The harmonics are extended to negative orders by
   \label{eq:ylm-extension}
 \end{equation}
 which is a definition, and which coincides with the standard convention built
-from the associated Legendre function of negative order.  Negative orders are
-wanted in exactly one place, the rotation machinery of section~3, where the order
+from the associated Legendre function of negative order.  Both halves of that sentence are
+checked: that the identity holds for the associated Legendre functions we use, and that the
+implementation reproduces it, are the content of \textbf{certificate \vtag{2}}.  Negative
+orders are wanted in exactly one place, the rotation machinery of section~3, where the order
 is an index of the representation rather than of a map.
 
 Coefficients, by contrast, are never formed at a negative order.  For a real map
@@ -203,7 +205,8 @@ $\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\
 $a = 2\pi q$ & argument of the Bessel functions \\
 $l,\ m$ & degree and order, with $m \ge 0$ throughout \\
 $c_{lm},\ s_{lm}$ & real cosine and sine coefficients of a map \\
-$a_{lm}$ & complex coefficient of order $m \ge 0$, \eqref{eq:half-complex} \\
+$a_{lm}$ & complex coefficient of order $m \ge 0$ in the observer frame, \eqref{eq:half-complex} \\
+$A_{lm}$ & the same map's body-frame coefficients, related by \eqref{eq:coefficient-rotation} \\
 $n$ & Zernike radial degree \\
 $k = (n-m)/2$ & Jacobi degree, $m \ge 0$ \\
 $\alpha,\ \beta,\ \PA$ & spin phase, inclination, position angle \\
@@ -225,9 +228,9 @@ mean harmonic degree and order.
 \subsection{Verification conventions}
 
 Claims that rest on algebra rather than on argument carry a tag such as
-\vtag{11}, which resolves in the verification register to a named certificate
-function in \code{mostlyharmless.symbolic}.  Each such claim also states its
-scope and one of three evidence rungs:
+\vtag{11}, which resolves to a named certificate function in
+\code{mostlyharmless.symbolic}; the register at the end of each section lists the tags that
+section makes, with their scope.  Each such claim also states one of three evidence rungs:
 
 \begin{description}
 \item[exact] the residual simplifies to zero with the parameters left free;

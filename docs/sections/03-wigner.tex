@@ -19,13 +19,16 @@ the harmonics transform as
   Y_l^m(R^{-1}\hat n) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_l^{m'}(\hat n) ,
   \label{eq:rotation-law}
 \end{equation}
-so a map whose coefficients are $a_{lm}$ in the body frame has coefficients
+so a map whose coefficients are $A_{lm}$ in the body frame has coefficients
 \begin{equation}
-  b_{lm'} = \sum_{m=-l}^{l} D^l_{m'm}(R) \, a_{lm}
+  a_{lm'} = \sum_{m=-l}^{l} D^l_{m'm}(R) \, A_{lm}
   \label{eq:coefficient-rotation}
 \end{equation}
 in the observer frame: the matrix contracts the \emph{second} index of $D$, and no
-conjugation is involved.  Equation \eqref{eq:rotation-law} says that the two
+conjugation is involved.  The two symbols are kept apart throughout: capital $A_{lm}$ is
+body-frame, lower case $a_{lm}$ is observer-frame, and the visibility of
+sections~\ref{sec:visibility}--\ref{sec:full-map} always takes the latter, since that is
+the frame the modes $V_l^m$ are defined in.  Equation \eqref{eq:rotation-law} says that the two
 descriptions are one physical map evaluated at rotated arguments --- a statement
 that certif\-icate \vtag{6} tests directly.
 
@@ -95,13 +98,13 @@ Splitting the sum in \eqref{eq:coefficient-rotation} into $m \ge 0$ and $m < 0$,
 and substituting the value of each negative-order coefficient, gives an expression
 in which every coefficient carries a non-negative order:
 \begin{equation}
-  b_{lm'} = D^l_{m'0} \, a_{l0}
-  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, a_{lm}
-  + (-1)^m \, D^l_{m',-m} \, \overline{a_{lm}} \, \Big] ,
+  a_{lm'} = D^l_{m'0} \, A_{l0}
+  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, A_{lm}
+  + (-1)^m \, D^l_{m',-m} \, \overline{A_{lm}} \, \Big] ,
   \qquad m' \ge 0 .
   \label{eq:rotation-nonnegative}
 \end{equation}
-The $m = 0$ term appears once and not twice, because $a_{l0}$ is real: written as
+The $m = 0$ term appears once and not twice, because $A_{l0}$ is real: written as
 a pair it would be doubled.  Every negative order in \eqref{eq:rotation-nonnegative}
 is an index of $D$; none is a coefficient.
 

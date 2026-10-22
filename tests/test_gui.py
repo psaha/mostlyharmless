@@ -110,3 +110,67 @@ def test_the_linear_pattern_is_a_second_order_change():
     full, half = spread(1.0), spread(0.5)
     print(f"\nlinear-pattern spread: {full:.6f} {half:.6f}  ratio {half / max(full, 1e-30):.3f}")
     assert half < 0.4 * full
+
+
+def test_the_fitted_row_is_a_fourth_model():
+    """Four models now, and the fitted one is named for what it does."""
+    parameters = gui.Parameters(tide=0.03, spin=0.01)
+    assert gui.MODEL_LABELS[-1].startswith("fitted")
+    for model in gui.MODEL_LABELS:
+        values = gui.compute_visibility(parameters, model, samples=3000, grid=9,
+                                        q_max=1.0)
+        assert np.all(np.isfinite(values))
+        panels = gui.compute_image(parameters, model, samples=3000, pixels=31)
+        assert len(panels) == 2
+
+
+def test_the_fitted_row_beats_the_projected_one_in_its_own_norm():
+    """The fit is optimal in the image norm, so no projection can do better there.
+
+    Both live in the same span: the affine row's ``l <= 2`` coefficients, padded with
+    zeros to ``l <= 4``, against the fit's.  This is the property that makes the row a
+    diagnostic rather than another approximation.
+    """
+    from mostlyharmless.symbolic import affine, fitted, render
+
+    parameters = gui.Parameters(tide=0.05, spin=0.02)
+    field = parameters.field()
+    eye, (east, north) = gui._view(parameters.inclination)
+    stretch = affine.projected_stretch(field, eye)
+    star = render.surface_samples(field, eye, n_samples=8000)
+
+    projected = affine.sphere_coefficients(field, l_max=2, n_samples=8000, eye=eye)
+    projected_residual, norm = fitted.residual_of(projected, star, stretch, east, north)
+    fit = fitted.fit_image(star, stretch, east, north, l_max=4)
+
+    print(f"\nimage residual: projected {projected_residual:.3e}, "
+          f"fitted {fit.residual:.3e}, norm {norm:.3e}")
+    assert fit.residual <= projected_residual + 1e-9 * norm
+
+
+def test_the_fitted_report_agrees_with_the_row_it_reports():
+    """The headless accessor behind the fitted row's title.
+
+    Two routes to the same residual, and a residual small enough to be truncation rather
+    than a modelling failure at the sliders' default amplitudes.
+    """
+    parameters = gui.Parameters(tide=0.03, spin=0.01)
+    report = gui.fitted_report(parameters, samples=6000)
+    assert 0.0 < report.residual < 0.2
+    assert abs(report.residual - report.residual_direct) < 1e-9 * report.norm
+    assert len(report.condition) == 5
+
+
+def test_every_title_is_mathtext_the_backend_can_parse():
+    """A bad symbol in a title crashes the *draw*, not a callback, and `build` needs a display.
+
+    ``\\le`` is LaTeX but not mathtext, and that surfaced as a traceback from inside the
+    renderer with nothing pointing at the string.  Parsing the titles here makes the fault
+    a test failure instead.
+    """
+    pytest.importorskip("matplotlib")
+    from matplotlib.mathtext import MathTextParser
+
+    parser = MathTextParser("agg")
+    for title in list(gui.MODEL_TITLES.values()) + list(gui.VISIBILITY_TITLES):
+        parser.parse(title)                      # raises on an unknown symbol

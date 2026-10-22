@@ -195,23 +195,65 @@ def test_the_first_order_coefficients_are_the_closed_form():
     assert dv.check_first_order_coefficients() < 5e-3
 
 
-def test_the_first_order_stretch_differs_at_second_order():
-    """Linearised radii change Lambda only at O(eps^2), so the saving is free.
+def test_the_first_order_coefficients_agree_in_two_frames():
+    """V24: the body-frame coefficients rotated reach the observer-frame ones.
 
-    ``delta r = -phi_1`` is exact to first order, so the ellipsoid built from it differs
-    from the exact one at second order and no earlier.  Halving the amplitudes should
-    therefore quarter the difference; a factor of two would mean the linearised radius is
-    wrong at first order, which would be a bug rather than a saving.
+    One route refers each axis to the observer frame through the angles of section 8.7; the
+    other rotates the body-frame coefficients with the Wigner matrices.  They share only the
+    addition theorem, so this checks the frame rule itself.
     """
-    eye = np.array([np.sin(np.pi / 3.0), 0.0, np.cos(np.pi / 3.0)])
+    assert dv.check_first_order_frame() < 1e-12
 
-    def spread(scale):
-        field = Deformation(tide=0.02 * scale, tide_direction=(1.0, 0.0, 0.0),
-                            centrifugal=0.01 * scale, spin_direction=(0.0, 0.0, 1.0))
-        exact = affine.projected_stretch(field, eye)
-        linear = affine.projected_stretch(field, eye, first_order=True)
-        return float(np.max(np.abs(exact - linear)))
 
-    full, half = spread(1.0), spread(0.5)
-    print(f"\nstretch difference: {full:.8f} {half:.8f}  ratio {half / max(full, 1e-30):.3f}")
-    assert half < 0.4 * full
+def test_the_affine_error_at_the_working_amplitudes():
+    """The affine model's error, and its superlinear rise toward the closure bound.
+
+    Same configuration the Stage 6 figures used: a 3:1 tide-to-spin pair at the working
+    amplitudes, inclination 60 degrees, orbital phase 45.  ``figure_visibility_maps`` used to
+    print this number; the figure is superseded by the GUI, but the two values roadmap item 7
+    quotes still need an instrument, so the measurement lives here.
+
+    The assertion is on the *shape*, not on the digits: the residual is first order in the
+    amplitude with a coefficient that grows as the pinch is approached, so quadrupling the
+    amplitude must more than quadruple it.  Read the printed pair against item 7.
+
+    The baseline grid is the removed figure's exactly, ``q <= 2`` on 31 points a side.  Both
+    matter: the error is a supremum over the sampled baselines, and it is *grid-sensitive*,
+    since the difference of two oscillating visibilities peaks between coarse grid points ---
+    a 7 x 7 grid reports about 0.16 where the figure's 31 x 31 reports about 0.40 for the same
+    model.  Quoting the number therefore requires quoting the grid, and the test uses the
+    figure's so that the documented value is the one it prints.
+    """
+    eye = np.array([np.sin(np.radians(60.0)), 0.0, np.cos(np.radians(60.0))])
+    longitude = np.radians(45.0)
+    axis = np.linspace(-2.0, 2.0, 31)
+
+    def worst(scale):
+        field = Deformation(
+            tide=0.096 * scale,
+            tide_direction=(np.cos(longitude), np.sin(longitude), 0.0),
+            centrifugal=0.032 * scale, spin_direction=(0.0, 0.0, 1.0))
+        east, north = render.sky_basis(eye)
+        points, brightness, weights = render.surface_samples(field, eye, n_samples=20000)
+        coefficients = affine.sphere_coefficients(field, l_max=2, n_samples=20000, eye=eye)
+        stretch = affine.projected_stretch(field, eye)
+        sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
+
+        def sphere_visibility(u, v):
+            return visibility(coefficients, u, v) / sphere_flux
+
+        flux = render.direct_visibility(points, brightness, weights, east, north, 0.0, 0.0)
+        worst_value = 0.0
+        for u in axis:
+            for v in axis:
+                modelled = affine.affine_visibility(sphere_visibility, stretch, u, v)
+                summed = (render.direct_visibility(points, brightness, weights,
+                                                   east, north, u, v) / flux)
+                worst_value = max(worst_value, abs(modelled - summed))
+        return worst_value
+
+    small, ceiling = worst(0.226), worst(1.0)
+    print(f"\naffine error, 31 x 31 grid to q <= 2: {small:.4f} at E = 0.033, "
+          f"{ceiling:.4f} at the ceiling E = 0.144")
+    assert small < 0.08
+    assert ceiling > 2.0 * small

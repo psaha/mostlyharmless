@@ -41,3 +41,13 @@ def test_the_visibility_is_hermitian_for_a_real_map():
     values = visibility(coeffs, u, v)
     reflected = visibility(coeffs, -u, -v)
     assert np.max(np.abs(reflected - np.conjugate(values))) < 1e-12
+
+
+def test_the_mode_at_the_opposite_baseline():
+    """V23: V_l^m(-u,-v) = (-1)^m V_l^m(u,v), the identity the pairing rests on.
+
+    The Hermitian symmetry of a real map tests this only in combination with the pairing; a
+    sign error common to both would survive it.  This isolates the mode identity, so the
+    plain conjugation of the negative-order visibility is checked on its own.
+    """
+    assert dv.check_baseline_parity() < 1e-12

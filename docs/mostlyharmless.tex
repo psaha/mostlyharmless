@@ -6,8 +6,8 @@
 \usepackage[round]{natbib}
 \usepackage[hidelinks]{hyperref}
 
-% House macros.  \vtag resolves in the verification register to a named
-% certificate in mostlyharmless.symbolic (see section 1.5).
+% House macros.  \vtag resolves to a named certificate in mostlyharmless.symbolic,
+% listed in the register at the end of the section that cites it (see section 1.5).
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\PA}{\mathrm{PA}}
 \newcommand{\vtag}[1]{\textnormal{[V#1]}}
@@ -44,6 +44,7 @@ rung and the scope of every such claim are stated with it.
 \input{sections/07-full-map}
 \input{sections/08-triaxial}
 \input{sections/09-disk-modes}
+\input{sections/10-pairing}
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

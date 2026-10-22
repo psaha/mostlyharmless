@@ -131,8 +131,17 @@ family, and they carry the classical identity
 \end{equation}
 with $n-m$ even.  So \emph{one mode costs one ordinary Bessel function}, and a series of $M$
 modes costs $M$ of them.  That is the same shape of result as the even family's finite
-Bessel sum, and the identity is the natural candidate for the next certificate, since it
-underpins the whole construction and is cheap to check numerically.
+Bessel sum.
+
+The identity is \textbf{certificate \vtag{22}}, and it is worth being clear about why it can
+be certified so cleanly.  The integrand is a polynomial times a Bessel function, so
+Gauss--Legendre quadrature evaluates the integral to machine precision: any residual is the
+identity's own, not the quadrature's.  The check runs over every $(n,m)$ with $n \le 8$ and
+$n-m$ even, against the library's own $R_n^m$, so it certifies that the convention of
+section~\ref{sec:zernike} --- in particular the normalisation $R_n^m(1) = 1$ --- is the one
+the identity holds for.  That is the point worth having: an identity of this kind is easy to
+quote with the wrong normalisation, and the check fails immediately if the conventions
+disagree.
 
 \subsection{Why this may also be the limb-darkening route}
 \label{sec:disk-modes-limb}
@@ -194,3 +203,20 @@ per-parameter-set projection, which is the resource that is cheap.
 
 If all three hold, the surrogate replaces the affine model, and Stage~7 becomes a question
 of radial modes rather than of Gaunt coefficients.
+
+\subsection{Register}
+\label{sec:disk-modes-register}
+
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+tag & what is checked & kind \\
+\hline
+\vtag{22} & the Zernike transform identity, against the library's $R_n^m$ & numerical \\
+\hline
+\end{tabular}
+\end{center}
+
+One certificate is all this section can claim, because nothing else here is implemented: the
+identity is a fact about the basis, while the surrogate itself is a proposal.  The experiment
+of section~\ref{sec:disk-modes-test} is what would produce the next one.

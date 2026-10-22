@@ -120,3 +120,13 @@ def test_the_generated_coefficient_table_is_current():
     if not path.exists():
         pytest.skip(f"{path} not generated yet; run `make data`")
     assert path.read_text() == emit.coefficients_table()
+
+
+def test_the_zernike_bessel_identity():
+    """V22: the basis of the disk-mode surrogate, checked against the library's R_n^m.
+
+    int_0^1 R_n^m(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v.  Gauss-Legendre
+    quadrature of a polynomial times a Bessel function is exact to machine precision, so the
+    tolerance is the identity's, not the quadrature's.
+    """
+    assert dv.check_zernike_bessel_identity() < 1e-9

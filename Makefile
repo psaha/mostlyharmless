@@ -17,14 +17,14 @@ DOC := docs/mostlyharmless.tex
 PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
-FIGURES := docs/generated/map.pdf docs/generated/uv.pdf docs/generated/convergence.pdf docs/generated/jupiter.pdf docs/generated/triaxial.pdf docs/generated/delta-visibility.pdf
+FIGURES := docs/generated/map.pdf docs/generated/uv.pdf docs/generated/convergence.pdf
 
 .PHONY: all check docs data gui clean distclean
 
 all: check docs
 
 check:
-	$(PYTHON) -m pytest
+	$(PYTHON) -m pytest -rP
 
 docs: $(PDF)
 

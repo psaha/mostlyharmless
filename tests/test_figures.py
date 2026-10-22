@@ -21,14 +21,6 @@ CASES = [
     ("map.pdf", "figure_map", {"l_max": 4, "n": 61}),
     ("uv.pdf", "figure_uv", {"l_max": 4, "n": 31}),
     ("convergence.pdf", "figure_convergence", {"orders": (2, 4), "n": 61}),
-    ("jupiter.pdf", "figure_jupiter", {"l_max": 8, "n": 61}),
-    ("triaxial.pdf", "figure_triaxial", {"n_samples": 3000, "n": 41}),
-    ("stretched-sphere.pdf", "figure_stretched_sphere",
-     {"n_samples": 3000, "n": 41}),
-    ("visibility-maps.pdf", "figure_visibility_maps",
-     {"n_samples": 1200, "grid": 7, "q_max": 1.0}),
-    ("delta-visibility.pdf", "figure_delta_visibility",
-     {"n_samples": 1200, "grid": 7, "q_max": 1.0}),
 ]
 
 

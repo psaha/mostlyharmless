@@ -51,6 +51,7 @@ from mostlyharmless.visylm.zernike import (
     mode_polynomial,
     zernike_coefficients,
     zernike_polynomial,
+    zernike_radial,
 )
 
 __all__ = [
@@ -83,6 +84,11 @@ __all__ = [
     "check_deformation_first_order",
     "check_level_surface",
     "check_first_order_coefficients",
+    "check_zernike_bessel_identity",
+    "check_baseline_parity",
+    "check_first_order_frame",
+    "check_fitted_round_trip",
+    "check_disk_gram",
 ]
 
 THETA, PHI = sp.symbols("theta phi", real=True)
@@ -994,34 +1000,217 @@ def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000)
     n -> -n.  The axes are expressed in the observer frame exactly as a sampled direction
     is: theta from north x east, phi from North towards East.
 
-    The comparison is against the quadrature that projects the same pattern, so only
-    discretisation error should remain.  A wrong sign, a wrong constant or a wrong frame
+    The comparison is the production closed form of
+    :func:`affine.first_order_coefficients` against the quadrature that projects the
+    same pattern, so only discretisation error should remain --- and the certificate
+    covers the code the model actually calls, not a copy of it.  A wrong sign, a wrong constant or a wrong frame
     would show as a residual of order the coefficients themselves, some 1e-2, rather than
     the 1e-5 or so that quadrature leaves.
     """
-    from mostlyharmless.symbolic import affine, render
+    from mostlyharmless.symbolic import affine
 
     eye = np.array([np.sin(np.pi / 3.0), 0.0, np.cos(np.pi / 3.0)])
     field = Deformation(tide=tide, tide_direction=(1.0, 0.0, 0.0),
                         centrifugal=centrifugal, spin_direction=(0.0, 0.0, 1.0))
     projected = affine.sphere_coefficients(field, l_max=2, n_samples=n_samples,
                                            eye=eye, linear=True)
+    closed = affine.first_order_coefficients(field, eye)
+    return float(np.max(np.abs(closed.to_vector() - projected.to_vector())))
 
+
+# --------------------------------------------------------------------------
+# V22 -- the Zernike transform identity of section 9
+# --------------------------------------------------------------------------
+
+def check_zernike_bessel_identity(n_max=8, values=(0.7, 1.7, 3.0, 6.0)):
+    """V22, numerical rung -- the identity the disk-mode surrogate rests on.
+
+    For ``n - m`` even and the normalisation ``R_n^m(1) = 1`` of section 6.2,
+
+        int_0^1 R_n^m(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v ,
+
+    which is what makes one disk mode cost exactly one ordinary Bessel function, so that a
+    series of M modes costs M of them and nothing more.
+
+    Checked against the library's own ``zernike_radial`` by Gauss-Legendre quadrature, which
+    for a polynomial times a Bessel function is exact to machine precision, so any residual
+    is the identity's and not the quadrature's.  ``v = 0`` is left out because the right
+    side is a limit there rather than the identity's statement.
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(400)
+    rho = 0.5 * (nodes + 1.0)
+    weights = 0.5 * weights
+    worst = 0.0
+    for n in range(n_max + 1):
+        for m in range(n + 1):
+            if (n - m) % 2:
+                continue
+            radial = zernike_radial(n, m, rho)
+            coefficient = (-1.0) ** ((n - m) // 2)
+            for value in values:
+                integral = float(np.sum(weights * radial * jv(m, value * rho) * rho))
+                expected = coefficient * jv(n + 1, value) / value
+                worst = max(worst, abs(integral - expected))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V23 -- the mode at the opposite baseline
+# --------------------------------------------------------------------------
+
+def check_baseline_parity(l_max=6, q_values=(0.3, 1.1, 2.5, 5.0)):
+    """V23, algebraic -- the mode at the opposite baseline.
+
+        V_l^m(-u, -v) = (-1)^m V_l^m(u, v) ,
+
+    which is what makes the plain conjugation of the negative-order visibility correct, and
+    so what produces the ``(-i)^m`` phase of the mode sum.  It follows from ``psi -> psi + pi``,
+    but it is checked here directly against ``visibility_mode``, with no coefficients and no
+    pairing involved, so the identity is isolated rather than inferred from the Hermitian
+    symmetry of a whole map.
+    """
+    worst = 0.0
+    angle = 0.7
+    for l in range(l_max + 1):
+        for m in range(l + 1):
+            for q in q_values:
+                here = visibility_mode(l, m, q * np.cos(angle), q * np.sin(angle))
+                there = visibility_mode(l, m, -q * np.cos(angle), -q * np.sin(angle))
+                worst = max(worst, abs(there - (-1.0) ** m * here))
+    return worst
+
+
+# --------------------------------------------------------------------------
+# V24 -- the first-order coefficients in two frames
+# --------------------------------------------------------------------------
+
+def check_first_order_frame(tide=0.03, centrifugal=0.01, inclination=0.9):
+    """V24, algebraic -- the first-order coefficients agree through the rotation law.
+
+    Two independent routes to the same numbers.  The production function
+    :func:`affine.first_order_coefficients` takes the body axes and refers each to the
+    observer frame through the angles of section 8.7.  Here the same formula is evaluated
+    with the harmonics in the *body* frame, and the result is then rotated into the observer
+    frame by :func:`rotate_coefficients`, i.e. through the Wigner matrices rather than through
+    the angles.
+
+    The rotation is read off the frames themselves rather than assumed.  The body-to-observer
+    map is the transpose of the matrix whose *columns* are the observer axes in body
+    coordinates, and its zyz Euler angles are extracted exactly.  Two things are easy to get
+    wrong here and both are avoided by extracting rather than guessing: the observer polar axis
+    is ``north x east``, which is *minus* the viewing direction, and the map needs a rotation
+    about the polar axis as well --- fixing that third angle to zero is wrong by ``pi`` at zero
+    inclination.
+
+    This is a check on the frame rule of section 8.7 rather than on the algebra of either
+    route: the rule is asserted there, and this is what catches it being wrong.
+    """
+    from mostlyharmless.symbolic import affine, render
+
+    eye = np.array([np.sin(inclination), 0.0, np.cos(inclination)])
+    field = Deformation(tide=tide, tide_direction=(0.6, 0.0, 0.8),
+                        centrifugal=centrifugal, spin_direction=(0.0, 0.0, 1.0))
+
+    # body frame: the harmonics are the ordinary ones about the body axes
+    tide_axis, spin_axis = field.axes()
+    body = [np.zeros(l + 1, dtype=complex) for l in range(3)]
+    body[0][0] = (1.0 - 4.0 * centrifugal) * np.sqrt(4.0 * np.pi)
+    for m in range(3):
+        terms = []
+        for axis in (tide_axis, spin_axis):
+            theta = float(np.arccos(np.clip(axis[2], -1.0, 1.0)))
+            phi = float(np.arctan2(axis[1], axis[0]))
+            terms.append(sph_harm(2, m, theta, phi))
+        body[2][m] = -(16.0 * np.pi / 5.0) * (
+            tide * np.conjugate(terms[0]) - centrifugal * np.conjugate(terms[1]))
+    body = Coeffs(tuple(body))
+
+    # the body-to-observer rotation: the observer axes as columns, then transposed, because
+    # a body vector's observer components are its projections onto those axes
     east, north = render.sky_basis(eye)
     polar = np.cross(north, east)
     polar = polar / np.linalg.norm(polar)
+    rotation = np.stack([north, east, polar], axis=-1).T
 
-    def angles(direction):
-        return (float(np.arccos(np.clip(direction @ polar, -1.0, 1.0))),
-                float(np.arctan2(direction @ east, direction @ north)))
+    # zyz extraction, all three angles
+    beta = float(np.arccos(np.clip(rotation[2, 2], -1.0, 1.0)))
+    pa = float(np.arctan2(rotation[1, 2], rotation[0, 2]))
+    alpha = float(np.arctan2(rotation[2, 1], -rotation[2, 0]))
 
-    tide_axis, spin_axis = field.axes()
-    expected = [np.zeros(l + 1, dtype=complex) for l in range(3)]
-    expected[0][0] = (1.0 - 4.0 * centrifugal) * np.sqrt(4.0 * np.pi)
-    for m in range(3):
-        tide_term = sph_harm(2, m, *angles(tide_axis))
-        spin_term = sph_harm(2, m, *angles(spin_axis))
-        expected[2][m] = -(16.0 * np.pi / 5.0) * (
-            tide * np.conjugate(tide_term) - centrifugal * np.conjugate(spin_term))
-    closed = Coeffs(tuple(expected))
-    return float(np.max(np.abs(closed.to_vector() - projected.to_vector())))
+    rotated = rotate_coefficients(body, alpha, beta, pa)
+    observer = affine.first_order_coefficients(field, eye)
+    return float(np.max(np.abs(rotated.to_vector() - observer.to_vector())))
+
+
+# --------------------------------------------------------------------------
+# V26, V27 -- the fitted rung
+# --------------------------------------------------------------------------
+
+def check_fitted_round_trip(l_max=4, stretch=None):
+    """V26, algebraic -- a synthetic image is fitted back to its own coefficients.
+
+    The samples are manufactured from a known coefficient set using the disk's own
+    quadrature weights, so the fit has nothing to approximate.  Every step should be an
+    identity, and a residual at roundoff therefore means the unstretching, the real
+    pairing and the normalisation are all consistent.  Nothing here touches the renderer,
+    so a frame error cannot hide behind sampling noise.
+    """
+    from mostlyharmless.symbolic import fitted
+
+    if stretch is None:
+        stretch = np.array([[1.2, 0.3], [0.3, 0.9]])
+    east = np.array([1.0, 0.0, 0.0])
+    north = np.array([0.0, 1.0, 0.0])
+
+    nodes, node_weights = np.polynomial.legendre.leggauss(96)
+    theta = 0.25 * np.pi * (nodes + 1.0)
+    w_theta = 0.25 * np.pi * node_weights
+    n_phi = 128
+    phi = 2.0 * np.pi * np.arange(n_phi) / n_phi
+    theta_grid, phi_grid = np.meshgrid(theta, phi, indexing="ij")
+    weight = np.outer(w_theta * np.sin(theta) * np.cos(theta),
+                      np.full(n_phi, 2.0 * np.pi / n_phi))
+    disk_east = np.sin(theta_grid) * np.cos(phi_grid)
+    disk_north = np.sin(theta_grid) * np.sin(phi_grid)
+
+    plan = fitted.design(l_max)
+    truth = np.linspace(-0.7, 0.9, len(plan))
+    columns = fitted._evaluate(plan, disk_east, disk_north)
+    brightness = np.tensordot(truth, columns, axes=(0, 0))
+
+    sky = np.stack([disk_east, disk_north], axis=-1) @ stretch.T
+    points = sky[..., :1] * east + sky[..., 1:] * north
+    samples = (points.reshape(-1, 3), brightness.ravel(), weight.ravel())
+
+    result = fitted.fit_image(samples, stretch, east, north, l_max=l_max)
+    expected = fitted._as_coeffs(plan, truth, l_max)
+    return float(np.max(np.abs(result.coefficients.to_vector()
+                               - expected.to_vector())))
+
+
+def check_disk_gram(l_max=4, n_side=400):
+    """V27, numerical -- the Gram matrix, three ways at once.
+
+    The ``(0, 0)`` entry is that of a constant, ``pi (1/sqrt(4 pi))^2 = 1/4``, exactly.
+    Entries between different orders vanish, the angular factors being orthogonal.  And the
+    whole matrix agrees with a brute-force midpoint rule over the disk, which shares
+    nothing with the Gauss--Legendre construction but the definition.
+    """
+    from mostlyharmless.symbolic import fitted
+
+    matrix = fitted.gram(l_max)
+    anchor = abs(float(matrix[0, 0]) - 0.25)
+
+    plan = fitted.design(l_max)
+    orders = np.array([m for _, m, _ in plan])
+    off_block = float(np.max(np.abs(
+        matrix[np.ix_(orders != 0, orders == 0)])))
+
+    axis = (np.arange(n_side) + 0.5) * (2.0 / n_side) - 1.0
+    east_grid, north_grid = np.meshgrid(axis, axis)
+    inside = east_grid**2 + north_grid**2 <= 1.0
+    cell = (2.0 / n_side) ** 2
+    columns = fitted._evaluate(plan, east_grid[inside], north_grid[inside])
+    brute = cell * np.einsum("ip,jp->ij", columns, columns)
+    scale = float(np.max(np.abs(matrix))) or 1.0
+    return max(anchor, off_block, float(np.max(np.abs(brute - matrix))) / scale)
