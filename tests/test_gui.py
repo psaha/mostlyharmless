@@ -112,10 +112,11 @@ def test_the_linear_pattern_is_a_second_order_change():
     assert half < 0.4 * full
 
 
-def test_the_fitted_row_is_a_fourth_model():
-    """Four models now, and the fitted one is named for what it does."""
+def test_every_model_label_computes():
+    """Each label in the radio produces finite panels and maps."""
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    assert gui.MODEL_LABELS[-1].startswith("fitted")
+    assert sum(label.startswith("fitted") for label in gui.MODEL_LABELS) == 2
+    assert "affine" not in gui.MODEL_LABELS        # dropped from the interface
     for model in gui.MODEL_LABELS:
         values = gui.compute_visibility(parameters, model, samples=3000, grid=9,
                                         q_max=1.0)

@@ -45,14 +45,19 @@ SPHERE_L_MAX = 2
 FIT_L_MAX = 4
 # The model radio, in order.  The fitted row sits last, below first-order, because it is the
 # one that replaces the coefficients rather than the shape or the brightness.
-MODEL_LABELS = ("numeric", "affine", "first-order", "fitted, l = 0,2,4")
+MODEL_LABELS = ("numeric", "first-order", "fitted, l = 0,2,4",
+                "fitted, l = 0,2,4,6")
+# The truncation each fitted row uses.  Two rows rather than a slider: the point is to see
+# what the extra order buys, and every change costs a full redraw.
+FIT_ORDERS = {"fitted, l = 0,2,4": 4, "fitted, l = 0,2,4,6": 6}
 # The panel titles.  Module level rather than inline because mathtext is parsed at draw
 # time, so an unsupported symbol crashes the draw rather than a callback --- and draw-time
 # code cannot be covered by a headless test unless the strings are reachable.
 MODEL_TITLES = {"numeric": "the star",
                 "affine": "affine",
                 "first-order": "affine, linear $g$",
-                "fitted, l = 0,2,4": "fitted, l = 0,2,4"}
+                "fitted, l = 0,2,4": "fitted, l = 0,2,4",
+                "fitted, l = 0,2,4,6": "fitted, l = 0,2,4,6"}
 VISIBILITY_TITLES = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
 CLOSURE = 0.148
 # Numerical resolution: discrete levels, chosen by radio buttons, because every change
@@ -188,7 +193,8 @@ def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS,
         if model.startswith("fitted"):
             # Lambda still comes from the level surface; only the coefficients are chosen.
             star = render.surface_samples(field, direction, n_samples=samples)
-            fit = fitted.fit_image(star, stretch, east, north, l_max=FIT_L_MAX)
+            fit = fitted.fit_image(star, stretch, east, north,
+                                   l_max=FIT_ORDERS.get(model, FIT_L_MAX))
             if report is not None and sense > 0.0:
                 report["fit"] = fit                     # the near side is the reported one
             image = fitted.model_image(fit.coefficients, stretch, half_width=1.5,
@@ -228,7 +234,8 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
         if model.startswith("fitted"):
             star = render.surface_samples(field, eye, n_samples=samples)
             fitted_fit = fitted.fit_image(star, affine.projected_stretch(field, eye),
-                                          east, north, l_max=FIT_L_MAX)
+                                          east, north,
+                                          l_max=FIT_ORDERS.get(model, FIT_L_MAX))
             coefficients = fitted_fit.coefficients
         elif model == "first-order":
             # the closed form of (83): no quadrature, ten harmonic evaluations.  The
@@ -252,7 +259,7 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
     return np.array([[model_visibility(u, v) for v in axis] for u in axis]) - reference
 
 
-def fitted_report(parameters, samples=SAMPLES):
+def fitted_report(parameters, samples=SAMPLES, model="fitted, l = 0,2,4"):
     """The fitted row's diagnostics for the near side (manual section 8.8).
 
     The residual is the point of the row: with ``Lambda`` fixed it is the truncation floor
@@ -265,7 +272,7 @@ def fitted_report(parameters, samples=SAMPLES):
     eye, (east, north) = _view(parameters.inclination)
     star = render.surface_samples(field, eye, n_samples=samples)
     return fitted.fit_image(star, affine.projected_stretch(field, eye), east, north,
-                            l_max=FIT_L_MAX)
+                            l_max=FIT_ORDERS.get(model, FIT_L_MAX))
 
 
 def build(parameters=None):  # pragma: no cover - needs a display
@@ -275,7 +282,8 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     state = {"parameters": clamped(parameters or Parameters()),
              "model": "numeric", "visibility": False, "refreshing": False,
-             "resolution": 0, "stale": False, "timer": None}
+             "resolution": 0, "stale": False, "timer": None,
+             "limit_key": None, "limit": None}
 
     figure = plt.figure(figsize=(9.2, 6.6))
     # The panels sit in the middle band and the radios in a band of their own below them:
@@ -337,7 +345,6 @@ def build(parameters=None):  # pragma: no cover - needs a display
             # left, so the arrays are flipped once, here, rather than being built mirrored
             panels = (values.real[:, ::-1], values.imag[:, ::-1])
             titles = VISIBILITY_TITLES
-            limit = float(np.max(np.abs(values))) or 1e-30
             extent = (Q_MAX, -Q_MAX, -Q_MAX, Q_MAX)
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
@@ -349,11 +356,21 @@ def build(parameters=None):  # pragma: no cover - needs a display
             # the first-order form of equation (74)
             name = MODEL_TITLES[state["model"]]
             titles = (f"{name}, near", f"{name}, far")
-            limit = float(np.nanmax(np.abs(np.concatenate(
-                [p.ravel() for p in panels])))) or 1e-30
             extent = (1.5, -1.5, -1.5, 1.5)
             labels = (r"$y$ (East)", r"$x$ (North)")
             bar_label = r"$g/\langle g\rangle - 1$"
+        # One colour scale per parameter set, shared by every model: recomputing it from
+        # whichever row is showing makes the same star change colour when the model
+        # changes, which reads as a difference in the model rather than in the display.
+        # The key is the parameters, the resolution and the view --- everything except the
+        # model --- so switching rows reuses it and moving a slider resets it.
+        key = (current, state["resolution"], state["visibility"])
+        if state["limit_key"] != key:
+            state["limit_key"] = key
+            state["limit"] = (float(np.nanmax(np.abs(np.concatenate(
+                [np.asarray(panel).ravel() for panel in panels])))) or 1e-30)
+        limit = state["limit"]
+
         if "fit" in report:
             # the residual is the point of the row: at fixed Lambda it is the truncation
             # floor, so it is not a defect of the fit but the price of l <= 4
@@ -464,9 +481,10 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     resolution_radio.on_clicked(resolution_callback)
     figure._widgets = (sliders, model_radio, view_radio, resolution_radio)
-    print("fitted row: Gram condition numbers by order --- "
-          + ", ".join(f"m={m}: {c:.1f}"
-                      for m, c in enumerate(fitted.block_condition(FIT_L_MAX))))
+    for label, order in FIT_ORDERS.items():
+        print(f"{label}: Gram conditioning by order --- "
+              + ", ".join(f"m={m}: {c:.1f}"
+                          for m, c in enumerate(fitted.block_condition(order))))
 
     redraw()          # mark stale
     _draw()           # and paint once, without waiting for the timer

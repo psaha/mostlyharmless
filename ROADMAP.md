@@ -493,6 +493,14 @@ reproducing as an anchor (F21).
    path, so the call sites are the real-basis certificates, the tests and the figures. Worth doing
    for the call sites' sake, not urgent.
 
+**T4 — retire the affine model.** Its radio button is gone from the interface: with the fitted
+row at `l <= 4`, the affine row is strictly worse by every measure we have, since the fit minimises
+the same norm the affine row projects into. What is left is the code path --- the `affine` branch of
+`compute_image` and `compute_visibility`, `affine.sphere_coefficients`, and the tests that pin it
+(`test_the_analytic_and_numeric_panels_are_similar`, the affine row of the Im-sign test). Delete it
+once the fitted row has been looked at for a while and nothing wants it back; the first-order row
+stays, because it is closed form and has no fit in it at all.
+
 ### Decisions deliberately left open
 
 **O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
