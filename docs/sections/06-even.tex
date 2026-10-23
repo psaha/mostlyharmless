@@ -41,9 +41,7 @@ Equivalently, and better for evaluation,
   R_n^m(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
   \label{eq:zernike-jacobi}
 \end{equation}
-a Jacobi polynomial in $1-2\rho^2$.  Certificate \vtag{8} checks
-\eqref{eq:zernike-sum} against \eqref{eq:zernike-jacobi} by expanding both as
-polynomials.  \emph{Exact}, $n \le 8$.
+a Jacobi polynomial in $1-2\rho^2$.
 
 They are orthogonal against the weight $\rho$,
 \begin{equation}
@@ -51,8 +49,14 @@ They are orthogonal against the weight $\rho$,
   = \frac{\delta_{nn'}}{2n+2} ,
   \label{eq:zernike-orthogonality}
 \end{equation}
-which certificate \vtag{9} checks in exact rational arithmetic for every pairing
-with $n \le 8$.  \emph{Exact}, $n \le 8$.
+\begin{itemize}
+  \item[$\checkmark$] \code{check_zernike_jacobi} relates \eqref{eq:zernike-sum} and
+    \eqref{eq:zernike-jacobi} by expanding both as polynomials, for $n \le 8$.
+    \\[1pt] \vtag{8}\quad \emph{Exact}
+  \item[$\checkmark$] \code{check_zernike_orthogonality} checks
+    \eqref{eq:zernike-orthogonality} in rational arithmetic for every pairing, for $n \le 8$.
+    \\[1pt] \vtag{9}\quad \emph{Exact}
+\end{itemize}
 
 \subsection{The expansion, and its coefficients}
 \label{sec:even-projection}
@@ -74,10 +78,13 @@ The integrand is a polynomial, so every $c_k$ is an exact rational.  They are no
 tabulated: they are computed on demand and memoised (decision D19), which is why
 there is no data file and no maximum $l$.
 
-Certificate \vtag{12} obtains the same coefficients a second way, by matching powers
-of $\rho$ from the highest downwards.  That system is triangular, since the highest
-power of the mode occurs in $R_l^m$ alone, and the two routes agree.  \emph{Exact}
-rational, $l \le 6$.
+\begin{itemize}
+  \item[$\checkmark$] \code{check_zernike_projection} obtains the same coefficients a second
+    way, by matching powers of $\rho$ from the highest downwards.  That system is triangular,
+    since the highest power of the mode occurs in $R_l^m$ alone, and the two routes agree,
+    in rational arithmetic, for $l \le 6$.
+    \\[1pt] \vtag{12}\quad \emph{Exact}
+\end{itemize}
 
 \subsection{The Zernike--Hankel identity}
 \label{sec:zernike-hankel}

@@ -6,9 +6,9 @@
 \usepackage[round]{natbib}
 \usepackage[hidelinks]{hyperref}
 
-% House macros.  \vtag resolves to a named certificate in mostlyharmless.symbolic,
+% House macros.  \code detokenises, so identifiers need no escaped underscores.
 % listed in the register at the end of the section that cites it (see section 1.5).
-\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
 \newcommand{\PA}{\mathrm{PA}}
 \newcommand{\vtag}[1]{\textnormal{[V#1]}}
 

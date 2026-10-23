@@ -501,6 +501,30 @@ the same norm the affine row projects into. What is left is the code path --- th
 once the fitted row has been looked at for a while and nothing wants it back; the first-order row
 stays, because it is closed form and has no fit in it at all.
 
+**T5 — a map GUI.** The manual's two picture figures are static views of a spherical map: a
+spot's brightness in two orientations, and its visibility. A second GUI would carry all of it live,
+on the existing scaffolding --- two panels (near and far) rather than the figures' four, since the
+spin-frame against observer-frame distinction is just the inclination slider. Sliders for spot
+half-angle, depth, rotation phase and inclination, with `l_max` as a radio, so switching it shows
+the convergence the third figure plots; the `(u,v)` view from `visibility(coeffs)/flux` minus the
+uniform-disk reference. The compute side is about thirty lines of existing library calls ---
+`cap_coefficients`, `rotate_coefficients`, `sky_map`, `visibility` --- with no level solve and no
+fit, so redraws are far cheaper than the deformation GUI's. The work is the scaffolding: extract the
+debounce timer, the colour-scale rule and the East-leftward flips into a shared core rather than
+copying `build`, since two copies of those have already drifted once each. PA stays a gauge, being
+degenerate with the rotation phase for a single spot. Tests as for the existing GUI: every radio
+label gives finite panels, and `Delta V` vanishes at the origin.
+
+**T6 — retire the manual's figures.** With T5 in place the three figures and their machinery can go:
+the `figure_*` functions, `write()`, the `FIGURES` list, the figure half of the `data` target, the
+three rendering tests, and the `\includegraphics` calls. Two things first. The convergence figure is
+the only *quantitative* statement of the `l_max` rate --- the algebraic decay at a limb discontinuity
+--- so that number moves into a certificate or a small table before the picture goes. And
+`cap_coefficients` survives, because T5 needs it; it is also the duplicate of
+`derivations._zonal_starspot`, which is the moment to unify them. The consequence to accept
+deliberately: the manual becomes figure-free, and section 1's "North up, East to the left" becomes a
+statement about the display rather than about a picture.
+
 ### Decisions deliberately left open
 
 **O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
