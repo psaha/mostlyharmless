@@ -1,0 +1,118 @@
+"""The map builders: a starspot as spherical-harmonic coefficients, and its hemispheres.
+
+``cap_coefficients`` turns a polar cap into zonal coefficients and ``sky_map`` renders one
+hemisphere of any coefficient set, in the real basis, in the frame the coefficients belong
+to.  Both are used by the map GUI (``symbolic.map_gui``) and by the truncation certificate
+V28; the manual's picture figures that used to live here are retired under T6, their content
+having moved to the GUI, which shows the same map live.
+
+There is no matplotlib here.  This module is numerics only.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+from scipy.special import eval_legendre
+
+from mostlyharmless.symbolic import affine, render
+from mostlyharmless.visylm.coefficients import Coeffs
+from mostlyharmless.visylm.deformation import Deformation
+from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
+from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
+from mostlyharmless.visylm.wigner import rotate_coefficients
+
+__all__ = [
+    "cap_coefficients",
+    "sky_map",
+    "figure_map",
+    "figure_uv",
+    "figure_convergence",
+    "write",
+]
+
+# A cap this size has a peak brightness about four and a half times its mean, so
+# the edge and its ringing are both visible.
+HALF_ANGLE = 0.9
+BETA = 1.05
+
+# A spot at 40 per cent of the photosphere: dark enough to read as a starspot, and
+# far from the depth at which the truncation ringing would go negative.
+SPOT_DEPTH = 0.6
+# The convergence figure wants the largest jump that still stays non-negative.
+CONVERGENCE_DEPTH = 0.9
+
+# The a_00 = 1 convention fixes the sphere mean at 1/sqrt(4 pi), so the map figures
+# plot I / <I> = I sqrt(4 pi).  This is a display choice; sky_map still returns model
+# units, which the bound test needs.
+MEAN_FACTOR = float(np.sqrt(4.0 * np.pi))
+
+
+def _pyplot():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    return plt
+
+
+def cap_coefficients(l_max=16, half_angle=HALF_ANGLE, depth=SPOT_DEPTH):
+    """A polar spot on a uniformly bright surface, as zonal coefficients.
+
+    The surface has brightness 1 outside the cap and 1 - depth inside it, so depth = 0
+    is no spot and depth = 1 is black.  The Legendre moments of that map are
+    c_l = 2 delta_l0 - depth m_l, with m_l the moments of the cap indicator, and the
+    harmonic coefficients follow from a_l0 = c_l sqrt(pi (2l+1)).  Everything is then
+    scaled so that a_00 = 1, which fixes the sphere mean at 1/sqrt(4 pi) by D16.
+
+    Keeping depth below about 0.92 keeps the map non-negative: the truncation ringing
+    undershoots by roughly 9 per cent of the jump.  That is what makes |V| <= V(0,0)
+    hold for this map, which is the bound a starspot should show.
+
+    The blocks are built directly rather than by indexing the flat real vector: there
+    each block has length 2l+1 with (l, 0) in the middle, so that index is l*l + l.
+    The first attempt used l*l, which put the zonal coefficients in the sin(l*phi)
+    slots and drew a banana instead of a cap.
+    """
+    cos_edge = np.cos(half_angle)
+    nodes, weights = np.polynomial.legendre.leggauss(200)
+    mu = 0.5 * (nodes + 1.0) * (1.0 - cos_edge) + cos_edge
+    weight = 0.5 * (1.0 - cos_edge) * weights
+    moments = [float(np.sum(weight * eval_legendre(l, mu))) for l in range(l_max + 1)]
+    zeroth = 2.0 - depth * moments[0]
+    blocks = []
+    for l in range(l_max + 1):
+        spherical = (2.0 if l == 0 else 0.0) - depth * moments[l]
+        block = np.zeros(l + 1, dtype=complex)
+        block[0] = (spherical / zeroth) * np.sqrt(2 * l + 1)
+        blocks.append(block)
+    return Coeffs(tuple(blocks))
+
+
+def sky_map(coeffs, back=False, n=241):
+    """The map on one hemisphere, as seen down the frame's z axis.
+
+    Each point of the projected disk is a direction on the unit sphere, and the map
+    is evaluated there in the real basis, in the frame the coefficients belong to.
+    ``back`` renders the far hemisphere, mirrored so that it reads like a view from
+    the other side.  Outside the disk it is NaN.
+    """
+    axis = np.linspace(-1.0, 1.0, n)
+    x_east, x_north = np.meshgrid(axis, axis)
+    if back:
+        x_east = -x_east
+    rho_squared = x_east ** 2 + x_north ** 2
+    z = (-1.0 if back else 1.0) * np.sqrt(np.clip(1.0 - rho_squared, 0.0, None))
+    theta = np.arccos(np.clip(z, -1.0, 1.0))
+    # By D24 the body x axis is North, so the map's azimuth is measured from North.
+    phi = np.arctan2(x_east, x_north)
+    image = np.zeros_like(x_east)
+    real = coeffs.to_real()
+    for l, row in enumerate(real):
+        image = image + row[l] * real_sph_harm(l, 0, theta, phi)
+        for m in range(1, l + 1):
+            image = image + (row[l + m] * real_sph_harm(l, m, theta, phi)
+                             + row[l - m] * real_sph_harm(l, -m, theta, phi))
+    return np.where(rho_squared <= 1.0, image, np.nan)
+
+
