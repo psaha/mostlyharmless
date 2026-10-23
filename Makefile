@@ -17,9 +17,8 @@ DOC := docs/mostlyharmless.tex
 PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
-FIGURES := docs/generated/map.pdf docs/generated/uv.pdf docs/generated/convergence.pdf
 
-.PHONY: all check docs data gui clean distclean
+.PHONY: all check docs data gui mapgui clean distclean
 
 all: check docs
 
@@ -28,7 +27,7 @@ check:
 
 docs: $(PDF)
 
-$(PDF): $(DOC) $(TEX) $(GENERATED) $(FIGURES) docs/refs.bib
+$(PDF): $(DOC) $(TEX) $(GENERATED) docs/refs.bib
 	cd docs && $(PDFLATEX) -interaction=nonstopmode -halt-on-error mostlyharmless.tex
 	cd docs && $(BIBTEX) mostlyharmless
 	cd docs && $(PDFLATEX) -interaction=nonstopmode -halt-on-error mostlyharmless.tex
@@ -38,13 +37,15 @@ $(PDF): $(DOC) $(TEX) $(GENERATED) $(FIGURES) docs/refs.bib
 # checkout builds without this; the rules fire when a file is missing.
 data:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.emit
-	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.figures
 
 # The interactive front end (Stage 8, D25).  Needs a display; not part of `all`.
 gui:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.gui
 
-$(GENERATED) $(FIGURES):
+mapgui:
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.map_gui
+
+$(GENERATED):
 	$(MAKE) data
 
 clean:

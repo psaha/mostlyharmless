@@ -123,22 +123,11 @@ because the $l = 0$ block is untouched by it --- the $d$ matrix at $l = 0$ is th
 identity, which certificate \vtag{5} covers.  The free coefficients of a map are
 therefore those with $l \ge 1$.
 
-\begin{figure}[t]
-  \centering
-  \IfFileExists{generated/map.pdf}{%
-    \includegraphics[width=0.8\textwidth]{generated/map.pdf}}{%
-    \emph{Not generated yet --- run \code{make data}.}}
-  \caption{A starspot on a uniformly bright surface, truncated at $l_{\max} = 16$,
-  with brightness in units of the sphere mean that
-  \eqref{eq:a00-normalisation} fixes.  Left: down the spin axis, near and far
-  hemispheres.  Right: the same map rotated into the observer's frame by the
-  rotation of section~\ref{sec:wigner}.  The ripples at the spot's rim are
-  truncation error, the series being finite, and not structure.  The sky is drawn
-  with North up and East to the left, and azimuths are measured from North through
-  East (D23), so the spot's position on the page is quoted in that convention: a map
-  referred to East instead would show the same spot a quarter turn away.}
-  \label{fig:starspot}
-\end{figure}
+A map drawn on the page follows the axis conventions of D24, with North up and East to the
+left and azimuths measured from North through East (D23); a map referred to East instead
+would show the same spot a quarter turn away.  The model in \code{make mapgui} draws the
+same quantity live, and section~\ref{sec:full-map} describes what a truncated map costs at
+its limb.
 
 For compact storage the same map is carried as complex coefficients of the
 non-negative orders alone,

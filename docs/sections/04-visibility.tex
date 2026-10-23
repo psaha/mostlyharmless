@@ -144,19 +144,11 @@ contribute $\cos(m\PA_{uv} - m\pi/2)$, which is $\pm\sin(m\PA_{uv})$ for odd $m$
 $\pm\cos(m\PA_{uv})$ for even $m$.  The branch names would alternate meaning with
 $m$.  The two azimuths are measured the same way here on purpose.
 
-\begin{figure}[t]
-  \centering
-  \IfFileExists{generated/uv.pdf}{%
-    \includegraphics[width=\textwidth]{generated/uv.pdf}}{%
-    \emph{Not generated yet --- run \code{make data}.}}
-  \caption{The visibility of the map of figure~\ref{fig:starspot}, normalised by
-  its value at the origin, which is the total flux.  Real part on the left,
-  imaginary on the right, on a common scale.  Both statements of
-  \eqref{eq:contribution} are visible: the real part is $1$ and the imaginary part
-  $0$ at the origin, and the imaginary part is odd under $(u,v) \to (-u,-v)$ while
-  the real part is even, since $V(-u,-v) = \overline{V(u,v)}$ for a real map.}
-  \label{fig:visibility-uv}
-\end{figure}
+The model in \code{make mapgui} draws exactly this: the real and imaginary parts of
+$\Delta V$, in the observer's frame, on a common scale, with the origin at the centre of
+each panel.  Both statements of \eqref{eq:contribution} are then visible at once --- the
+real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since
+$V(-u,-v) = \overline{V(u,v)}$ for a real map.
 
 \subsection{The parity dichotomy}
 \label{sec:parity}

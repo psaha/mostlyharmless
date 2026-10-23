@@ -36,7 +36,7 @@ still open.
 | D22 | **The observable is normalised at the origin.** Intensity interferometry measures `|V|^2` in units of the zero-baseline correlation, so what is modelled is `V/V(0,0)`, which is 1 at the origin by definition. Every difference is therefore taken between *normalised* visibilities, so `Delta V(0,0) = 0` by construction, and the absolute flux — which the normalisation removes — is not modelled at all. This also settles the normalisation rung 1 had left open: the affine model is normalised by its own origin, and the unobservable flux difference between the star and its reference is divided out rather than carried. The *squared* difference `|V_tri|^2 - |V_ref|^2` is deliberately not used: the phase is retained, and the difference is taken on `V` itself. Worth recording why the normalisation is needed even against a volume-equivalent reference: the flux is the *projected area*, not the volume, so the two agree only for a sphere, and the deformed star's projected area depends on the viewing direction. |
 | D23 | **The azimuth reference is North, through East.** Position angles are measured from the observer's North toward East, the astronomical convention, which fixes both the reference axis and the sense. With `u` along North and `v` along East (D24), `psi = arctan2(v, u)` *is* the position angle, so `PA = psi` and no offset appears anywhere. Had the older convention been kept — `u` along East — the consequence would have been `PA = pi/2 - psi`, the other sign corresponding to North-through-West, and the two differ by a *reflection* rather than a rotation, flipping every odd-`m` sign and changing the meaning of the mirror symmetry of section 8. The body's longitude zero remains the body `x` axis, which is already the convention for the harmonic azimuth. The real-basis branch labelling (T2) is a separate convention and is untouched by this. |
 | D24 | **The sky's orientation is shared by the ground and the image, departing from the radio convention.** `u` is the **North** component of the baseline and `v` the **East** component, so `V(u,v) = ∫ I(x_E, x_N) exp(-2 pi i (u x_N + v x_E))`. The third axis points from the sky *toward* the observer — into the ground for an observer looking up — so (North, East, toward the observer) is right-handed *given* the sky convention that North is up and East is to the left. The point of the swap is that `psi` becomes the position angle directly (D23), and that the coordinates on the sky and on the ground have the same orientation. The cost is deliberate: radio interferometry takes `u` as East-West and `v` as North-South, so this is a departure, justified only because our `(u,v)` are used throughout as *sky-plane* coordinates rather than as baseline hardware coordinates. Every image is therefore drawn with North vertical and East horizontal increasing leftward, images and `(u,v)` planes alike. *Status: decided, not yet implemented.* The obstacle is that the mode reduction's `psi` is tied to the harmonics' `phi`, which is measured from the body `x` axis; relabelling `(u,v)` alone rotates `psi` by `pi/2` while `phi` stays put, and V15 detects exactly that as a 0.14 residual. Doing it properly means re-referencing the body `x` axis to North as well — so the display maps the body `x` to the vertical — together with the transform and the V15 pairing. |
-| D25 | **The interactive GUI is a separate, optional front end.** Matplotlib widgets, since there is no Jupyter here, and nothing added to the library. Two radio buttons: the view is image or `(u,v)`, and the model has **three** settings so that the shape and the brightness approximations are varied separately --- `numeric` (exact level surface), `affine` (ellipsoid shape, exact brightness pattern) and `first-order` (ellipsoid shape, brightness linearised as in the manual's equation 74). The three-by-two split replaces the figures' four rows and adds the comparison the figures cannot make: the first-order pattern differs from the exact one at `O(eps^2)`, so that pair isolates the *brightness* approximation while `numeric` against `affine` isolates the *shape* one at `O(eps)`. The spin's position angle is *pinned to zero*, because for a single observation the sky's orientation is a gauge; the model keeps it for real data. The light is **fixed at the von Zeipel law**, `I ∝ g` (D21), with the exponent to be exposed as a slider later; and the analytic row keeps **only `l <= 2`**, discarding `l = 4` and above. Note what that is and is not: it is *not* "first order in `eps`". The `l = 4` content first appears at `eps^2` from `P_2^2`, so dropping it *is* the `eps^2` truncation — but the projection keeps the `l = 2` coefficient to all orders, including its own `eps^2` correction, so the retained set is "`l <= 2`, resummed in `eps`". The difference from a true first-order truncation is itself `O(eps^2)`, below the model's error, so the simpler and more accurate choice is `l <= 2`: `SPHERE_L_MAX = 2`, with no further decision to make. The free parameters are `eps_tide`, `eps_spin`, `i`, `lambda_tide` and `phi_tide`. The spin phase `alpha` is deliberately *absent*: this front end is for a spin and tide alone, and with no starspots the phase is degenerate with the tide's longitude — only their difference is observable — so a slider for it would move a gauge. The **latitude slider is constrained** rather than the amplitudes, and in the direction that is easy to get backwards: raising `lambda` *loosens* the bound, since at the equator the centrifugal quadrupole deepens the potential by `1.5 eps_spin` while along the spin it contributes nothing, so the infeasible region is near `lambda = 0` and the limit on the slider is a **lower** one. The eps sliders get upper limits from the same function. Clamping is applied after every change rather than by restricting ranges, because the feasible set is a polygon in the amplitudes rather than a box. Sliders show **degrees**; the conversion lives at the widget boundary, so the model and everything outside the GUI stay in radians. *Implemented so far:* single-threaded redraws, with a **numerical resolution control** of three labelled radio buttons in a column --- coarse, medium, fine. Discrete rather than continuous because every change costs a full redraw. Each level sets the surface samples, the image pixels and the `(u,v)` grid together (10 000/140/17, 30 000/220/23, 150 000/360/31), keeping the sample density per pixel roughly constant; only the samples are physics, so the control trades speed against noise, which is what makes it the way to tell a sampling artefact from a model error. The finest level matches the Stage 6 figures --- 150 000 samples for a rendering, a 31-point grid for a visibility map --- so it is publication quality at the cost of a visible pause, since the numeric `(u,v)` row costs `grid^2 x samples`, about fifty times the coarsest level. Widget references are held on the figure so that they are not collected; and clamping is written **back into the widgets**, so the thumb tracks the state rather than sitting where it was dragged. That last one matters because the clamp often moves a parameter other than the one being dragged --- raising `eps_tide` pushes `lambda` up --- so every slider is refreshed, with a guard flag to stop `Slider.set_val` re-firing its own callback. *Planned, not yet done:* coalescing updates --- numpy cannot be interrupted, so the intent is a worker thread, a latest-values slot holding the newest parameters, and stale results discarded, with the GUI thread only drawing --- and caching the level radii and brightness pattern across orientation changes, since they depend on the deformation alone. |
+| D25 | **The interactive GUI is a separate, optional front end.** Matplotlib widgets, since there is no Jupyter here, and nothing added to the library. Two radio buttons: the view is image or `(u,v)`, and the model has **four** settings, chosen so that the shape model, the brightness approximation and the truncation can be varied one at a time --- `numeric` (exact level surface), `first-order` (ellipsoid shape, brightness linearised as in the manual's equation 74), and two fitted orders, `l <= 4` and `l <= 6`, whose coefficients are chosen by least squares in the image plane rather than taken from the brightness pattern. The readings are these: `numeric` against `first-order` is the whole analytic stack at `O(eps)`; `first-order` against the exact pattern at the same order isolates the *brightness* linearisation at `O(eps^2)`; and `l <= 4` against `l <= 6` isolates the *truncation* from the shape model, which the earlier rows conflated. The `affine` row --- ellipsoid shape with the pattern's coefficients projected rather than fitted --- was in the interface until the fitted row existed and left it under T4, being strictly worse in the same norm; its code is still there pending that item. The spin's position angle is *pinned to zero*, because for a single observation the sky's orientation is a gauge; the model keeps it for real data. The light is **fixed at the von Zeipel law**, `I ∝ g` (D21), with the exponent to be exposed as a slider later; and the analytic row keeps **only `l <= 2`**, discarding `l = 4` and above. Note what that is and is not: it is *not* "first order in `eps`". The `l = 4` content first appears at `eps^2` from `P_2^2`, so dropping it *is* the `eps^2` truncation — but the projection keeps the `l = 2` coefficient to all orders, including its own `eps^2` correction, so the retained set is "`l <= 2`, resummed in `eps`". The difference from a true first-order truncation is itself `O(eps^2)`, below the model's error, so the simpler and more accurate choice is `l <= 2`: `SPHERE_L_MAX = 2`, with no further decision to make. The free parameters are `eps_tide`, `eps_spin`, `i`, `lambda_tide` and `phi_tide`. The spin phase `alpha` is deliberately *absent*: this front end is for a spin and tide alone, and with no starspots the phase is degenerate with the tide's longitude — only their difference is observable — so a slider for it would move a gauge. The **latitude slider is constrained** rather than the amplitudes, and in the direction that is easy to get backwards: raising `lambda` *loosens* the bound, since at the equator the centrifugal quadrupole deepens the potential by `1.5 eps_spin` while along the spin it contributes nothing, so the infeasible region is near `lambda = 0` and the limit on the slider is a **lower** one. The eps sliders get upper limits from the same function. Clamping is applied after every change rather than by restricting ranges, because the feasible set is a polygon in the amplitudes rather than a box. Sliders show **degrees**; the conversion lives at the widget boundary, so the model and everything outside the GUI stay in radians. *Implemented so far:* single-threaded redraws, with a **numerical resolution control** of three labelled radio buttons in a column --- coarse, medium, fine. Discrete rather than continuous because every change costs a full redraw. Each level sets the surface samples, the image pixels and the `(u,v)` grid together (10 000/140/17, 30 000/220/23, 150 000/360/31), keeping the sample density per pixel roughly constant; only the samples are physics, so the control trades speed against noise, which is what makes it the way to tell a sampling artefact from a model error. The finest level matches the Stage 6 figures --- 150 000 samples for a rendering, a 31-point grid for a visibility map --- so it is publication quality at the cost of a visible pause, since the numeric `(u,v)` row costs `grid^2 x samples`, about fifty times the coarsest level. Widget references are held on the figure so that they are not collected; and clamping is written **back into the widgets**, so the thumb tracks the state rather than sitting where it was dragged. That last one matters because the clamp often moves a parameter other than the one being dragged --- raising `eps_tide` pushes `lambda` up --- so every slider is refreshed, with a guard flag to stop `Slider.set_val` re-firing its own callback. *Planned, not yet done:* coalescing updates --- numpy cannot be interrupted, so the intent is a worker thread, a latest-values slot holding the newest parameters, and stale results discarded, with the GUI thread only drawing --- and caching the level radii and brightness pattern across orientation changes, since they depend on the deformation alone. |
 | D26 | **The linearised level radii are not offered.** Taking the ellipsoid's radii from `delta r = -phi_1` instead of the level condition would remove the last root-find from the analytic rows and make them fully closed form. It is exact only to first order, and the next term is not small where it matters: `delta r = E + 3E^2 + ...` diverges as the closure bound is approached, giving a bulge of 0.144 where the cubic gives 0.366 at the ceiling. The saving is three bisections per parameter set --- some fifty scalar evaluations against the 10^5 the replaced quadrature cost --- so a shortcut that is safe only in a corner and buys nothing measurable is a hazard rather than an option. The brightness is linearised instead, which is exact at first order with no such divergence, and `principal_axes` always solves the level condition. |
 | D27 | **The surrogate is fitted in `(x,y)`, not in `(u,v)`.** By Plancherel an image-space fit is an `L2` fit over *all* `(u,v)`, so the answer no longer depends on which baselines were sampled --- which is what left the sparse-`(u,v)` least-squares underdetermined, since the coefficient count at `l <= 4` is comparable to a sparse baseline count. The procedure: unstretch the numerical image, `I'(y) = |det Lambda| I_num(Lambda y)` (the inverse of the manual's eq. 81), then project `I'` onto the *projected* harmonics on the unit disk --- the section 6 objects, with `exp(i m phi)` angular dependence and a Jacobi radial part. Their Gram matrix depends only on the mode count: not on `Lambda` and not on the node, so it is computed and inverted once, and a node costs one quadrature over the samples the numeric model already produced. Three consequences: `A_lm` becomes a linear functional of the image samples and therefore smooth in the parameters, which is what the interpolant needs; the sampling-driven part of the conditioning disappears, leaving only the intrinsic mode near-dependence, now a single `Lambda`-independent condition number checked once; and because the unstretched image should be supported inside the unit disk, the overshoot is a free diagnostic on `Lambda`. *Caveat recorded:* this is not a noise-weighted fit to real baselines. If the surrogate is used inside a fit to actual interferometric data, the `(u,v)` metric with those weights matches the use better; for interpolating the model, the image metric is the more robust choice because it is uniform in baseline rather than in sampling. |
 
@@ -99,7 +99,7 @@ src/mostlyharmless/
     ├── affine.py                 # rung 1, and the closed-form first-order row
     ├── fitted.py                 # rung 1 with fitted coefficients: disk harmonics, the fit
     ├── emit.py                   # the LaTeX fragment; run as a module
-    ├── figures.py                # the figures of docs/generated/; run as a module
+    ├── maps.py                   # the map builders: cap_coefficients, sky_map
     └── gui.py                    # the interactive model of D25; imports only the library
 ```
 
@@ -191,10 +191,9 @@ model_image(coefficients, stretch, half_width=..., n=...)  -> ndarray  # [north,
 # --- derivations.py -----------------------------------------------------
 check_*                                     -> residual  # thirty functions; tags in section 4
 
-# --- emit.py and figures.py, both run as modules ------------------------
+# --- emit.py, run as a module -------------------------------------------
 coefficients_table(l_max=...) / write(directory=None)
 cap_coefficients / sky_map   # the maps the figures and tests build
-figure_map / figure_uv / figure_convergence / write(directory=None)
 
 # --- gui.py, D25 --------------------------------------------------------
 Parameters [field]                          # the five sliders
@@ -214,7 +213,6 @@ the committed artifacts, which is what keeps the staleness test meaningful.
 | artifact | contents | notes |
 |---|---|---|
 | `docs/generated/coefficients.tex` | the even-family coefficients for the manual | emitted by `symbolic/emit.py` from the just-in-time coefficients (D19); printed to `l <= 3` |
-| `docs/generated/*.pdf` | `map.pdf` (the starspot on both hemispheres), `uv.pdf` (Re and Im V(u,v), normalised) and `convergence.pdf` (the `l_max` sweep) | emitted by `symbolic/figures.py`; rendered by the test suite at small size. `figure_triaxial` and `figure_delta_visibility` are written by nothing --- see C11 |
 
 There is no `data/` directory and no coefficient data file. Coefficients are computed just in
 time in exact rational arithmetic (D19), so nothing has to read a table, and the emitters are the
@@ -262,6 +260,7 @@ left outside every tag. The table below lists tags, not functions.
 | V25 | the real basis is orthonormal, and matches the complex one up to the phase | numerical, `l <= 4` |
 | V26 | the fit returns a synthetic image's own coefficients | algebraic, `1e-12` |
 | V27 | the Gram matrix: analytic entry `1/4`, block structure, midpoint rule | numerical, `5e-3` |
+| V28 | the truncation error of a discontinuous map falls as `l^(-1/2)`, to about two thirds per doubling | numerical, `l <= 32`, reference `l = 64` |
 
 Two habits, from D10: prefer exact expansion and coefficient comparison to `simplify`; and
 state the rung and the scope next to every claim, in the register and in the text.
@@ -379,7 +378,7 @@ truncation error is visible.
    parameter (D21); limb darkening is absent by construction until T1, and the captions must
    say so.
 3. **The two figures.** Both are **done**: `figure_triaxial` and `figure_delta_visibility` in
-   `symbolic/figures.py`. The render shows the star down the spin axis and inclined by 60
+   `symbolic/maps.py`. The render shows the star down the spin axis and inclined by 60
    degrees, each in *both hemispheres*, through the same sky axes per orientation — so the far
    panel is the near view **rotated by half a turn**, the far observer's offset `(a, b)` being the
    antipodal surface point rather than the mirrored one. A convex body's silhouette is the same
@@ -501,7 +500,9 @@ the same norm the affine row projects into. What is left is the code path --- th
 once the fitted row has been looked at for a while and nothing wants it back; the first-order row
 stays, because it is closed form and has no fit in it at all.
 
-**T5 — a map GUI.** The manual's two picture figures are static views of a spherical map: a
+**T5 — a map GUI.** *Written: `symbolic/map_gui.py`, with `make mapgui` and six tests. What remains
+is the extraction below, which is why the item stays open.* The manual's two picture figures are
+static views of a spherical map: a
 spot's brightness in two orientations, and its visibility. A second GUI would carry all of it live,
 on the existing scaffolding --- two panels (near and far) rather than the figures' four, since the
 spin-frame against observer-frame distinction is just the inclination slider. Sliders for spot
@@ -509,21 +510,68 @@ half-angle, depth, rotation phase and inclination, with `l_max` as a radio, so s
 the convergence the third figure plots; the `(u,v)` view from `visibility(coeffs)/flux` minus the
 uniform-disk reference. The compute side is about thirty lines of existing library calls ---
 `cap_coefficients`, `rotate_coefficients`, `sky_map`, `visibility` --- with no level solve and no
-fit, so redraws are far cheaper than the deformation GUI's. The work is the scaffolding: extract the
-debounce timer, the colour-scale rule and the East-leftward flips into a shared core rather than
-copying `build`, since two copies of those have already drifted once each. PA stays a gauge, being
+fit, so redraws are far cheaper than the deformation GUI's. The scaffolding is the
+remaining work: the new module carries its own copy of the debounce timer, the colour-scale rule and
+the East-leftward flips, which is what should be extracted into a shared core rather than copied,
+since two copies of those have already drifted once each in the other GUI. PA stays a gauge, being
 degenerate with the rotation phase for a single spot. Tests as for the existing GUI: every radio
 label gives finite panels, and `Delta V` vanishes at the origin.
 
-**T6 — retire the manual's figures.** With T5 in place the three figures and their machinery can go:
+**T6 — retired the manual's figures.** *Done.* With T5 in place the three figures and their machinery can go:
 the `figure_*` functions, `write()`, the `FIGURES` list, the figure half of the `data` target, the
 three rendering tests, and the `\includegraphics` calls. Two things first. The convergence figure is
 the only *quantitative* statement of the `l_max` rate --- the algebraic decay at a limb discontinuity
---- so that number moves into a certificate or a small table before the picture goes. And
+--- so that number is now certificate V28, in section 7, before the picture goes. And
 `cap_coefficients` survives, because T5 needs it; it is also the duplicate of
 `derivations._zonal_starspot`, which is the moment to unify them. The consequence to accept
 deliberately: the manual becomes figure-free, and section 1's "North up, East to the left" becomes a
 statement about the display rather than about a picture.
+
+**T7 — convert the certificates to the in-place format.** Done for two subsections, 6.2 and 6.3,
+which are the model; the other twenty-two are not, and they are in at least three styles. Some are
+prose sentences that fold the certification into the mathematics --- "Certificate V13 compares ...",
+which is what 6.2 and 6.3 looked like before --- some carry the scope and rung in the same sentence,
+and some are register tables at the ends of sections 8, 9 and 10. So this is per-section judgement
+rather than a search and replace, which is why it is not one commit.
+
+The format, as settled on 6.2 and 6.3: each certificate becomes its own item, marked with a
+`\checkmark` in place of the word "Certificate", carrying the \emph{name of the Python function}
+where the tag used to be, with the claim and its scope in the sentence --- "in rational arithmetic,
+for `l <= 6`" --- and the tag and rung on a second line at the item's own margin. The reader then
+sees what was verified and which function does it, in place, without a register lookup and without
+having to remember the rung vocabulary; and deleting that second line remains possible, so the tags
+can be retired later without touching the prose.
+
+Two consequences, both to be taken deliberately rather than by accident. The tags exist for the
+registers; once every certificate is converted the per-section registers go, section 1.5 stops
+describing them, and the roadmap's own table in section 4 becomes the checklist. And with the tags
+gone from the prose, the correspondence between tag and function is no longer visible at all --- so
+either the appendix idea is revived, or a test asserts it by scanning the sources, which is the gap
+C9 was opened for. `\code` already detokenises, so function names need no escaped underscores.
+
+**T8 — all-subscript indices for the harmonics, Legendre and Zernike.** Write `Y_{lm}`, `P_{lm}`,
+`R_{n,m}` and `V_{lm}` --- and `Y_{l,-m}` for a negative order, `R_{l,m,c}` and `R_{l,m,s}` for the
+real basis --- instead of the superscript forms. The argument is internal uniformity: the
+coefficients are already subscripts (`a_{lm}`, `c_k`, `Phi_{lm}`, `R_{lm}`), so the basis functions
+are the odd members of the family; and the superscript is genuinely misleading exactly where it
+matters, since `Y_l^{-m}` reads as an inverse as readily as a negative order, which section 1 has to
+forbid explicitly. `V_{lm}` is our own notation, so nothing external is at stake there, and the
+sum-over-modes expressions read better once orders sit on the same level as degrees.
+
+*What does not change.* Powers and squares --- `rho^2`, `epsilon^2`, `e^{im phi}`, `(-1)^m`, `g^p`,
+`Lambda^{T}`, `10^{-5}` --- since those superscripts are exponents. The Wigner matrices keep
+`D^l_{m'm}` and `d^l_{m'm}`: the degree is a superscript in every convention that uses them, and
+breaking that would cost more than the uniformity buys. Jacobi parameters stay a parenthesised
+superscript pair, `P_{k}^{(m,0)}`, which is likewise universal. Bessel functions are already
+subscripts.
+
+*Cost.* About a hundred and five occurrences in the manual, plus the roadmap's own formulas, plus the
+docstrings in `spherical_harmonics.py`, `zernike.py` and `visibility.py`, which are where a reader of
+the code meets the notation. Mechanical per family --- `_l^m`, `_n^m`, `_l^{-m}` are specific enough
+that no power can be caught --- but worth checking section by section rather than in one pass, since
+the superscript on `R_l^{m,c}` also carries a branch label. No certificate can cover a notation
+change; the check is that the PDF still builds and that the sections that reconcile our conventions
+with published ones (section 5 in particular) say which form we use.
 
 ### Decisions deliberately left open
 
@@ -532,6 +580,31 @@ statement about the display rather than about a picture.
    oblate star and `O(eps)` for a triaxial one. Alternatives — the phase of the azimuthal structure,
    or a fit of the low-order azimuthal harmonics — have not been compared against it, and the
    comparison should account for what the sparse sampling can actually constrain.
+
+**O3 — whether the manual's three parts should be its top-level structure.** The manual has three
+parts, though nothing says so: definitions and conventions (sections 1--3); the derivation of the
+`V_lm` basis (4--7), which follows published work with the conventions reconciled in section 5; and
+the new material (8--9), the deformation field, the affine and fitted rows, and the disk basis.  The
+summary of the coefficient pairing, section 10, is part of the second and sits after the third only
+because it was written last.
+
+Two ways to make that visible.  **Coalesce**: three sections, the present sections demoted to
+subsections and their subsections to subsubsections.  Nothing else changes --- every
+cross-reference is a `\label`, so numbers update themselves, and the files can stay as they are ---
+but `article` numbers down to `subsection` only, so the preamble needs `secnumdepth=4` and
+`tocdepth=3` or the demoted headings lose their numbers and every reference to them with them.  The
+real cost is outside the manual: the roadmap's own text carries 32 section references, 27 inventory
+entries with a section column, and 17 file names, so about sixty numbers to renumber by hand, which
+is the kind of change that goes wrong quietly.
+
+**Or leave the numbering alone** and put three unnumbered dividers between the sections --- `\part`
+in `article` gives exactly that --- plus a two-sentence statement of which part is which.  That gets
+the shape visible in the contents for almost nothing, and moving section 10 to the end of part 2 is
+one line either way.
+
+*What would settle it:* whether the parts need to be the top-level structure rather than visible
+dividers, which is a question about the reader rather than about the LaTeX; and, if so, whether the
+roadmap's sixty numbers are worth rewriting to match.
 
 ### Further ideas
 
@@ -597,6 +670,16 @@ statement about the display rather than about a picture.
    against the first-order expectation, with a network reserved for the case where the target
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **The manual is figure-free, and the figures' machinery is gone.** `figures.py` became `maps.py`,
+  keeping only `cap_coefficients` and `sky_map`, which the map GUI and certificate V28 use;
+  `figure_map`, `figure_uv`, `figure_convergence` and `write()` are deleted, with
+  `tests/test_figures.py`, the `FIGURES` list, the figure half of the `data` target, and the three
+  committed PDFs. The two figure environments in sections 1 and 4 became sentences: the display
+  convention they carried (North up, East to the left, D23) and the reading of the uv panels (real
+  even, imaginary odd) now stand in the text, pointing at `make mapgui` for the live version. The
+  manual is 32 pages, down from 34. The convergence rate they plotted is certificate V28, in
+  section 7.
 
 * **The fitted rung was implemented (was T3).** `symbolic/fitted.py` carries the disk harmonics
   `Phi_lm = Y_lm(n)`, the design plan and its Gram matrix, `fit_image` with both residual routes,

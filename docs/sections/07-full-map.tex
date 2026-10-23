@@ -22,8 +22,8 @@ The first is Hermitian symmetry.  For a real map
   V(-u,-v) = \overline{V(u,v)} ,
   \label{eq:hermitian}
 \end{equation}
-so the real part of a visibility map is even and the imaginary part odd.  This is
-visible by eye in figure~\ref{fig:visibility-uv}, and it is checked directly.
+so the real part of a visibility map is even and the imaginary part odd.  That is
+visible by eye in \code{make mapgui}, and it is checked directly.
 
 The second is a bound,
 \begin{equation}
@@ -32,7 +32,8 @@ The second is a bound,
 \end{equation}
 since $|V| \le \int|I| = \int I = V(0,0)$ for a non-negative map.  The condition
 matters: a truncated expansion of a discontinuous map dips below zero near its
-edges, which is the ringing of figure~\ref{fig:starspot}, and there the bound fails.
+edges, which is the truncation ringing of section~\ref{sec:full-map}, and there the
+bound fails.
 Stating it with its condition is the honest form.
 
 \subsection{What was checked}
@@ -56,3 +57,25 @@ is restricted to low frequencies, because the rim of the disk is a discontinuity
 its Gibbs ringing contaminates high frequencies at any resolution.  Hermitian
 symmetry \eqref{eq:hermitian} is checked separately and much more tightly, being a
 statement about the transform rather than about a resolution.
+
+That ringing is the practical cost of the whole scheme, and it is worth stating as a rate
+rather than as a picture.  A map whose brightness jumps --- a sharp-edged spot, a polar cap
+--- has coefficients falling as a power of $l$, so it converges \emph{algebraically} and not
+exponentially.  The error is then set by the Gibbs ring rather than by the smooth part: the
+overshoot at the edge is a fixed fraction of the jump, only its width shrinks, so the mean
+square falls as $l_{\max}^{-1}$ and the root mean square as $l_{\max}^{-1/2}$ --- to
+roughly two thirds when the order doubles, which is what certificate \vtag{28} measures.  A
+smooth map converges far faster, which is why limb darkening, when it comes, buys accuracy
+as well as realism.  That rate is what an expansion in spherical harmonics costs, and it is
+the reason the mode count is a knob rather than a formality.
+
+\begin{itemize}
+  \item[$\checkmark$] \code{check_convergence_rate} compares each truncation with $l = 64$
+    on the rendered disc and reports the worst ratio between successive errors.  It is
+    measured on the \emph{map} rather than on the visibility for a reason worth recording:
+    every even-family mode of a visibility costs a Zernike expansion in exact rationals, so
+    the cost grows as roughly the fourth power of the order, and a reference at high $l$ is
+    unaffordable.  Both sides are in the same units, so the normalisation cancels in the
+    ratio and only the rate survives --- which is the claim.
+    \\[1pt] \vtag{28}\quad \emph{Numerical}, $l \le 32$
+\end{itemize}

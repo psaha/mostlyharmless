@@ -51,3 +51,12 @@ def test_the_mode_at_the_opposite_baseline():
     plain conjugation of the negative-order visibility is checked on its own.
     """
     assert dv.check_baseline_parity() < 1e-12
+
+
+def test_the_truncation_error_falls_with_the_mode_count():
+    """V28: a discontinuous map converges algebraically, not exponentially.
+
+    Each doubling of ``l`` should at least halve the distance to the converged visibility;
+    exponential convergence would give a much smaller ratio, and a stall a ratio near one.
+    """
+    assert dv.check_convergence_rate() < 0.75

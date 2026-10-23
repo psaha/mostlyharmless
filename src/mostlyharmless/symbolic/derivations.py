@@ -89,6 +89,7 @@ __all__ = [
     "check_first_order_frame",
     "check_fitted_round_trip",
     "check_disk_gram",
+    "check_convergence_rate",
 ]
 
 THETA, PHI = sp.symbols("theta phi", real=True)
@@ -1214,3 +1215,40 @@ def check_disk_gram(l_max=4, n_side=400):
     brute = cell * np.einsum("ip,jp->ij", columns, columns)
     scale = float(np.max(np.abs(matrix))) or 1.0
     return max(anchor, off_block, float(np.max(np.abs(brute - matrix))) / scale)
+
+
+# --------------------------------------------------------------------------
+# V28 -- the rate at which a discontinuous map converges
+# --------------------------------------------------------------------------
+
+def check_convergence_rate(l_values=(8, 16, 32), reference=64, half_angle=0.9,
+                           depth=0.6, n=61):
+    r"""V28, numerical -- the truncation error of a map with a limb discontinuity.
+
+    Measured **on the rendered map**, not on the visibility, and deliberately so.  Every
+    even-family mode of a visibility costs a Zernike expansion in exact rationals, so the
+    cost grows roughly as the fourth power of the order --- half a second at ``l = 8``,
+    three at 16, thirty at 32 --- and a reference at high ``l`` runs to minutes.  The map
+    costs a coefficient sum, so a reference at ``l = 64`` is affordable.
+
+    Each truncation is compared with that reference on the visible disc, in the units
+    ``sky_map`` uses, so the normalisation cancels in the ratio and the number measures the
+    *rate* alone: a jump has coefficients falling as a power of ``l``, so the error falls
+    algebraically and roughly halves when the order doubles.  The return value is the
+    **worst ratio between successive errors**.  The visibility follows term by term, being
+    a bounded linear functional of the map, and the model's ``l_max`` radio shows it.
+    """
+    from mostlyharmless.symbolic import maps
+
+    def rendered(l_max):
+        return maps.sky_map(maps.cap_coefficients(l_max, half_angle, depth), n=n)
+
+    converged = rendered(reference)
+    visible = np.isfinite(converged)
+    errors = []
+    for l_max in l_values:
+        difference = rendered(l_max) - converged
+        errors.append(float(np.sqrt(np.mean(difference[visible] ** 2))))
+
+    ratios = [errors[i + 1] / errors[i] for i in range(len(errors) - 1)]
+    return float(max(ratios))
