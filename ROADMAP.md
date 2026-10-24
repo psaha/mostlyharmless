@@ -49,7 +49,8 @@ Status: **derived** = worked out and checked during design discussion; **new** =
 | # | formula | status | section |
 |---|---|---|---|
 | F1 | `Y_{lm}` for `m >= 0`: definition, CS phase; the real basis `R_{l,m,c}`, `R_{l,m,s}` and the map expansion | derived | 02 |
-| F2 | Orthonormality; addition theorem | derived | 02 |
+| F2 | Orthonormality | derived | 02 |
+| F2b | the `l = 2` zonal corollary, from the rotation law | derived | 03 |
 | F3 | Real basis (cos/sin) and its normalisation | derived | 02 |
 | F4 | Rotation law `Y_lm(R^-1 n) = sum D^l_{m'm}(R) Y_lm'(n)` | derived | 03 |
 | F5 | zyz factorisation `D = exp(-i m' alpha) d(beta) exp(-i m gamma)`; explicit sum for `d` | derived | 03 |
@@ -235,7 +236,7 @@ left outside every tag. The table below lists tags, not functions.
 |---|---|---|
 | V1 | `Y_{lm}` orthonormal on the exact quadrature grid | exact, `l <= L` |
 | V2 | harmonic extension `Y_{l,-m} = (-1)^m conj(Y_{lm})`, and that the implementation reproduces it | exact |
-| V3 | addition theorem | numerical: 40-digit SymPy, plus float at higher `l` (the symbolic route tangles in the sign of `sin theta`) |
+| V3 | the `l = 2` zonal corollary, against the general `sph_harm_addition` | numerical: 40-digit SymPy, plus float at higher `l` (the symbolic route tangles in the sign of `sin theta`) |
 | V4 | explicit `d` sum equals `exp(-i beta J_y)` | numerical, `l <= 6` |
 | V5 | `d^T d = I`; `d(0) = I`; `d_00 = P_l(cos beta)`; symmetry | numerical, `l <= 6` |
 | V6 | rotation equals a direct geometric rotation; and the non-negative-order form equals the full-range transform | numerical, `l <= 4` |
@@ -282,7 +283,6 @@ docs/
     07-full-map.tex         F18
     08-triaxial.tex         the deformation field, the affine model, rung 1, the closed form
     09-disk-modes.tex       a disk-mode surrogate, and a possible route to limb darkening
-    10-pairing.tex          the half-complex pairing, map against visibility
     11-limb-darkening.tex   F19-F20
     12-numerics.tex         accuracy, range of validity
   generated/                emitted fragments
@@ -584,9 +584,9 @@ with published ones (section 5 in particular) say which form we use.
 **O3 — whether the manual's three parts should be its top-level structure.** The manual has three
 parts, though nothing says so: definitions and conventions (sections 1--3); the derivation of the
 `V_lm` basis (4--7), which follows published work with the conventions reconciled in section 5; and
-the new material (8--9), the deformation field, the affine and fitted rows, and the disk basis.  The
-summary of the coefficient pairing, section 10, is part of the second and sits after the third only
-because it was written last.
+the new material (8--9), the deformation field, the affine and fitted rows, and the disk basis.
+(The former section 10, a summary of the coefficient pairing, has since been dissolved into
+sections 1 and 4, where its material is used rather than recited afterwards.)
 
 Two ways to make that visible.  **Coalesce**: three sections, the present sections demoted to
 subsections and their subsections to subsubsections.  Nothing else changes --- every
@@ -599,8 +599,7 @@ is the kind of change that goes wrong quietly.
 
 **Or leave the numbering alone** and put three unnumbered dividers between the sections --- `\part`
 in `article` gives exactly that --- plus a two-sentence statement of which part is which.  That gets
-the shape visible in the contents for almost nothing, and moving section 10 to the end of part 2 is
-one line either way.
+the shape visible in the contents for almost nothing.
 
 *What would settle it:* whether the parts need to be the top-level structure rather than visible
 dividers, which is a question about the reader rather than about the LaTeX; and, if so, whether the
@@ -763,8 +762,8 @@ roadmap's sixty numbers are worth rewriting to match.
   cleanup C4.
 * **The documentation plan numbered the sections wrongly.** It listed `10-limb-darkening.tex`
   and `11-numerics.tex`, sketching a manual without the pairing section. Section 5 now reads
-  10-pairing, 11-limb-darkening, 12-numerics, matches the ten sections that exist, and notes
-  which two are still to come. Was cleanup C2.
+  10-limb-darkening, 11-numerics; the pairing section it sketched has since been dissolved into
+  sections 1 and 4, so the manual now has nine sections and two still to come. Was cleanup C2.
 * **The API listing described a package that did not exist.** Section 2 now names what the tree
   contains: `gui.py` is in the layout, the five functions that were never written are gone
   (`visibility_limb_darkened`, `odd_case_expression`, `even_case_coefficients`,

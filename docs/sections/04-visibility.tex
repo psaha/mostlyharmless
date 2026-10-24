@@ -120,23 +120,55 @@ on folding the second term onto the first with \eqref{eq:visibility-extension}. 
 $m = 0$ the contribution is the single term $a_{l0}V_{l0}$.  The stored coefficients
 are complex; it is the map, and the parameters of a fit, that are real.  The pairing of
 \eqref{eq:contribution} with the map's own expansion, and why the two bases treat negative
-orders differently, is collected in section~\ref{sec:pairing}.
+orders differently, is collected here.
+
+The tool is one fact about conjugation.  Writing the transform as $\mathcal{F}$,
+\begin{equation}
+  \mathcal{F}\bigl[\,\overline{f}\,\bigr](u,v)
+  \;=\; \overline{\mathcal{F}[f](-u,-v)} ,
+  \label{eq:transform-conjugate}
+\end{equation}
+which says that conjugating a map conjugates its transform \emph{and} mirrors the baseline.
+Reversing both components of the baseline sends $\psi \to \psi + \pi$ in
+\eqref{eq:mode-visibility}, and the order-$m$ mode picks up $e^{im\pi} = (-1)^m$:
+\begin{equation}
+  V_{lm}(-u,-v) \;=\; (-1)^m\,V_{lm}(u,v) .
+  \label{eq:pairing-baseline-sign}
+\end{equation}
+Composing the two, the conjugate of a mode transforms to
+\begin{equation}
+  \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} ,
+  \label{eq:pairing-v-negative}
+\end{equation}
+so a stored coefficient and its conjugate partner contribute
+\begin{equation}
+  a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
+  \;=\;
+  \begin{cases}
+    2\,\mathrm{Re}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ even},\\[2pt]
+    2i\,\mathrm{Im}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ odd}.
+  \end{cases}
+  \label{eq:pairing-contribution}
+\end{equation}
+Summing over the stored half therefore splits the inner sum by the parity of $m$,
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
+    \;+\; \sum_{m=1}^{l}
+      \begin{cases}
+        2\,\mathrm{Re}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ even},\\[2pt]
+        2i\,\mathrm{Im}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ odd},
+      \end{cases}
+  \Bigr] .
+  \label{eq:pairing-visibility-parity}
+\end{equation}
+which is the counterpart of the map's \eqref{eq:map-from-half-complex}: the same shape, with
+the even orders under $\mathrm{Re}$ and the odd ones under $i\,\mathrm{Im}$.
 
 Equations \eqref{eq:mode-visibility} and \eqref{eq:contribution} are all that is
-needed.  The real basis of \eqref{eq:real-basis} needs no separate treatment.  Its branches are
-$R_{l,m,c} = \sqrt2\,\mathrm{Re}\,Y_{lm}$ and $R_{l,m,s} = \sqrt2\,\mathrm{Im}\,Y_{lm}$, and
-a real part is a sum of a function and its conjugate, so
-\begin{equation}
-  V(R_{l,m,c}) \;=\; \frac{V_{lm} + (-1)^m\,\overline{V_{lm}}}{\sqrt2} ,
-  \qquad
-  V(R_{l,m,s}) \;=\; \frac{V_{lm} - (-1)^m\,\overline{V_{lm}}}{i\sqrt2} ,
-  \label{eq:real-branch-visibilities}
-\end{equation}
-using the fact, taken up properly in section~\ref{sec:pairing}, that conjugating a map
-conjugates its transform \emph{and} mirrors the baseline, which multiplies an order-$m$ mode
-by $(-1)^m$.  No object at a negative order appears in either line.  The branches reduce with
-\eqref{eq:visibility-extension} to the $\cos(m\psi)$ and $\sin(m\psi)$ forms met in the
-literature.
+needed.  The real basis requires no separate treatment: a branch is made of a function and
+its conjugate, so its visibility follows from the one fact about conjugation used throughout,
+and the results are collected with the rest of the published conventions in
+section~\ref{sec:other-conventions}.
 
 One could absorb \eqref{eq:phase-packed} into the azimuth for those branches by
 measuring the baseline direction as a position angle, from North towards East, as is
@@ -154,12 +186,17 @@ each panel.  Both statements of \eqref{eq:contribution} are then visible at once
 real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since
 $V(-u,-v) = \overline{V(u,v)}$ for a real map.
 
-\subsection{The parity dichotomy}
+\subsection{The two parities}
 \label{sec:parity}
 
-Write $\rho = \sin\theta$, so $\sqrt{1-\rho^2} = \cos\theta$.  The angular factor
-$P_{lm}(\cos\theta)$ is either a polynomial in $\rho^2$, or that polynomial times a
-single factor of $\sqrt{1-\rho^2}$, according to the parity of $l+m$:
+Two reflections of the sphere, and their eigenvalues, govern almost everything that differs
+between the mode families.  They are independent facts, and keeping them apart is what makes
+the two closed forms and the several $(-1)^m$ factors legible.
+
+\paragraph{Through the equator: the radial parity.}  Write $\rho = \sin\theta$, so
+$\sqrt{1-\rho^2} = \cos\theta$, and reflect $\theta \to \pi - \theta$.  The angular factor
+$P_{lm}(\cos\theta)$ is then either a polynomial in $\rho^2$, or that polynomial times a single
+factor of $\sqrt{1-\rho^2}$, according to the parity of $l+m$:
 \begin{equation}
   P_{lm}(\cos\theta) =
   \begin{cases}
@@ -168,11 +205,33 @@ single factor of $\sqrt{1-\rho^2}$, according to the parity of $l+m$:
   \end{cases}
   \label{eq:parity-dichotomy}
 \end{equation}
-This is not merely an algebraic convenience; the two cases give different kinds of
-answer.  For $l+m$ odd the half-range integral can be doubled into a full-range
-one, and it then collapses to a single spherical Bessel function.  For $l+m$ even
-no such doubling exists and the result is a finite sum of ordinary Bessel
-functions, obtained through a Zernike expansion.  Those are sections 5 and 6.
+Equivalently, the radial profile is $\rho^m A(\rho^2)$ with $A$ a polynomial when $l+m$ is
+even, and not otherwise.  That is why this parity decides the \emph{radial} answer.  For $l+m$
+odd the half-range integral can be doubled into a full-range one, and it then collapses to a
+single spherical Bessel function.  For $l+m$ even no such doubling exists and the result is a
+finite sum of ordinary Bessel functions, obtained through a Zernike expansion.  Those are
+sections~\ref{sec:odd} and~\ref{sec:even}.
+
+\paragraph{About the axis: the angular parity.}  Reflect $\varphi \to \varphi + \pi$, a half
+turn about the polar axis.  Only $m$ enters, through $e^{im\pi} = (-1)^m$, because the azimuthal
+factor is the single exponential $e^{im\varphi}$ and not a sum of two.  That parity is what
+governs the \emph{angular} behaviour, and it appears in four places: the phase $(-i)^m$ of the
+mode, which is the statement $J_m(-z) = (-1)^mJ_m(z)$; the sign $(-1)^m$ in the pairing
+$Y_{l,-m} = (-1)^m\overline{Y_{lm}}$; the switch between real and imaginary parts in
+\eqref{eq:pairing-contribution}; and the $\cos(m\psi)$ and $\sin(m\psi)$ factors of the real
+branches.
+
+The two are independent --- all four combinations of $l+m$ and $m$ occur --- which is why the
+$(-1)^m$ of the angular parity turns up in arguments that have nothing to do with the
+Bessel--Zernike split, and why it is worth naming them separately here.
+
+Identity \eqref{eq:pairing-baseline-sign} is \textbf{certificate \vtag{23}}: it is checked
+directly against \eqref{eq:mode-visibility} at the two baselines, with no coefficients and no
+pairing involved, so the identity is isolated rather than inferred.  That isolation is the
+point.  Hermitian symmetry of a real map, $V(-u,-v) = \overline{V(u,v)}$, also depends on it,
+but only in combination with the pairing, so a sign error common to both would satisfy the
+symmetry and still be wrong.  Certificate \vtag{23} would fail instead, and it would fail
+loudly if the sense of the azimuth were ever changed again --- which it has been.
 
 \subsection{The uniform disk}
 \label{sec:uniform-disk}

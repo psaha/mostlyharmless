@@ -257,7 +257,7 @@ def check_reality_exact(l_max=4):
 # --------------------------------------------------------------------------
 
 def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
-    """V3, numerical rung -- the addition theorem.
+    """V3, numerical rung -- the `l = 2` zonal corollary, checked generally.
 
         sum_m Y_{lm}(1) conj(Y_{lm}(2)) = (2l+1)/(4 pi) P_l(cos gamma)
 

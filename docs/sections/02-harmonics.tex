@@ -4,12 +4,13 @@
 \section{Spherical harmonics}
 \label{sec:harmonics}
 
-The basis is real and is labelled by non-negative orders only, as set out in
-section~\ref{sec:conventions}.  Complex harmonics appear in the derivations, also
-only for $m \ge 0$.  Negative orders are never formed, so no magnitude is ever
-needed and there is no signed-order convention to get wrong.  This section records
-the facts the visibility derivation rests on, and says for each which part is
-argument and which is algebra delegated to a certificate.
+Complex harmonics are labelled by non-negative orders only, as set out in
+section~\ref{sec:conventions}, and negative orders are never formed, so no magnitude is ever
+needed and there is no signed-order convention to get wrong.  This section records the
+harmonic fact the visibility derivation rests on --- orthonormality --- and collects the
+real-basis conventions, which the derivation does not use, in one place for comparison with
+published work.  Each part says which is argument and which is algebra delegated to a
+certificate.
 
 \subsection{Orthonormality}
 \label{sec:orthonormality}
@@ -21,14 +22,6 @@ are orthonormal over the full range,
   = \delta_{ll'} \, \delta_{mm'} , \qquad -l \le m, m' \le l ,
   \label{eq:ylm-orthonormal}
 \end{equation}
-and the real basis \eqref{eq:real-basis} is orthonormal and complete:
-\begin{equation}
-  \int_{S^2} R_{l,m,\sigma} \, R_{l',m',\sigma'} \, d\Omega
-  = \delta_{ll'} \, \delta_{mm'} \, \delta_{\sigma\sigma'} ,
-  \label{eq:real-orthonormal}
-\end{equation}
-where $\sigma$ runs over the branches $c$ and $s$, the $m = 0$ function counting
-once on its own.
 
 The proof of \eqref{eq:ylm-orthonormal} is two factors multiplied.  Writing
 $d\Omega = \sin\theta\,d\theta\,d\varphi$, the azimuthal factor is the elementary
@@ -54,10 +47,7 @@ to a sign, and conjugation commutes with the integral.
 Multiplying \eqref{eq:fourier-orthogonality} by
 \eqref{eq:legendre-orthogonality} gives \eqref{eq:ylm-orthonormal}: the $2\pi$ and
 the normalisation together account for the surviving $2/(2l+1)$.  That
-multiplication is the argument; the two identities are the certified part.  The
-real basis then inherits \eqref{eq:real-orthonormal} directly, since
-$R_{l,m,c}$ and $R_{l,m,s}$ are the real and imaginary parts of $Y_{lm}$ scaled by
-$\sqrt{2}$.
+multiplication is the argument; the two identities are the certified part.
 
 The implementation is checked end to end on a Gauss--Legendre grid in
 $\cos\theta$ and the uniform Fourier rule in $\varphi$.  Both are exact for this
@@ -69,51 +59,63 @@ numerically because the two expressions are algebraically equal but not
 identically written --- a symbolic zero there would test the simplifier more than
 the claim.
 
-\subsection{The addition theorem}
-\label{sec:addition}
-
-In the real basis the addition theorem reads
-\begin{equation}
-  R_{l,0}(\hat n_1) R_{l,0}(\hat n_2)
-  + \sum_{m=1}^{l} \Big[ R_{l,m,c}(\hat n_1) R_{l,m,c}(\hat n_2)
-  + R_{l,m,s}(\hat n_1) R_{l,m,s}(\hat n_2) \Big]
-  = \frac{2l+1}{4\pi} \, P_l(\cos\gamma) ,
-  \label{eq:addition}
-\end{equation}
-with $\cos\gamma = \hat n_1 \cdot \hat n_2$.  Every index is non-negative.  The
-form one usually meets in the literature,
-$\sum_{m=-l}^{l} Y_{lm} \overline{Y_{lm}} = \frac{2l+1}{4\pi} P_l(\cos\gamma)$,
-agrees with \eqref{eq:addition}: the negative orders there are exactly the
-conjugates of the non-negative ones, so each $m > 0$ contributes its real and
-imaginary parts separately, which is what the cosine and sine branches are.
-
-This is classical and is cited rather than proved here.  Certificate \vtag{3}
-checks our implementation of it, at $40$ digits and in floating point.
-\emph{Numerical}, $l \le 5$ at $40$ digits.
-
-An exact symbolic certificate is deliberately not attempted.  A symbolic route has
-to reconcile $\sqrt{1-\cos^2\theta}$ with $\sin\theta$, at which point the
-statement being checked is about branch assumptions rather than about the theorem.
-Saying so is more useful than a certificate that passes for the wrong reason.
-
-\subsection{Other conventions}
+\subsection{The real basis, and other conventions}
 \label{sec:other-conventions}
 
-Two translations are worth recording, for comparing with published work.
+Nothing in the derivation needs the material in this subsection.  It is collected here so
+that the main line stays complex, and so that the conventions most often met in published
+work can be translated in one place.
 
-Most of the literature indexes real harmonics by a \emph{signed} order, with
-$\cos(m\varphi)$ for $m > 0$ and $\sin(m\varphi)$ for $m < 0$.  That is a
-relabelling of \eqref{eq:real-basis}: our $(l, m, c)$ and $(l, m, s)$ are their
-$(l, m)$ and $(l, -m)$.  Interferometric surface-mapping codes, including the one
-the analytic visibility work we build on uses, follow that convention.  Nothing in
-this work needs it, but the translation is what makes published coefficients
-directly comparable.
+\paragraph{The real basis.}  At degree $l$ there are $2l+1$ real functions, labelled by
+$m = 0, \dots, l$ together with a cosine or sine branch:
+\begin{equation}
+  R_{l,0} = Y_{l0} , \qquad
+  R_{l,m,c} = \sqrt{2}\,\mathrm{Re}\,Y_{lm} , \qquad
+  R_{l,m,s} = \sqrt{2}\,\mathrm{Im}\,Y_{lm} \quad (m > 0) ,
+  \label{eq:real-basis}
+\end{equation}
+orthonormal and complete,
+\begin{equation}
+  \int_{S^2} R_{l,m,\sigma} \, R_{l',m',\sigma'} \, d\Omega
+  = \delta_{ll'} \, \delta_{mm'} \, \delta_{\sigma\sigma'} ,
+  \label{eq:real-orthonormal}
+\end{equation}
+where $\sigma$ runs over $c$ and $s$, the $m = 0$ function counting once on its own.  A real
+map expands in them with real coefficients, $c_{lm}$ and $s_{lm}$, which relate to the stored
+half-complex $a_{lm}$ of \eqref{eq:map-from-half-complex} by
+\begin{equation}
+  a_{l0} = c_{l0} , \qquad
+  a_{lm} = \frac{c_{lm} - i\,s_{lm}}{\sqrt{2}} \quad (m > 0) .
+  \label{eq:half-complex}
+\end{equation}
+That $\sqrt{2}$ is the only place the two normalisations differ, and it is the reason a
+coefficient quoted from a real-harmonic code has to be rescaled before it means the same
+map.
 
-Second, complex coefficients for a real map are sometimes defined without the
-$\sqrt{2}$ that normalises the real branches in \eqref{eq:real-basis}, in which case
-\eqref{eq:map-from-half-complex} carries a different numerical factor.  The
-relation above is the one used here, and it is the one pyshtools documents for the
-coefficients of a real function.
+\paragraph{The branches in the visibility.}  The transform of a branch follows from the one
+fact about conjugation used throughout, that conjugating a map conjugates its transform and
+mirrors the baseline:
+\begin{equation}
+  V(R_{l,m,c}) \;=\; \frac{V_{lm} + (-1)^m\,\overline{V_{lm}}}{\sqrt2} ,
+  \qquad
+  V(R_{l,m,s}) \;=\; \frac{V_{lm} - (-1)^m\,\overline{V_{lm}}}{i\sqrt2} ,
+  \label{eq:real-branch-visibilities}
+\end{equation}
+which reduce to the $\cos(m\psi)$ and $\sin(m\psi)$ forms met in the literature.  No object
+at a negative order appears in either line.
+
+\paragraph{Signed orders.}  Most of the literature indexes real harmonics by a \emph{signed}
+order, with $\cos(m\varphi)$ for $m > 0$ and $\sin(m\varphi)$ for $m < 0$.  That is a
+relabelling of \eqref{eq:real-basis}: our $(l, m, c)$ and $(l, m, s)$ are their $(l, m)$ and
+$(l, -m)$.  Interferometric surface-mapping codes, including the one the analytic visibility
+work we build on uses, follow that convention.  Nothing in this work needs it, but the
+translation is what makes published coefficients directly comparable.
+
+\paragraph{The $\sqrt{2}$-free convention.}  Complex coefficients for a real map are
+sometimes defined without the $\sqrt{2}$ of \eqref{eq:half-complex}, in which case
+\eqref{eq:map-from-half-complex} carries a different numerical factor.  The relation above is
+the one used here, and it is the one pyshtools documents for the coefficients of a real
+function.
 
 \subsection{What was checked}
 \label{sec:harmonics-register}
@@ -127,7 +129,7 @@ tag & claim & rung \\
          & implementation orthonormality & numerical, $l \le 4$ \\
          & convention against SymPy \code{Ynm} & numerical, $30$ digits \\
 \vtag{2} & the extension \eqref{eq:ylm-extension}, and the implementation reproduces it & exact \\
-\vtag{3} & addition theorem, complex form and real form \eqref{eq:addition} & numerical, $40$ digits, $l \le 5$ \\
+\vtag{3} & the $l = 2$ zonal corollary \eqref{eq:zonal-l2}, against the general \code{sph_harm_addition} & numerical, $40$ digits, $l \le 6$ \\
 \vtag{25} & the real basis \eqref{eq:real-basis}: orthonormal on the grid, and equal to the complex one & numerical, $l \le 4$ \\
 \hline
 \end{tabular}

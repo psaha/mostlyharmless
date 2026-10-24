@@ -4,16 +4,11 @@
 \section{The whole map}
 \label{sec:full-map}
 
-Everything a map needs is now in place, and assembling it is arithmetic.
-\eqref{eq:contribution} gives the contribution of one stored coefficient, so
-\begin{equation}
-  V(u,v) = \sum_{l=0}^{l_{\max}} \bigg[\, a_{l0} V_{l0}
-  + \sum_{m=1}^{l} \Big( a_{lm} V_{lm} + (-1)^m \overline{a_{lm}}\, V_{l,-m} \Big)
-  \bigg] ,
-  \label{eq:map-visibility}
-\end{equation}
-with the mode visibilities from \eqref{eq:mode-visibility} --- the odd family's from
-\eqref{eq:odd-mode}, the even family's from \eqref{eq:even-radial}.
+Everything a map needs is now in place, and assembling it is arithmetic: the sum over the
+stored half of a map's coefficients is \eqref{eq:pairing-visibility-parity}, derived in
+section~\ref{sec:parity} and not restated here, with the mode visibilities from
+\eqref{eq:mode-visibility} --- the odd family's from \eqref{eq:odd-mode}, the even family's
+from \eqref{eq:even-radial}.
 
 Two properties are worth stating, because they are what an observer can check.
 
@@ -44,7 +39,7 @@ Stating it with its condition is the honest form.
 \hline
 tag & claim & rung \\
 \hline
-\vtag{15} & \eqref{eq:map-visibility} against a 2-D FFT of the rendered image & numerical, low-frequency band \\
+\vtag{15} & \eqref{eq:pairing-visibility-parity} against a 2-D FFT of the rendered image & numerical, low-frequency band \\
 \hline
 \end{tabular}
 \end{center}

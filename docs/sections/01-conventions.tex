@@ -79,30 +79,30 @@ is an index of the representation rather than of a map.
 Coefficients, by contrast, are never formed at a negative order.  For a real map
 the term accompanying $a_{lm} Y_{lm}$ is $(-1)^m \overline{a_{lm}} \, Y_{l,-m}$,
 which is to say $2\,\mathrm{Re}(a_{lm} Y_{lm})$; wherever the rotation would call
-for a negative-order coefficient, its value is substituted in that form.
-
-The basis used for maps is real.  At degree $l$ there are $2l+1$ real basis
-functions, labelled by $m = 0, \dots, l$ together with a cosine or sine branch:
+for a negative-order coefficient, its value is substituted in that form.  The pairing is
+therefore also a statement about the coefficients,
 \begin{equation}
-  R_{l,0} = Y_{l0} , \qquad
-  R_{l,m,c} = \sqrt{2}\,\mathrm{Re}\,Y_{lm} , \qquad
-  R_{l,m,s} = \sqrt{2}\,\mathrm{Im}\,Y_{lm} \quad (m > 0) .
-  \label{eq:real-basis}
+  a_{l,-m} \;=\; (-1)^m\,\overline{a_{lm}} ,
+  \label{eq:pairing-reality}
 \end{equation}
-They are orthonormal on the sphere.  A real map is expanded in them with real coefficients,
-but those coefficients are never formed: what is carried is the same expansion in complex
-form, with non-negative orders only,
+and carrying only $m \ge 0$ costs nothing: each stored coefficient is one real number's worth
+of information plus one for its $m = 0$ companion, the rotation of \eqref{eq:coefficient-rotation}
+delivers observer-frame coefficients in the same half-complex form, and the cost of a
+visibility is set by the mode count rather than by any sampling.
+
+A real map is expanded in complex harmonics with non-negative orders only, and the reality
+is carried by the expansion itself rather than by a separate set of real coefficients,
 \begin{equation}
   I(\theta,\varphi) = \sum_{l} \Big[ \, a_{l0} Y_{l0}
   + \sum_{m=1}^{l} 2\,\mathrm{Re}\big( a_{lm} Y_{lm} \big) \Big] .
   \label{eq:map-from-half-complex}
 \end{equation}
 It is real by construction, because the second term in each order is the conjugate of the
-first, the harmonics obeying \eqref{eq:ylm-extension}.  The two descriptions are one
-expansion written twice: the real branches give $2l+1$ functions at degree $l$ and make the
-reality manifest, while the complex form is what is stored, rotated and transformed.  Either
-way there are $\sum_{l=0}^{L} (2l+1) = (L+1)^2$ independent real numbers at degree $\le L$,
-which is what a flat coefficient vector holds.
+first, the harmonics obeying \eqref{eq:ylm-extension}: there are
+$\sum_{l=0}^{L} (2l+1) = (L+1)^2$ independent real numbers at degree $\le L$, which is what a
+flat coefficient vector holds.  A real cosine-and-sine basis, and its relation to published
+conventions, is set out in section~\ref{sec:other-conventions}; nothing in the derivation
+needs it.
 
 The constant term is $a_{00}Y_{00} = a_{00}/\sqrt{4\pi}$, so $a_{00}$ is $\sqrt{4\pi}$ times
 the mean intensity over the sphere,
