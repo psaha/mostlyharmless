@@ -702,7 +702,7 @@ def check_odd_closed_form(l_max=5, q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0)):
 def check_zernike_jacobi(n_max=8):
     """V8, exact rung -- the Jacobi form of the Zernike radial polynomial.
 
-        R_{n,m}(rho) = (-1)^k rho^m P_k^{(m,0)}(1 - 2 rho^2) ,   k = (n-m)/2 ,
+        R_n^m(rho) = (-1)^k rho^m P_k^{(m,0)}(1 - 2 rho^2) ,   k = (n-m)/2 ,
 
     compared as polynomials by expansion.  Exact over the stated range.
     """
@@ -720,7 +720,7 @@ def check_zernike_jacobi(n_max=8):
 
 
 def check_zernike_orthogonality(n_max=8):
-    """V9, exact rung -- int_0^1 R_{n,m} R_n'^m rho drho = delta_{nn'}/(2n+2)."""
+    """V9, exact rung -- int_0^1 R_n^m R_n'^m rho drho = delta_{nn'}/(2n+2)."""
     rho = sp.Symbol("rho", nonnegative=True)
     worst = sp.Integer(0)
     for m in range(n_max + 1):
@@ -739,10 +739,10 @@ def check_zernike_orthogonality(n_max=8):
 def check_zernike_hankel(n_max=6, order=6):
     """V10, exact rung -- the Zernike-Hankel identity, through its power series.
 
-        int_0^1 R_{n,m}(rho) J_m(a rho) rho drho = (-1)^k J_{n+1}(a)/a ,
+        int_0^1 R_n^m(rho) J_m(a rho) rho drho = (-1)^k J_{n+1}(a)/a ,
         k = (n-m)/2 .
 
-    Both sides are expanded in a: the left from the exact moments of R_{n,m} and the
+    Both sides are expanded in a: the left from the exact moments of R_n^m and the
     Bessel series, the right from the Bessel series alone.  Every power up to
     a^(n + 2*order) is compared, so the rung is exact with a stated series scope
     rather than a proof of the identity for all a.  The identity itself is cited;
@@ -834,26 +834,17 @@ def check_even_closed_form(l_max=6, q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0)):
 # --------------------------------------------------------------------------
 
 def _zonal_starspot(l_max, half_angle=0.9, depth=0.6):
-    """A starspot on a uniformly bright surface, as zonal coefficients with a_00 = 1.
+    """A starspot as zonal coefficients with a_00 = 1.
 
-    The surface has brightness 1 outside the cap and 1 - depth inside it.  Built
-    here rather than imported from the figure module, so that the certificate does
-    not depend on the plotting code.
+    Delegates to :func:`mostlyharmless.symbolic.maps.cap_coefficients`, which is the one
+    implementation.  This wrapper existed because the certificate was written before the map
+    builders and deliberately did not import the *plotting* module; that reason expired when
+    the plotting code was retired and the builders became ``maps``, and the two implementations
+    were verified identical (to 0.0) before the merge.
     """
-    cos_edge = math.cos(half_angle)
-    nodes, weights = np.polynomial.legendre.leggauss(200)
-    mu = 0.5 * (nodes + 1.0) * (1.0 - cos_edge) + cos_edge
-    weight = 0.5 * (1.0 - cos_edge) * weights
-    moments = [float(np.sum(weight * eval_legendre(l, mu))) for l in range(l_max + 1)]
-    zeroth = 2.0 - depth * moments[0]
-    blocks = []
-    for l in range(l_max + 1):
-        inside = (2.0 if l == 0 else 0.0) - depth * moments[l]
-        block = np.zeros(l + 1, dtype=complex)
-        block[0] = (inside / zeroth) * math.sqrt(2 * l + 1)
-        blocks.append(block)
-    return Coeffs(tuple(blocks))
+    from mostlyharmless.symbolic import maps
 
+    return maps.cap_coefficients(l_max, half_angle=half_angle, depth=depth)
 
 def _fft_visibility(coeffs, n_side=129):
     """The visibility by a 2-D FFT of the sampled image, in our planar measure.
@@ -1026,9 +1017,9 @@ def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000)
 def check_zernike_bessel_identity(n_max=8, values=(0.7, 1.7, 3.0, 6.0)):
     """V22, numerical rung -- the identity the disk-mode surrogate rests on.
 
-    For ``n - m`` even and the normalisation ``R_{n,m}(1) = 1`` of section 6.2,
+    For ``n - m`` even and the normalisation ``R_n^m(1) = 1`` of section 6.2,
 
-        int_0^1 R_{n,m}(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v ,
+        int_0^1 R_n^m(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v ,
 
     which is what makes one disk mode cost exactly one ordinary Bessel function, so that a
     series of M modes costs M of them and nothing more.

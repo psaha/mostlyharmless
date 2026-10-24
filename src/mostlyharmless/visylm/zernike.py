@@ -1,23 +1,23 @@
 """Zernike radial polynomials, and the even-family coefficients.
 
-Two jobs live here.  :func:`zernike_radial` evaluates R_{n,m}(rho) for given numbers,
+Two jobs live here.  :func:`zernike_radial` evaluates R_n^m(rho) for given numbers,
 through the Jacobi polynomial.  :func:`mode_polynomial` and
 :func:`zernike_coefficients` do the exact rational algebra the even family needs:
 the first writes P_{lm}(sqrt(1-rho^2)) as rho^m A(rho^2), the second expands that in
 Zernike radial polynomials.
 
-The convention is the standard one, R_{n,m}(1) = 1, defined for n - m even:
+The convention is the standard one, R_n^m(1) = 1, defined for n - m even:
 
-    R_{n,m}(rho) = sum_{s=0}^{(n-m)/2} (-1)^s (n-s)!
+    R_n^m(rho) = sum_{s=0}^{(n-m)/2} (-1)^s (n-s)!
                  / (s! ((n-m)/2 + m - s)! ((n-m)/2 - s)!) rho^{n-2s} .
 
 Two identities are used later and certified rather than assumed: the Jacobi form
 
-    R_{n,m}(rho) = (-1)^{(n-m)/2} rho^m P_{(n-m)/2}^{(m,0)}(1 - 2 rho^2) ,
+    R_n^m(rho) = (-1)^{(n-m)/2} rho^m P_{(n-m)/2}^{(m,0)}(1 - 2 rho^2) ,
 
 and the orthogonality
 
-    int_0^1 R_{n,m}(rho) R_n'^m(rho) rho drho = delta_{nn'} / (2n + 2) .
+    int_0^1 R_n^m(rho) R_n'^m(rho) rho drho = delta_{nn'} / (2n + 2) .
 
 The exact side uses SymPy, which is already a dependency, and every result is
 memoised: a fit asks for the same coefficients many times, and they never change.
@@ -61,7 +61,7 @@ def _check_even_family(l, m):
 
 
 def zernike_radial(n, m, rho):
-    """R_{n,m}(rho), numeric, through the Jacobi polynomial."""
+    """R_n^m(rho), numeric, through the Jacobi polynomial."""
     _check_degree(n, m)
     rho = np.asarray(rho, dtype=float)
     half = (n - m) // 2
@@ -70,7 +70,7 @@ def zernike_radial(n, m, rho):
 
 @lru_cache(maxsize=None)
 def zernike_polynomial(n, m):
-    """R_{n,m} as an exact expression in rho."""
+    """R_n^m as an exact expression in rho."""
     _check_degree(n, m)
     half = (n - m) // 2
     total = sp.Integer(0)

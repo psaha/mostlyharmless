@@ -49,6 +49,35 @@ its place on the sky.  The body $z$ axis, which is the spin, maps to
 $(\sin\beta\cos\PA,\ \sin\beta\sin\PA,\ \cos\beta)$, so it tilts toward the azimuth
 $\PA$ and sits $\cos\beta$ above the sky plane.
 
+\subsection{Visibility and Fourier conventions}
+
+The complex visibility is the Fourier transform of the sky brightness, with the
+factor $2\pi$ inside the exponent and no prefactor,
+\begin{equation}
+  V(u,v) = \int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx ,
+  \label{eq:visibility-definition}
+\end{equation}
+with $u$ and $v$ in \emph{wavelengths} and $y, x$ dimensionless direction
+cosines.  Here $u$ is the \emph{North} component of the baseline and $v$ the
+\emph{East} component: the reverse of the radio-interferometry convention, adopted
+deliberately (D24) so that the coordinates on the sky and on the ground share an
+orientation, and so that $\psi$ below is the position angle directly.  Thus
+$V(0,0)$ is the total flux.  The transform is written in plane polar coordinates
+through
+\begin{equation}
+  q = \sqrt{u^2 + v^2}, \qquad \psi = \arctan(v,u), \qquad a = 2\pi q .
+  \label{eq:uv-polar}
+\end{equation}
+Public functions take $(u,v)$; $q$, $\psi$ and $a$ are internal.
+
+The measure in \eqref{eq:visibility-definition} is the planar measure over the
+projected disk, $dy\,dx = \rho\,d\rho\,d\varphi$.  The exact solid-angle
+measure differs by a factor $1/n$ with $n = \sqrt{1-\rho^2}$, and is not used
+here, because the planar measure is the one in which the classical uniform-disk
+and limb-darkening results are expressed.  The difference is not cosmetic: the
+solid-angle measure moves the square root from the odd family to the even one,
+and so swaps which family is easy.
+
 \subsection{Spherical harmonics}
 
 Complex harmonics are used in the derivations, and only for non-negative orders:
@@ -73,8 +102,12 @@ which is a definition, and which coincides with the standard convention built
 from the associated Legendre function of negative order.  Both halves of that sentence are
 checked: that the identity holds for the associated Legendre functions we use, and that the
 implementation reproduces it, are the content of \textbf{certificate \vtag{2}}.  Negative
-orders are wanted in exactly one place, the rotation machinery of section~3, where the order
-is an index of the representation rather than of a map.
+orders are \emph{formed} in one place only, the rotation machinery of
+section~\ref{sec:wigner}, where the order indexes the representation rather than a map.
+Elsewhere they appear only through the definition \eqref{eq:ylm-extension}: as the
+signed-order relabelling of section~\ref{sec:other-conventions}, and in relating the real
+branches to the complex coefficients in section~\ref{sec:visibility}.  No coefficient is ever
+stored at a negative order.
 
 Coefficients, by contrast, are never formed at a negative order.  For a real map
 the term accompanying $a_{lm} Y_{lm}$ is $(-1)^m \overline{a_{lm}} \, Y_{l,-m}$,
@@ -103,6 +136,45 @@ $\sum_{l=0}^{L} (2l+1) = (L+1)^2$ independent real numbers at degree $\le L$, wh
 flat coefficient vector holds.  A real cosine-and-sine basis, and its relation to published
 conventions, is set out in section~\ref{sec:other-conventions}; nothing in the derivation
 needs it.
+
+A consequence worth recording here, before any functional form of $V_{lm}$ is known, is the
+shape the visibility sum must take.  Two facts suffice.  First, the transform commutes with
+rotations: rotating a map rotates its transform by the same angle, so the azimuthal order of a
+mode is the only azimuthal structure its visibility can have.  Second, conjugating a map
+conjugates its transform and mirrors the baseline,
+\begin{equation}
+  \mathcal{F}\bigl[\,\overline{f}\,\bigr](u,v) \;=\; \overline{\mathcal{F}[f](-u,-v)} ,
+  \label{eq:transform-conjugate}
+\end{equation}
+a plane wave with its phase conjugated being the wave travelling the other way.  Now $Y_{lm}$
+carries azimuthal order exactly $m$, and reversing both components of the baseline is a rotation
+of the baseline by $\pi$, which advances that structure by $m\pi$.  So
+\begin{equation}
+  V_{lm}(-u,-v) \;=\; (-1)^m\,V_{lm}(u,v) ,
+  \label{eq:pairing-baseline-sign}
+\end{equation}
+and, composing the two,
+\begin{equation}
+  \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} .
+  \label{eq:pairing-v-negative}
+\end{equation}
+The stored half of \eqref{eq:map-from-half-complex} therefore transforms to a sum in which each
+coefficient brings its conjugate partner, weighted by $(-1)^m$:
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
+    \;+\; \sum_{m=1}^{l}
+      \begin{cases}
+        2\,\mathrm{Re}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ even},\\[2pt]
+        2i\,\mathrm{Im}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ odd}.
+      \end{cases}
+  \Bigr] .
+  \label{eq:pairing-visibility-parity}
+\end{equation}
+That is the counterpart of \eqref{eq:map-from-half-complex}: the same shape, with the even orders
+under $\mathrm{Re}$ and the odd ones under $i\,\mathrm{Im}$.  Nothing in it depends on the
+functional form of $V_{lm}$, which is what the rest of sections~\ref{sec:visibility}
+and~\ref{sec:odd} supplies; the derivation is completed in
+section~\ref{sec:visibility}, where the mode's contribution is evaluated.
 
 The constant term is $a_{00}Y_{00} = a_{00}/\sqrt{4\pi}$, so $a_{00}$ is $\sqrt{4\pi}$ times
 the mean intensity over the sphere,
@@ -136,35 +208,6 @@ would show the same spot a quarter turn away.  The model in \code{make mapgui} d
 same quantity live, and section~\ref{sec:full-map} describes what a truncated map costs at
 its limb.
 
-\subsection{Visibility and Fourier conventions}
-
-The complex visibility is the Fourier transform of the sky brightness, with the
-factor $2\pi$ inside the exponent and no prefactor,
-\begin{equation}
-  V(u,v) = \int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx ,
-  \label{eq:visibility-definition}
-\end{equation}
-with $u$ and $v$ in \emph{wavelengths} and $y, x$ dimensionless direction
-cosines.  Here $u$ is the \emph{North} component of the baseline and $v$ the
-\emph{East} component: the reverse of the radio-interferometry convention, adopted
-deliberately (D24) so that the coordinates on the sky and on the ground share an
-orientation, and so that $\psi$ below is the position angle directly.  Thus
-$V(0,0)$ is the total flux.  The transform is written in plane polar coordinates
-through
-\begin{equation}
-  q = \sqrt{u^2 + v^2}, \qquad \psi = \arctan(v,u), \qquad a = 2\pi q .
-  \label{eq:uv-polar}
-\end{equation}
-Public functions take $(u,v)$; $q$, $\psi$ and $a$ are internal.
-
-The measure in \eqref{eq:visibility-definition} is the planar measure over the
-projected disk, $dy\,dx = \rho\,d\rho\,d\varphi$.  The exact solid-angle
-measure differs by a factor $1/n$ with $n = \sqrt{1-\rho^2}$, and is not used
-here, because the planar measure is the one in which the classical uniform-disk
-and limb-darkening results are expressed.  The difference is not cosmetic: the
-solid-angle measure moves the square root from the odd family to the even one,
-and so swaps which family is easy.
-
 \subsection{Symbols}
 
 \begin{center}
@@ -187,7 +230,8 @@ $n$ & Zernike radial degree \\
 $k = (n-m)/2$ & Jacobi degree, $m \ge 0$ \\
 $\alpha,\ \beta,\ \PA$ & spin phase, inclination, position angle \\
 $N_{lm}$ & harmonic normalisation, \eqref{eq:ylm} \\
-$R_{n,m}(\rho)$ & Zernike radial polynomial, $m \ge 0$ \\
+$R_n^m(\rho)$ & Zernike radial polynomial, $m \ge 0$ \\
+$X_{lm}(q)$ & radial transform of a mode, \eqref{eq:radial-integral} \\
 $j_l,\ J_m$ & spherical and cylindrical Bessel functions \\
 \hline
 \end{tabular}

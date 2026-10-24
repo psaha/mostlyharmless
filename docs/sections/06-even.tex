@@ -29,23 +29,23 @@ doubling, and here its absence is what forces a sum.
 \label{sec:zernike}
 
 These are the natural basis for functions of $\rho$ with a fixed parity.  With the
-normalisation $R_{n,m}(1) = 1$, and $n-m$ even,
+normalisation $R_n^m(1) = 1$, and $n-m$ even,
 \begin{equation}
-  R_{n,m}(\rho) = \sum_{s=0}^{(n-m)/2} (-1)^s
+  R_n^m(\rho) = \sum_{s=0}^{(n-m)/2} (-1)^s
   \frac{(n-s)!}{s! \left(\frac{n-m}{2}+m-s\right)! \left(\frac{n-m}{2}-s\right)!}\,
   \rho^{n-2s} .
   \label{eq:zernike-sum}
 \end{equation}
 Equivalently, and better for evaluation,
 \begin{equation}
-  R_{n,m}(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
+  R_n^m(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
   \label{eq:zernike-jacobi}
 \end{equation}
 a Jacobi polynomial in $1-2\rho^2$.
 
 They are orthogonal against the weight $\rho$,
 \begin{equation}
-  \int_0^1 R_{n,m}(\rho)\, R_{n'}^m(\rho)\, \rho\, d\rho
+  \int_0^1 R_n^m(\rho)\, R_{n'}^m(\rho)\, \rho\, d\rho
   = \frac{\delta_{nn'}}{2n+2} ,
   \label{eq:zernike-orthogonality}
 \end{equation}
@@ -92,13 +92,13 @@ there is no data file and no maximum $l$.
 The integral of a Zernike polynomial against a Bessel function is elementary
 \citep{zernike1934,bornwolf}:
 \begin{equation}
-  \int_0^1 R_{n,m}(\rho)\, J_m(a\rho)\, \rho\, d\rho
+  \int_0^1 R_n^m(\rho)\, J_m(a\rho)\, \rho\, d\rho
   = (-1)^{(n-m)/2} \frac{J_{n+1}(a)}{a} .
   \label{eq:zernike-hankel}
 \end{equation}
 This is the identity that converts the expansion into Bessel functions, so its sign
 and normalisation matter.  Certificate \vtag{10} expands both sides in powers of $a$
---- the left from the exact moments of $R_{n,m}$, the right from the Bessel series ---
+--- the left from the exact moments of $R_n^m$, the right from the Bessel series ---
 and compares every power up to $a^{n+2J}$.  \emph{Exact}, with that stated series
 scope, $n \le 6$ and $J = 6$.
 
@@ -108,7 +108,7 @@ scope, $n \le 6$ and $J = 6$.
 Substituting \eqref{eq:even-expansion} into the radial integral and applying
 \eqref{eq:zernike-hankel} term by term gives
 \begin{equation}
-  R_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_k\, (-1)^k\,
+  X_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_k\, (-1)^k\,
   \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} ,
   \label{eq:even-radial}
 \end{equation}
@@ -120,7 +120,7 @@ route.
 At $q = 0$ only the term with $m+2k = 0$ survives, since $J_\nu(a) \approx a^\nu$
 there:
 \begin{equation}
-  R_{lm}(0) = \begin{cases}
+  X_{lm}(0) = \begin{cases}
     c_0/2 , & m = 0 , \\[2pt]
     0 , & m \ge 2 ,
   \end{cases}

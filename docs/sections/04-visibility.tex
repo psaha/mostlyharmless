@@ -76,98 +76,49 @@ between the two families --- it swaps which of them is easy.
 \label{sec:mode-visibility}
 
 For given $l$ and $m \ge 0$, \eqref{eq:master-reduction} is a complex constant
-times a radial integral that depends on $q$ alone:
+times a radial integral that depends on $q$ alone.  That integral is the only object left to
+evaluate, so it is given a letter of its own, $X_{lm}(q)$, deliberately not $R$: $R_n^m$ is the
+Zernike radial polynomial and is needed in the same sections, and one letter cannot mean both.
 \begin{equation}
-  V_{lm}(u,v) = 2\pi(-i)^m N_{lm}\, e^{im\psi}\, R_{lm}(q) ,
+  V_{lm}(u,v) = 2\pi(-i)^m N_{lm}\, e^{im\psi}\, X_{lm}(q) ,
   \label{eq:mode-visibility}
 \end{equation}
 \begin{equation}
-  R_{lm}(q) = \int_0^1 P_{lm}\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,
+  X_{lm}(q) = \int_0^1 P_{lm}\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,
   \rho\,d\rho .
   \label{eq:radial-integral}
 \end{equation}
-Written this way the reduction is complete and one object remains, $R_{lm}(q)$.
+Written this way the reduction is complete and one object remains, $X_{lm}(q)$.
 Sections 5 and 6 evaluate it for $l+m$ odd and even respectively, and that is the
 whole of the remaining work.
 
-\subsection{Negative orders, and the contribution of a coefficient}
+\subsection{The contribution of a coefficient}
 \label{sec:contribution}
 
-The harmonics were extended to negative orders by \eqref{eq:ylm-extension}, and the
-visibility is linear in the map, so it needs the same extension.  Its form is
-simpler.  Using $V(\overline{f})(u,v) = \overline{V(f)(-u,-v)}$ for the transform of
-a conjugate, and the fact that reversing the baseline adds $\pi$ to the azimuth,
-\begin{equation}
-  V_{l,-m}
-  = (-1)^m \overline{V_{lm}(-u,-v)}
-  = (-1)^m \overline{(-1)^m V_{lm}(u,v)}
-  = \overline{V_{lm}} ,
-  \label{eq:visibility-extension}
-\end{equation}
-so \emph{no} sign survives: the $(-1)^m$ of \eqref{eq:ylm-extension} is cancelled by
-the $(-1)^m$ that $e^{im\pi}$ contributes when the baseline is reversed.
+The visibility is linear in the map, so it inherits the map's pairing of \eqref{eq:ylm-extension}.
+One consequence is worth a sentence rather than an equation: at a negative order the visibility
+carries \emph{no} extra sign, because the $(-1)^m$ of the basis is cancelled by the $(-1)^m$ that
+$e^{im\pi}$ contributes when the baseline is reversed, as
+\eqref{eq:pairing-visibility-parity} already showed.  That cancellation is the whole difference
+between the map's inner sum and the visibility's, and it is why the stored half suffices on its
+own.
 
-The contribution of a stored coefficient follows in one step.  The map carries
-$2\,\mathrm{Re}(a_{lm}Y_{lm})$ at order $m > 0$, which is
-$a_{lm}Y_{lm} + (-1)^m\overline{a_{lm}}\,Y_{l,-m}$, so
-\begin{equation}
-  a_{lm} V_{lm} + (-1)^m \overline{a_{lm}}\, V_{l,-m}
-  = 4\pi(-i)^m N_{lm} R_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
-  \qquad m > 0 ,
-  \label{eq:contribution}
-\end{equation}
-on folding the second term onto the first with \eqref{eq:visibility-extension}.  At
-$m = 0$ the contribution is the single term $a_{l0}V_{l0}$.  The stored coefficients
-are complex; it is the map, and the parameters of a fit, that are real.  The pairing of
-\eqref{eq:contribution} with the map's own expansion, and why the two bases treat negative
-orders differently, is collected here.
-
-The tool is one fact about conjugation.  Writing the transform as $\mathcal{F}$,
-\begin{equation}
-  \mathcal{F}\bigl[\,\overline{f}\,\bigr](u,v)
-  \;=\; \overline{\mathcal{F}[f](-u,-v)} ,
-  \label{eq:transform-conjugate}
-\end{equation}
-which says that conjugating a map conjugates its transform \emph{and} mirrors the baseline.
-Reversing both components of the baseline sends $\psi \to \psi + \pi$ in
-\eqref{eq:mode-visibility}, and the order-$m$ mode picks up $e^{im\pi} = (-1)^m$:
-\begin{equation}
-  V_{lm}(-u,-v) \;=\; (-1)^m\,V_{lm}(u,v) .
-  \label{eq:pairing-baseline-sign}
-\end{equation}
-Composing the two, the conjugate of a mode transforms to
-\begin{equation}
-  \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} ,
-  \label{eq:pairing-v-negative}
-\end{equation}
-so a stored coefficient and its conjugate partner contribute
-\begin{equation}
+The contribution of one stored coefficient is then not a new result but a substitution: take the
+summand of \eqref{eq:pairing-visibility-parity} at order $m$ and put in the mode
+\eqref{eq:mode-visibility}, which reduces both branches to a common form,
+\[
   a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
-  \;=\;
-  \begin{cases}
-    2\,\mathrm{Re}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ even},\\[2pt]
-    2i\,\mathrm{Im}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ odd}.
-  \end{cases}
-  \label{eq:pairing-contribution}
-\end{equation}
-Summing over the stored half therefore splits the inner sum by the parity of $m$,
-\begin{equation}
-  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
-    \;+\; \sum_{m=1}^{l}
-      \begin{cases}
-        2\,\mathrm{Re}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ even},\\[2pt]
-        2i\,\mathrm{Im}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ odd},
-      \end{cases}
-  \Bigr] .
-  \label{eq:pairing-visibility-parity}
-\end{equation}
-which is the counterpart of the map's \eqref{eq:map-from-half-complex}: the same shape, with
-the even orders under $\mathrm{Re}$ and the odd ones under $i\,\mathrm{Im}$.
+  \;=\; 4\pi(-i)^m N_{lm} X_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
+  \qquad m > 0 ,
+\]
+because $(-i)^m$ is real for even $m$ and imaginary for odd $m$.  At $m = 0$ the contribution is
+the single term $a_{l0}V_{l0}$.  The stored coefficients are complex; it is the map, and the
+parameters of a fit, that are real.
 
-Equations \eqref{eq:mode-visibility} and \eqref{eq:contribution} are all that is
-needed.  The real basis requires no separate treatment: a branch is made of a function and
-its conjugate, so its visibility follows from the one fact about conjugation used throughout,
-and the results are collected with the rest of the published conventions in
+Equations \eqref{eq:pairing-visibility-parity} and \eqref{eq:mode-visibility} are all that is
+needed for the whole map.  The real basis requires no separate treatment: a branch is made of a
+function and its conjugate, so its visibility follows from the one fact about conjugation used
+throughout, and the results are collected with the rest of the published conventions in
 section~\ref{sec:other-conventions}.
 
 One could absorb \eqref{eq:phase-packed} into the azimuth for those branches by
@@ -182,8 +133,8 @@ $m$.  The two azimuths are measured the same way here on purpose.
 
 The model in \code{make mapgui} draws exactly this: the real and imaginary parts of
 $\Delta V$, in the observer's frame, on a common scale, with the origin at the centre of
-each panel.  Both statements of \eqref{eq:contribution} are then visible at once --- the
-real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since
+each panel.  Both halves of \eqref{eq:pairing-visibility-parity} are then visible at once ---
+the real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since
 $V(-u,-v) = \overline{V(u,v)}$ for a real map.
 
 \subsection{The two parities}
@@ -218,7 +169,7 @@ factor is the single exponential $e^{im\varphi}$ and not a sum of two.  That par
 governs the \emph{angular} behaviour, and it appears in four places: the phase $(-i)^m$ of the
 mode, which is the statement $J_m(-z) = (-1)^mJ_m(z)$; the sign $(-1)^m$ in the pairing
 $Y_{l,-m} = (-1)^m\overline{Y_{lm}}$; the switch between real and imaginary parts in
-\eqref{eq:pairing-contribution}; and the $\cos(m\psi)$ and $\sin(m\psi)$ factors of the real
+\eqref{eq:pairing-visibility-parity}; and the $\cos(m\psi)$ and $\sin(m\psi)$ factors of the real
 branches.
 
 The two are independent --- all four combinations of $l+m$ and $m$ occur --- which is why the

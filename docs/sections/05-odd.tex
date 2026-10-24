@@ -4,7 +4,7 @@
 \section{The odd family}
 \label{sec:odd}
 
-This section evaluates $R_{lm}(q)$ of \eqref{eq:radial-integral} for $l+m$ odd, and
+This section evaluates $X_{lm}(q)$ of \eqref{eq:radial-integral} for $l+m$ odd, and
 does so completely: the answer is a single spherical Bessel function.  The even
 family is section 6.
 
@@ -14,7 +14,7 @@ family is section 6.
 Write $\rho = \sin\theta$, so that $\sqrt{1-\rho^2} = \cos\theta$, and the radial
 integral becomes
 \begin{equation}
-  R_{lm}(q) = \int_0^{\pi/2} P_{lm}(\cos\theta)\,
+  X_{lm}(q) = \int_0^{\pi/2} P_{lm}(\cos\theta)\,
   J_m(2\pi q\sin\theta)\,\sin\theta\cos\theta\,d\theta .
   \label{eq:radial-in-theta}
 \end{equation}
@@ -23,7 +23,7 @@ $P_{lm}(-z) = -P_{lm}(z)$, and so is the explicit factor $\cos\theta$; everythin
 else in the integrand is even.  The product is therefore even and the half-range
 integral can be doubled,
 \begin{equation}
-  2R_{lm}(q) = \int_{-1}^{1} P_{lm}(z)\, J_m\!\left(2\pi q\sqrt{1-z^2}\right)
+  2X_{lm}(q) = \int_{-1}^{1} P_{lm}(z)\, J_m\!\left(2\pi q\sqrt{1-z^2}\right)
   z\,dz , \qquad z = \cos\theta ,
   \label{eq:doubled}
 \end{equation}
@@ -46,7 +46,7 @@ leaving two integrals of one form,
 \end{equation}
 so that
 \begin{equation}
-  2R_{lm}(q) = \frac{l-m+1}{2l+1} K_{l+1}^m
+  2X_{lm}(q) = \frac{l-m+1}{2l+1} K_{l+1}^m
   + \frac{l+m}{2l+1} K_{l-1}^m .
   \label{eq:K-combination}
 \end{equation}
@@ -54,16 +54,16 @@ so that
 \subsection{The \texorpdfstring{$K$}{K} identity}
 \label{sec:k-identity}
 
-For $l+m$ even, \citet{neves2006} give
+For $l+m$ odd, \citet{neves2006} give
 \begin{equation}
   K_{lm}(a) = (-1)^m \, 2 \, \frac{(l+m-1)!!}{(l-m)!!} \, j_l(a) .
   \label{eq:K-identity}
 \end{equation}
-This is the one step we cite rather than derive, and the sign is the one thing the
-citation does not settle for us, since it depends on the Condon--Shortley phase
-carried inside $P_{lm}$.  Certificate \vtag{18} therefore checks
-\eqref{eq:K-identity} numerically in our own convention.  \emph{Numerical},
-$l \le 6$.
+This is the one step we cite rather than derive, and the overall sign is the one thing the
+citation does not settle for us: it depends on the phase convention a source carries inside
+$P_{lm}$, which is not always the one used here.  Certificate \vtag{18} therefore checks
+\eqref{eq:K-identity} numerically in our own convention rather than taking the sign on
+trust.  \emph{Numerical}, $l \le 6$.
 
 \subsection{The collapse}
 \label{sec:odd-collapse}
@@ -97,7 +97,7 @@ statement, not evidence for it.
 
 One term survives,
 \begin{equation}
-  R_{lm}(q) = (-1)^m \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
+  X_{lm}(q) = (-1)^m \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
   \qquad l+m \text{ odd} ,
   \label{eq:odd-radial}
 \end{equation}
