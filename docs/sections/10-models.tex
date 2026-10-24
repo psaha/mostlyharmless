@@ -1,0 +1,106 @@
+% Input by mostlyharmless.tex.  No preamble here.
+
+\section{The two interactive models}
+\label{sec:models}
+
+The derivations are complete without this section, and nothing here is certified: what
+follows is a pair of front ends and the visual checks that go with them.  They are recorded
+because a picture can be wrong in ways a residual cannot --- a mirrored image satisfies every
+statement in sections~\ref{sec:visibility} to~\ref{sec:full-map}, and did so for long enough
+to be embarrassing --- and because a check that lives in prose is one that drifts away from
+the code it describes.
+
+Both models are Matplotlib windows over the same scaffolding: two panels, a shared colour
+bar, sliders, radio groups, and a redraw that fires once when a slider drag ends rather than
+once per mouse motion.  Each carries a \emph{preset} group: named parameter sets, labelled by
+what you should see rather than by their angles, with a \code{manual} entry meaning ``these
+are the user's own numbers'', re-selected whenever a slider moves.  The presets are the
+reproducible part of the checks below.
+
+\subsection{The deformation model}
+\label{sec:model-deformation}
+
+\code{make gui} shows a rotationally deformed star in the far field: a unit-radius source
+whose level surface is the equipotential of a tide and a spin, with brightness fixed at the
+von Zeipel law $I \propto g$.  The two panels are the near and far hemispheres.  The sliders
+are the two amplitudes, the inclination, and the tide's body latitude and longitude; the
+position angle of the spin is pinned to zero, being a gauge for a single observation.
+
+The row group is the part worth explaining, because the rows differ in kind:
+\begin{description}
+\item[\code{numeric}] the exact level surface, solved by bisection along each sampled
+  direction.  The reference.
+\item[\code{first-order}] an ellipsoid, with the brightness linearised as in
+  \eqref{eq:first-order-pattern}.  Against \code{numeric} this measures the whole analytic
+  stack at $O(\epsilon)$.
+\item[\code{fitted, l = 0,2,4}] coefficients chosen by least squares in the image plane,
+  rather than taken from the brightness pattern.
+\item[\code{fitted, l = 0,2,4,6}] the same at one more degree.  Comparing the two fitted rows
+  isolates the \emph{truncation} from the shape model's error, which the other pairs
+  conflate.
+\end{description}
+The fitted rows print their residual in the panel titles.  It is not a defect of the fit but
+the price of the degree: at fixed $\Lambda$ the residual is the truncation floor, and
+section~\ref{sec:full-map} states why a discontinuous map converges slowly.
+
+\paragraph{The presets, and what they test.}  \code{reference} is a moderate configuration,
+$\epsilon_\text{tide} = 0.03$ and $\epsilon_\text{spin} = 0.01$, keeping
+$\epsilon_\text{tide} + \tfrac32\epsilon_\text{spin} \approx 0.045$ well below the $0.148$
+ceiling, with the spin axis inclined by $60°$ so that both the tide's bulge and the spin's
+flattening are visible.  \code{ceiling} puts the same amplitudes in the equatorial plane,
+which is the stress test for the analytic rows: the affine error reaches $0.11$ there.
+
+\code{tilt check} is the geometry test.  The deformations are at the ceiling and the tide axis
+is off both axes of the sky, at latitude $-45°$ and longitude $45°$, so the bulge lies on a
+\emph{diagonal}.  That matters: an axis-aligned bulge maps to itself under a mirror, so a
+sign error in the frame or in the display would pass unnoticed, while a diagonal one would
+come out on the wrong diagonal.  Seen on the page, the stretching should run from lower right
+to upper left --- mostly North with a little East, with the body-latitude bands
+perpendicular to it --- and the picture is drawn with North up and East to the left, as
+section~\ref{sec:conventions} fixes.
+
+\subsection{The map model}
+\label{sec:model-map}
+
+\code{make mapgui} shows a starspot as spherical-harmonic coefficients: a polar cap carried in
+the body frame and rotated into the observer frame, in the manner of
+section~\ref{sec:rotation-law}.  There is no deformation and no solve --- the model is a
+\code{Coeffs} object --- so a redraw costs a coefficient sum, and the panels are the near and
+far hemispheres in units of the mean.
+
+The sliders are the spot's half-angle, its depth, its colatitude away from the spin axis, its
+longitude, the inclination of the spin to the line of sight, and the position angle of the
+sky.  The colatitude is what makes the longitude mean something: the cap is built about the
+pole, and an axisymmetric map is invariant under a rotation about its own axis, so with the
+spot at the pole the longitude slider does nothing at all.  The \code{l_max} radio is a
+truncation knob, and switching it shows the ringing of
+certificate~\vtag{28} directly.
+
+\paragraph{The presets, and what they test.}  Four scenes, each labelled by where the spot
+should appear.  With the spin pointing at the observer --- inclination $0$ --- and the spot at
+colatitude $60°$:
+\begin{description}
+\item[\code{spot left}] longitude $90°$: the spot must appear \emph{left} of centre,
+  vertically centred.
+\item[\code{spot right}] longitude $270°$: the mirror position, \emph{right} of centre.
+\item[\code{spot above}] longitude $0$: \emph{above} centre.
+\item[\code{spot behind}] inclination $90°$, longitude $0$: the spin axis now lies in the
+  plane of the sky, so the spot goes to the \emph{far} panel, and the near panel shows
+  nothing of it.
+\end{description}
+The first three together pin the page: East leftwards and North upwards cannot both be wrong
+and still put the spot where the label says.  The fourth exercises the far hemisphere and its
+mirror, which no residual can check.  The visibility view adds a fifth, arithmetic check that
+needs no preset --- for a real map $V(-u,-v) = \overline{V(u,v)}$, so the real part of
+$\Delta V$ is even under $(u,v) \to (-u,-v)$ and the imaginary part odd
+\eqref{eq:hermitian}.
+
+\subsection{What the checks are worth}
+\label{sec:models-worth}
+
+The two models are deliberately outside the certificate scheme.  A certificate compares two
+routes to the same number; the checks here compare a picture with a stated expectation, and
+their evidence is that a wrong answer is visible rather than that a residual is small.  That
+is weaker, and it is why the presets exist: they move the expectation out of prose and into
+the program, so that the geometry can be re-checked without anyone having to remember which
+slider to move, or in which direction the answer should come out.

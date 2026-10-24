@@ -29,7 +29,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 from scipy.optimize import brentq
 
-from mostlyharmless.symbolic import affine, fitted, render
+from mostlyharmless.symbolic import affine, fitted, gui_core, render
 from mostlyharmless.visylm.deformation import Deformation
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
 
@@ -50,6 +50,29 @@ MODEL_LABELS = ("numeric", "first-order", "fitted, l = 0,2,4",
 # The truncation each fitted row uses.  Two rows rather than a slider: the point is to see
 # what the extra order buys, and every change costs a full redraw.
 FIT_ORDERS = {"fitted, l = 0,2,4": 4, "fitted, l = 0,2,4,6": 6}
+
+# Named parameter sets, labelled by what they are for rather than by their angles.
+#
+#   reference  --- below the closure ceiling, tide and spin both on, moderate tilt: the
+#                  configuration to quote when comparing rows.  eps_tide = 0.03 and
+#                  eps_spin = 0.01 keep E = eps_tide + 1.5 eps_spin at about 0.045, a third
+#                  of the 0.148 ceiling, and i = 60 deg shows both the tide's bulge and the
+#                  spin's flattening.
+#   tilt check --- the deformations at the ceiling, with the tide axis off both the sky's
+#                  axes (lambda = -45, varphi = 45) so the bulge lies on a diagonal.  A
+#                  mirrored or mis-rotated image is invisible for an axis-aligned bulge and
+#                  obvious for this one, which is why it is the geometry check.
+#   ceiling    --- the same amplitudes with the axis in the equatorial plane, so the
+#                  deformation is as large as the model allows: the stress test for the
+#                  analytic rows, where the affine error reaches 0.11.
+PRESETS = {
+    "reference": dict(tide=0.03, spin=0.01, inclination=np.radians(60.0),
+                      latitude=0.0, longitude=0.0),
+    "tilt check": dict(tide=0.138, spin=0.0, inclination=np.radians(60.0),
+                       latitude=np.radians(-45.0), longitude=np.radians(45.0)),
+    "ceiling": dict(tide=0.138, spin=0.0, inclination=np.radians(60.0),
+                    latitude=0.0, longitude=0.0),
+}
 # The panel titles.  Module level rather than inline because mathtext is parsed at draw
 # time, so an unsupported symbol crashes the draw rather than a callback --- and draw-time
 # code cannot be covered by a headless test unless the strings are reachable.
@@ -278,104 +301,54 @@ def fitted_report(parameters, samples=SAMPLES, model="fitted, l = 0,2,4"):
 def build(parameters=None):  # pragma: no cover - needs a display
     """The widget window; returns (figure, state) with the live parameters in ``state``."""
     from matplotlib import pyplot as plt
-    from matplotlib.widgets import RadioButtons, Slider
+    from matplotlib.widgets import RadioButtons
 
     state = {"parameters": clamped(parameters or Parameters()),
              "model": "numeric", "visibility": False, "refreshing": False,
-             "resolution": 0, "stale": False, "timer": None,
-             "limit_key": None, "limit": None}
+             "resolution": 0, "limit_key": None, "limit": None, "colorbar": None}
 
     figure = plt.figure(figsize=(9.2, 6.6))
-    # The panels sit in the middle band and the radios in a band of their own below them:
-    # a radio row placed at the panels' top overlapped their titles, which are set just
-    # above the axes and are not part of the rectangle.
-    axes = (figure.add_axes([0.06, 0.26, 0.36, 0.36]),
-            figure.add_axes([0.50, 0.26, 0.36, 0.36]))
-    colorbar_axis = figure.add_axes([0.90, 0.26, 0.015, 0.36])
-    state["colorbar"] = None
+    axes, colorbar_axis = gui_core.panel_axes(figure)
 
     def redraw(*_):
-        """Mark the view stale and schedule *one* redraw.
+        """Mark the view stale and schedule one redraw: a drag fires on every motion."""
+        coalescer.request()
 
-        A slider fires its callback on every mouse motion while it is dragged, and each
-        change costs a full render.  Rendering inside the callback therefore enqueues work
-        faster than the event loop can drain it, and the window stops responding --- which
-        looks like a hang but is a backlog.  So: mark stale, restart a short timer, and
-        render once when the motion stops.  Without a timer (a non-interactive canvas) it
-        renders at once, as before.
-        """
-        state["stale"] = True
-        if state["timer"] is None:
-            _draw()
-        else:
-            state["timer"].stop()
-            state["timer"].start()
-
-    def _draw(*_):
-        """One render, if the view is stale.  A callback that raises must not vanish."""
-        if not state["stale"]:
-            return
-        state["stale"] = False
-        try:
-            _redraw()
-        except Exception:                                   # pragma: no cover
-            import traceback
-            traceback.print_exc()
-
-    # Coalescing timer: one render per pause in the motion, not one per event.  It must be
-    # wired after ``_draw`` exists --- naming a local before its ``def`` runs is an
-    # UnboundLocalError, not a forward reference --- and some backends have no timer at
-    # all, in which case ``redraw`` falls back to drawing inline.
-    try:
-        timer = figure.canvas.new_timer(interval=200)
-    except Exception:                       # a backend without timers draws inline
-        timer = None
-    if timer is not None:
-        timer.add_callback(_draw)
-        state["timer"] = timer
-
-    def _redraw():
+    def _draw():
         current = state["parameters"]
         samples, pixels, grid = RESOLUTIONS[state["resolution"]]
         report = {}                     # filled by compute_image for the fitted row
         if state["visibility"]:
             values = compute_visibility(current, state["model"],
                                         samples=samples, grid=grid)
-            # East increases to the *left* (D24), and the extent draws column 0 on the
-            # left, so the arrays are flipped once, here, rather than being built mirrored
-            panels = (values.real[:, ::-1], values.imag[:, ::-1])
+            panels = (values.real, values.imag)
             titles = VISIBILITY_TITLES
             extent = (Q_MAX, -Q_MAX, -Q_MAX, Q_MAX)
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
         else:
-            panels = [panel[:, ::-1] for panel in
-                      compute_image(current, state["model"],
-                                    samples=samples, pixels=pixels, report=report)]
-            # the two analytic rows differ only in the brightness pattern: exact versus
-            # the first-order form of equation (74)
+            panels = compute_image(current, state["model"],
+                                   samples=samples, pixels=pixels, report=report)
+            # the analytic rows differ only in the brightness pattern: exact versus the
+            # first-order form of equation (88)
             name = MODEL_TITLES[state["model"]]
             titles = (f"{name}, near", f"{name}, far")
             extent = (1.5, -1.5, -1.5, 1.5)
             labels = (r"$y$ (East)", r"$x$ (North)")
             bar_label = r"$g/\langle g\rangle - 1$"
-        # One colour scale per parameter set, shared by every model: recomputing it from
-        # whichever row is showing makes the same star change colour when the model
-        # changes, which reads as a difference in the model rather than in the display.
-        # The key is the parameters, the resolution and the view --- everything except the
-        # model --- so switching rows reuses it and moving a slider resets it.
-        key = (current, state["resolution"], state["visibility"])
-        if state["limit_key"] != key:
-            state["limit_key"] = key
-            state["limit"] = (float(np.nanmax(np.abs(np.concatenate(
-                [np.asarray(panel).ravel() for panel in panels])))) or 1e-30)
-        limit = state["limit"]
+
+        # the flip and the shared scale are the scaffolding's, not this model's
+        panels = tuple(gui_core.flip(panel) for panel in panels)
+        limit = gui_core.colour_limit(
+            (current, state["resolution"], state["visibility"]), state, panels)
 
         if "fit" in report:
             # the residual is the point of the row: at fixed Lambda it is the truncation
-            # floor, so it is not a defect of the fit but the price of l <= 4
+            # floor, so it is not a defect of the fit but the price of the degree
             titles = tuple(f"{title}  (residual {report['fit'].residual:.1e})"
                            for title in titles)
+
+        drawn = None
         for axis_handle, data, title in zip(axes, panels, titles):
             axis_handle.clear()
             drawn = axis_handle.imshow(data, origin="lower", cmap="RdBu_r",
@@ -392,6 +365,8 @@ def build(parameters=None):  # pragma: no cover - needs a display
             state["colorbar"].update_normal(drawn)
         state["colorbar"].set_label(bar_label, fontsize=8)
         figure.canvas.draw_idle()
+
+    coalescer = gui_core.Coalescer(figure, _draw)
 
     def write_back():
         """Show the clamped parameters in the widgets, without re-firing their callbacks.
@@ -411,6 +386,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
         finally:
             state["refreshing"] = False
 
+    def apply_preset(updates):
+        """Set every parameter at once, clamp, and refresh the widgets."""
+        state["parameters"] = clamped(replace(state["parameters"], **updates))
+        write_back()
+        redraw()
+
     def slider_callback(name, in_degrees):
         def callback(value):
             if state["refreshing"]:
@@ -419,6 +400,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
             # here so nothing outside the GUI has to know about it.
             updated = np.radians(value) if in_degrees else value
             state["parameters"] = clamped(replace(state["parameters"], **{name: updated}))
+            preset.manual()             # these are the user's numbers now
             write_back()
             redraw()
         return callback
@@ -431,13 +413,10 @@ def build(parameters=None):  # pragma: no cover - needs a display
         state["visibility"] = label.startswith("u,v")
         redraw()
 
-    # Matplotlib widgets must stay in scope: a widget with no reference is collected and
-    # its callbacks stop firing, which looks like a frozen control.  Keep them on the
-    # figure, where they live as long as the window does.
-    #
-    # A Slider right-aligns its label just outside its axes, so the tracks start at 0.20 of
-    # the figure width: any closer to the left edge and a TeX label is clipped.  The value
-    # readout sits at the track's right end, so the tracks stop short of the colourbar.
+    def resolution_callback(label):
+        state["resolution"] = RESOLUTION_LABELS.index(label)
+        redraw()
+
     sliders = []
     slider_info = []
     for index, (name, low, high, label, in_degrees, number_format) in enumerate((
@@ -446,48 +425,33 @@ def build(parameters=None):  # pragma: no cover - needs a display
             ("inclination", 0.0, 90.0, r"$i$  [deg]", True, "%.0f"),
             ("latitude", -90.0, 90.0, r"$\lambda_\mathrm{tide}$  [deg]", True, "%.0f"),
             ("longitude", 0.0, 360.0, r"$\varphi_\mathrm{tide}$  [deg]", True, "%.0f"))):
-        axis_handle = figure.add_axes([0.20, 0.93 - 0.05 * index, 0.64, 0.028])
         current = getattr(state["parameters"], name)
-        slider = Slider(axis_handle, label, low, high,
-                        valinit=np.degrees(current) if in_degrees else current,
-                        valfmt=number_format)
-        slider.label.set_fontsize(9)
-        slider.valtext.set_fontsize(8)
-        slider.on_changed(slider_callback(name, in_degrees))
-        sliders.append(slider)
-        slider_info.append((slider, name, in_degrees))
+        sliders.append(gui_core.add_slider(
+            figure, index, label, low, high,
+            np.degrees(current) if in_degrees else current,
+            number_format, slider_callback(name, in_degrees)))
+        slider_info.append((sliders[-1], name, in_degrees))
 
-    # The radios go in a row below the sliders, where they cannot cover the slider labels.
-    # Four models rather than two, so that the shape approximation, the brightness
-    # approximation and the choice of coefficients can be varied separately: "numeric" is
-    # the exact surface, "affine" the ellipsoid shape with the exact brightness pattern,
-    # "first-order" the ellipsoid shape with the brightness of equation (74), and "fitted"
-    # the ellipsoid shape with the coefficients chosen rather than projected.
-    model_radio = RadioButtons(figure.add_axes([0.06, 0.02, 0.20, 0.21]),
-                               MODEL_LABELS)
+    model_radio = RadioButtons(figure.add_axes([0.06, 0.02, 0.20, 0.21]), MODEL_LABELS)
     model_radio.on_clicked(model_callback)
     view_radio = RadioButtons(figure.add_axes([0.32, 0.06, 0.18, 0.13]),
                               ("image", "u,v"))
     view_radio.on_clicked(view_callback)
-
-    # Resolution: a column of labelled buttons, coarse first.  Discrete because every
-    # change costs a full redraw.
     resolution_radio = RadioButtons(figure.add_axes([0.56, 0.02, 0.18, 0.21]),
                                     RESOLUTION_LABELS, active=state["resolution"])
-
-    def resolution_callback(label):
-        state["resolution"] = RESOLUTION_LABELS.index(label)
-        redraw()
-
     resolution_radio.on_clicked(resolution_callback)
-    figure._widgets = (sliders, model_radio, view_radio, resolution_radio)
+
+    preset = gui_core.PresetRadio(figure, [0.76, 0.02, 0.18, 0.21], PRESETS, apply_preset)
+
+    gui_core.retain_widgets(
+        figure, (sliders, model_radio, view_radio, resolution_radio, preset.radio))
+
     for label, order in FIT_ORDERS.items():
         print(f"{label}: Gram conditioning by order --- "
               + ", ".join(f"m={m}: {c:.1f}"
                           for m, c in enumerate(fitted.block_condition(order))))
 
-    redraw()          # mark stale
-    _draw()           # and paint once, without waiting for the timer
+    coalescer.now()
     return figure, state
 
 

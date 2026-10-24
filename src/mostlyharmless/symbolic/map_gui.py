@@ -23,7 +23,7 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
-from mostlyharmless.symbolic import maps
+from mostlyharmless.symbolic import gui_core, maps
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
 from mostlyharmless.visylm.wigner import rotate_coefficients
 
@@ -40,6 +40,25 @@ RESOLUTION_LABELS = ("coarse", "medium", "fine")
 RESOLUTIONS = ((121, 23), (241, 31), (361, 41))
 
 Q_MAX = 4.0
+
+# Named parameter sets for the geometry checks, labelled by what you should see rather than
+# by their angles.  The first four are the ones that pin the display: a spot whose position
+# on the page is stated can only appear there if East is left, North is up and the far
+# hemisphere is mirrored correctly.  See the closed entry for GUI verification in the
+# roadmap for why these are worth having.
+PRESETS = {
+    "spot left": dict(half_angle=np.radians(20.0), depth=0.92,
+                       colatitude=np.radians(60.0), alpha=np.radians(90.0),
+                       beta=0.0, pa=0.0),
+    "spot right": dict(half_angle=np.radians(20.0), depth=0.92,
+                        colatitude=np.radians(60.0), alpha=np.radians(270.0),
+                        beta=0.0, pa=0.0),
+    "spot above": dict(half_angle=np.radians(20.0), depth=0.92,
+                        colatitude=np.radians(60.0), alpha=0.0, beta=0.0, pa=0.0),
+    "spot behind": dict(half_angle=np.radians(20.0), depth=0.92,
+                         colatitude=np.radians(60.0), alpha=0.0,
+                         beta=np.radians(90.0), pa=0.0),
+}
 
 
 @dataclass(frozen=True)
@@ -80,13 +99,12 @@ def compute_map(parameters, pixels=241):
     """Near and far hemispheres, in units of the mean, East increasing leftward.
 
     ``sky_map`` already mirrors the far hemisphere so that it reads as a view from the
-    other side; the display flip is applied afterwards, on the columns, so the two
-    compose as they do in the deformation GUI.
+    other side.  The display flip is the scaffolding's, applied once by ``build``.
     """
     coeffs = coefficients(parameters)
     factor = maps.MEAN_FACTOR
-    return (factor * maps.sky_map(coeffs, n=pixels)[:, ::-1],
-            factor * maps.sky_map(coeffs, back=True, n=pixels)[:, ::-1])
+    return (factor * maps.sky_map(coeffs, n=pixels),
+            factor * maps.sky_map(coeffs, back=True, n=pixels))
 
 
 def compute_visibility(parameters, grid=23, q_max=Q_MAX):
@@ -103,49 +121,23 @@ def compute_visibility(parameters, grid=23, q_max=Q_MAX):
     u_grid, v_grid = np.meshgrid(axis, axis, indexing="ij")
     reference = visibility_uniform_disk(u_grid, v_grid, 1.0)
     values = np.array([[visibility(coeffs, u, v) for v in axis] for u in axis])
-    return (values / flux - reference)[:, ::-1]
+    return values / flux - reference
 
 
 def build(parameters=None):  # pragma: no cover - needs a display
     """The widget window; returns ``(figure, state)`` with the live parameters in it."""
     from matplotlib import pyplot as plt
-    from matplotlib.widgets import RadioButtons, Slider
+    from matplotlib.widgets import RadioButtons
 
     state = {"parameters": parameters or MapParameters(),
-             "view": "map", "resolution": 1, "stale": False, "timer": None,
-             "limit_key": None, "limit": None}
+             "view": "map", "resolution": 1, "limit_key": None, "limit": None,
+             "colorbar": None, "refreshing": False}
 
     figure = plt.figure(figsize=(9.2, 6.6))
-    axes = (figure.add_axes([0.06, 0.26, 0.36, 0.36]),
-            figure.add_axes([0.50, 0.26, 0.36, 0.36]))
-    colorbar_axis = figure.add_axes([0.90, 0.26, 0.015, 0.36])
+    axes, colorbar_axis = gui_core.panel_axes(figure)
 
     def redraw(*_):
-        """Mark the view stale and schedule one redraw; a drag fires on every motion."""
-        state["stale"] = True
-        if state["timer"] is None:
-            draw()
-        else:
-            state["timer"].stop()
-            state["timer"].start()
-
-    def draw(*_):
-        if not state["stale"]:
-            return
-        state["stale"] = False
-        try:
-            _draw()
-        except Exception:                                   # pragma: no cover
-            import traceback
-            traceback.print_exc()
-
-    try:
-        timer = figure.canvas.new_timer(interval=200)
-    except Exception:                       # a backend without timers draws inline
-        timer = None
-    if timer is not None:
-        timer.add_callback(draw)
-        state["timer"] = timer
+        coalescer.request()
 
     def _draw():
         pixels, grid = RESOLUTIONS[state["resolution"]]
@@ -164,22 +156,19 @@ def build(parameters=None):  # pragma: no cover - needs a display
             labels = (r"$y$ (East)", r"$x$ (North)")
             bar_label = r"$I/\langle I\rangle$"
 
-        # One colour scale per parameter set, shared by both views' rows: recomputing it
-        # from whichever panel is showing would make the same map change colour when the
-        # truncation changes, which reads as a difference in the map.
-        key = (current, state["view"], state["resolution"])
-        if state["limit_key"] != key:
-            state["limit_key"] = key
-            state["limit"] = (float(np.nanmax(np.abs(np.concatenate(
-                [np.asarray(panel).ravel() for panel in panels])))) or 1e-30)
-        limit = state["limit"]
+        # the flips and the shared scale are the scaffolding's, not this model's
+        panels = tuple(gui_core.flip(panel) for panel in panels)
+        limit = gui_core.colour_limit(
+            (current, state["view"], state["resolution"]), state, panels)
 
+        drawn = None
         for axis_handle, data, title in zip(axes, panels, titles):
             axis_handle.clear()
-            drawn = axis_handle.imshow(data, origin="lower", cmap="magma" if
-                                       state["view"] == "map" else "RdBu_r",
-                                       vmin=0.0 if state["view"] == "map" else -limit,
-                                       vmax=limit, extent=extent)
+            drawn = axis_handle.imshow(
+                data, origin="lower",
+                cmap="magma" if state["view"] == "map" else "RdBu_r",
+                vmin=0.0 if state["view"] == "map" else -limit,
+                vmax=limit, extent=extent)
             axis_handle.set_title(title, fontsize=9)
             axis_handle.set_xlabel(labels[0], fontsize=8)
             axis_handle.set_ylabel(labels[1], fontsize=8)
@@ -191,17 +180,42 @@ def build(parameters=None):  # pragma: no cover - needs a display
         state["colorbar"].set_label(bar_label, fontsize=8)
         figure.canvas.draw_idle()
 
-    state["colorbar"] = None
+    coalescer = gui_core.Coalescer(figure, _draw)
+
+    def write_back():
+        """Show the current parameters in the widgets, without re-firing their callbacks.
+
+        Needed because a preset sets them all at once, and because ``Slider.set_val`` fires
+        ``on_changed``: without the guard the write-back would recurse through the slider
+        callback and then through ``preset.manual``.
+        """
+        state["refreshing"] = True
+        try:
+            for slider, name, in_degrees in slider_info:
+                shown = getattr(state["parameters"], name)
+                shown = np.degrees(shown) if in_degrees else shown
+                if abs(slider.val - shown) > 1e-9:
+                    slider.set_val(shown)
+        finally:
+            state["refreshing"] = False
 
     def slider_callback(name, in_degrees):
         def callback(value):
-            current = state["parameters"]
+            if state["refreshing"]:
+                return
             converted = np.radians(value) if in_degrees else value
-            state["parameters"] = replace(current, **{name: converted})
+            state["parameters"] = replace(state["parameters"], **{name: converted})
+            preset.manual()             # these are the user's numbers now
             redraw()
         return callback
 
+    def apply_preset(updates):
+        state["parameters"] = replace(state["parameters"], **updates)
+        write_back()
+        redraw()
+
     sliders = []
+    slider_info = []
     for index, (name, low, high, label, in_degrees, number_format) in enumerate((
             ("half_angle", 1.0, 90.0, r"half-angle  [deg]", True, "%.0f"),
             ("depth", 0.0, 0.92, r"depth", False, "%.2f"),
@@ -209,15 +223,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
             ("alpha", 0.0, 360.0, r"$\alpha_\mathrm{spot}$  [deg]", True, "%.0f"),
             ("beta", 0.0, 90.0, r"$\beta$  [deg]", True, "%.0f"),
             ("pa", 0.0, 90.0, r"PA  [deg]", True, "%.0f"))):
-        axis_handle = figure.add_axes([0.20, 0.94 - 0.043 * index, 0.64, 0.026])
         current = getattr(state["parameters"], name)
-        slider = Slider(axis_handle, label, low, high,
-                        valinit=np.degrees(current) if in_degrees else current,
-                        valfmt=number_format)
-        slider.label.set_fontsize(9)
-        slider.valtext.set_fontsize(8)
-        slider.on_changed(slider_callback(name, in_degrees))
-        sliders.append(slider)
+        sliders.append(gui_core.add_slider(
+            figure, index, label, low, high,
+            np.degrees(current) if in_degrees else current,
+            number_format, slider_callback(name, in_degrees)))
+        slider_info.append((sliders[-1], name, in_degrees))
 
     def l_max_callback(label):
         state["parameters"] = replace(state["parameters"], l_max=int(label.strip("l =")))
@@ -231,8 +242,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
         state["resolution"] = RESOLUTION_LABELS.index(label)
         redraw()
 
-    l_max_radio = RadioButtons(figure.add_axes([0.06, 0.02, 0.18, 0.21]),
-                               tuple(f"l = {value}" for value in L_MAX_LABELS))
+    # the radio must start on the degree the parameters actually carry, or it shows l = 4
+    # while the map is built at 16 --- a mismatch nothing in the picture reveals
+    l_max_radio = RadioButtons(
+        figure.add_axes([0.06, 0.02, 0.18, 0.21]),
+        tuple(f"l = {value}" for value in L_MAX_LABELS),
+        active=L_MAX_LABELS.index(state["parameters"].l_max))
     l_max_radio.on_clicked(l_max_callback)
     view_radio = RadioButtons(figure.add_axes([0.30, 0.06, 0.18, 0.13]), VIEW_LABELS)
     view_radio.on_clicked(view_callback)
@@ -240,12 +255,12 @@ def build(parameters=None):  # pragma: no cover - needs a display
                                     RESOLUTION_LABELS, active=state["resolution"])
     resolution_radio.on_clicked(resolution_callback)
 
-    # Matplotlib widgets must stay in scope: a widget with no reference is collected and
-    # its callbacks stop firing, which looks like a frozen control.
-    figure._widgets = (sliders, l_max_radio, view_radio, resolution_radio)
+    preset = gui_core.PresetRadio(figure, [0.76, 0.02, 0.18, 0.21], PRESETS, apply_preset)
 
-    redraw()          # mark stale
-    draw()            # and paint once, without waiting for the timer
+    gui_core.retain_widgets(
+        figure, (sliders, l_max_radio, view_radio, resolution_radio, preset.radio))
+
+    coalescer.now()
     return figure, state
 
 
