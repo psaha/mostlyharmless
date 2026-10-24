@@ -67,7 +67,7 @@ def sky_basis(line_of_sight):
     return east, north
 
 
-def surface_samples(field, line_of_sight, n_samples=20000, power=1.0):
+def surface_samples(field, line_of_sight, n_samples=20000, power=1.0, limb=0.0):
     """Sample the level surface, keeping the visible points.
 
     Returns ``(points, brightness, weights)``.  The brightness is ``g^power`` in the
@@ -75,6 +75,14 @@ def surface_samples(field, line_of_sight, n_samples=20000, power=1.0):
     colour scale.  The weight of a sample is the area it projects onto the sky plane,
     ``(N . e_obs) r^2 / (n . N)`` times the solid angle it owns, since our visibility
     integrates over the plane rather than over the surface.
+
+    ``limb`` adds linear limb darkening, ``1 - u_limb (1 - mu)`` with ``mu`` the cosine between
+    the sample's *direction* and the line of sight --- the same law the closed-form
+    first-order row uses, so the rows differ in the shape and the brightness pattern and not
+    in the limb.  Since only visible points are kept, ``mu > 0`` throughout.  It is a
+    *viewing* effect and not a property of the surface, which matters here: a fit in the body
+    frame will absorb it as though it were intrinsic, so with ``limb > 0`` the fitted
+    coefficients are only meaningful for the orientation they were fitted at.
 
     The level radius comes from :meth:`Deformation.level_radii`, a vectorised bisection.
     """
@@ -100,10 +108,16 @@ def surface_samples(field, line_of_sight, n_samples=20000, power=1.0):
     # g^power in the potential's own units, where the undeformed g_eff is 1.  Not
     # renormalised per view, so two orientations can share one colour scale.
     brightness = np.where(visible, magnitudes ** power, 0.0)
+    if limb:
+        # mu from the *direction*, not from the deformed point's normal: the same law the
+        # first-order row uses, so the two rows share the limb and differ only in the surface.
+        facing = np.sum(directions * eye, axis=-1)
+        brightness = brightness * np.clip(1.0 - limb * (1.0 - facing), 0.0, None)
     return points[visible], brightness[visible], weights[visible]
 
 
-def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=False):
+def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=False,
+                   limb=0.0):
     """The star's brightness pattern carried onto the *unit sphere*.
 
     The affine model's counterpart to :func:`surface_samples`.  The *pattern* is the
@@ -115,6 +129,10 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=Fals
     only the perturbation's own derivative and drops the ``-2 delta r / r`` term, which
     leaves a pattern about half as deep as the star's, since both terms are first order
     and equal for quadrupoles.
+
+    ``limb`` applies the same law as :func:`surface_samples`, ``1 - u_limb (1 - mu)`` with
+    ``mu`` the cosine to the line of sight, so the analytic rows and the sampled ones share
+    one limb model and differ only in the surface and the pattern.
     """
     eye = np.asarray(line_of_sight, dtype=float)
     eye = eye / np.linalg.norm(eye)
@@ -134,6 +152,8 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=Fals
     solid = 4.0 * np.pi / n_samples
     weights = np.where(visible, facing * solid, 0.0)
     brightness = np.where(visible, brightness_here, 0.0)
+    if limb:
+        brightness = brightness * np.clip(1.0 - limb * (1.0 - facing), 0.0, None)
     return (directions[visible], brightness[visible], weights[visible])
 
 

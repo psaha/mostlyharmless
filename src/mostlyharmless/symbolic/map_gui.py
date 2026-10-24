@@ -161,14 +161,18 @@ def build(parameters=None):  # pragma: no cover - needs a display
         limit = gui_core.colour_limit(
             (current, state["view"], state["resolution"]), state, panels)
 
+        # a brightness wants a linear grey ramp; a signed Delta V wants a diverging map
+        brightness = state["view"] == "map"
+        cmap = gui_core.image_colormap() if brightness else "RdBu_r"
+
         drawn = None
         for axis_handle, data, title in zip(axes, panels, titles):
             axis_handle.clear()
+            if brightness:
+                gui_core.darken(axis_handle)     # after clear(), which resets the face
             drawn = axis_handle.imshow(
-                data, origin="lower",
-                cmap="magma" if state["view"] == "map" else "RdBu_r",
-                vmin=0.0 if state["view"] == "map" else -limit,
-                vmax=limit, extent=extent)
+                data, origin="lower", cmap=cmap,
+                vmin=0.0 if brightness else -limit, vmax=limit, extent=extent)
             axis_handle.set_title(title, fontsize=9)
             axis_handle.set_xlabel(labels[0], fontsize=8)
             axis_handle.set_ylabel(labels[1], fontsize=8)

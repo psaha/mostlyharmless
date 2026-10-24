@@ -23,8 +23,71 @@ reproducible part of the checks below.
 \code{make gui} shows a rotationally deformed star in the far field: a unit-radius source
 whose level surface is the equipotential of a tide and a spin, with brightness fixed at the
 von Zeipel law $I \propto g$.  The two panels are the near and far hemispheres.  The sliders
-are the two amplitudes, the inclination, and the tide's body latitude and longitude; the
-position angle of the spin is pinned to zero, being a gauge for a single observation.
+are the two amplitudes, the inclination, the tide's body latitude and longitude, and a limb
+coefficient; the position angle of the spin is pinned to zero, being a gauge for a single
+observation.
+
+The limb slider scales the brightness by $1 - u_\text{limb}(1-\mu)$, with
+$\mu = \sqrt{1-\rho^2}$ the cosine of the angle to the line of sight, so that the centre stays
+bright and the rim darkens.  One law is used by every row: the numeric row multiplies its
+sampled brightness, the two fitted rows absorb it by fitting those samples, and the
+first-order row carries it in closed form, since $\mu = \sqrt{4\pi/3}\,Y_{10}$ is a dipole
+about the observer's axis and costs one coefficient at $m = 0$.  The rows therefore differ in
+the shape and the brightness \emph{pattern}, which is what they are for, and not in the limb.
+Only visible points are rendered, so $\mu > 0$ throughout and the law is monotone across the
+disc.
+
+Written out, the numeric row multiplies the sampled brightness by the factor, and the
+closed-form row applies the same factor to the pattern of \eqref{eq:first-order-pattern}:
+\begin{equation}
+  I(\hat n) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
+  \Bigl[\,1 - 4\epsilon_\text{spin}
+  - 4\epsilon_\text{tide}\,P_2(\hat n\cdot\hat t)
+  + 4\epsilon_\text{spin}\,P_2(\hat n\cdot\hat s) \Bigr] ,
+  \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  \label{eq:limb-pattern}
+\end{equation}
+whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
+\begin{equation}
+  \begin{aligned}
+    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
+    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
+    a_{2m} = -\frac{16\pi}{5}\Bigl[\,\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
+    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\,\Bigr] .
+  \end{aligned}
+  \label{eq:limb-coefficients}
+\end{equation}
+None of these coefficients needs a Gaunt integral, and it is worth saying why, since the limb
+factor is a product.  The dipole is the whole of the limb term because $\mu$ \emph{is} a single
+harmonic: $Y_{10} = \sqrt{3/4\pi}\cos\theta$, so $\mu = \sqrt{4\pi/3}\,Y_{10}$, and its
+coefficient is its own amplitude.  The constant term is the other half of
+$1 - u_\text{limb} + u_\text{limb}\mu$, multiplied by the pattern's mean.  The quadrupoles are
+untouched, and come from the corollary of section~\ref{sec:rotation-law} --- the five-number
+table --- rather than from any coupling of harmonics.
+
+Coupling enters only through the terms that are dropped, and those are exactly the ones a Gaunt
+coefficient describes: multiplying the factor into the pattern couples
+$Y_{2m}\cdot Y_{10}$ into $l = 1$ and $l = 3$, with coefficients the $2\times1 \to 1$ and
+$2\times1 \to 3$ integrals.  Two further corrections of order $u_\text{limb}\epsilon$ go with
+them: the quadrupoles are not scaled by $(1-u_\text{limb})$.  What makes the omission defensible
+is that the row is a model chosen for algebra and not a truncation of a physical law, and that
+$a_{10}$ carries no deformation at all, so at zero tide and spin the row is exact --- which is
+what \code{test\_at\_zero\_deformation\_the\_rows\_agree\_with\_the\_limb\_on} checks.
+
+A quadratic law in $\rho^2$ was tried first and is too drastic: at half the disc radius it
+gives $1 - 0.75u_\text{limb}$ where the linear law gives $1 - 0.5u_\text{limb}$.  Since the numeric row's law is a
+placeholder for what a stellar-atmosphere model would supply, the linear form is the better
+default: it is the classical one, and the closed-form row can carry it exactly at leading
+order.  The factor multiplies the quadrupole pattern, so strictly the cross terms at
+$O(\epsilon c)$ add small $l = 3$ structure; those are dropped, and the row stays a constant,
+a dipole and two quadrupoles.
+
+One consequence should be stated rather than glossed: because the fit is made in the
+\emph{body} frame, a star darkened by the viewing geometry is fitted as though the darkening
+were painted onto the surface facing the observer.  The fitted coefficients are then
+meaningful only at the orientation they were fitted for.  That is a limitation of the
+surrogate's frame, not of the renderer, and it is one of the things
+section~\ref{sec:disk-modes} would fix.
 
 The row group is the part worth explaining, because the rows differ in kind:
 \begin{description}
@@ -35,9 +98,11 @@ The row group is the part worth explaining, because the rows differ in kind:
   stack at $O(\epsilon)$.
 \item[\code{fitted, l = 0,2,4}] coefficients chosen by least squares in the image plane,
   rather than taken from the brightness pattern.
-\item[\code{fitted, l = 0,2,4,6}] the same at one more degree.  Comparing the two fitted rows
-  isolates the \emph{truncation} from the shape model's error, which the other pairs
-  conflate.
+\item[\code{fitted, l = 0,2,4,6,8}] the same at two more degrees.  Comparing the two fitted
+  rows isolates the \emph{truncation} from the shape model's error, which the other pairs
+  conflate.  At the ceiling the lower of the two still shows a hard edge where the brightness
+  falls to zero, and the higher one genuinely does not: that is what a truncation floor looks
+  like, and it is the reason the row is a diagnostic rather than another approximation.
 \end{description}
 The fitted rows print their residual in the panel titles.  It is not a defect of the fit but
 the price of the degree: at fixed $\Lambda$ the residual is the truncation floor, and

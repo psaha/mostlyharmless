@@ -59,8 +59,8 @@ def test_compute_image_returns_two_panels():
     panels = gui.compute_image(gui.Parameters(), "numeric", samples=2000, pixels=41)
     assert len(panels) == 2
     assert panels[0].shape == panels[1].shape
-    # mean-removed, so the average over the disk is zero
-    assert np.nanmean(panels[0]) == pytest.approx(0.0, abs=1e-12)
+    # in units of the mean, so the average over the disk is one and black is zero brightness
+    assert np.nanmean(panels[0]) == pytest.approx(1.0, abs=1e-12)
 
 
 def test_compute_visibility_vanishes_at_the_origin():
@@ -204,3 +204,42 @@ def test_the_imaginary_part_keeps_its_sign_between_the_rows():
         # the rows differ by the shape model and the truncation, both O(eps); a convention
         # error is O(1) and would show here long before the tolerance
         assert abs(values.imag[index] - numeric.imag[index]) < 0.02, name
+
+
+def test_limb_darkening_reaches_every_row():
+    """One law for all three rows: 1 - limb rho^2.
+
+    The numeric row samples it, the fitted rows fit those samples, and the first-order row
+    carries it in closed form as a quadrupole about the observer's axis.  This test says the
+    three agree that the limb is there, not that they agree on the shape of the surface.
+    """
+    parameters = gui.Parameters(tide=0.03, spin=0.01, limb=0.6)
+    plain = gui.Parameters(tide=0.03, spin=0.01, limb=0.0)
+
+    def changed(model, samples=3000, pixels=31):
+        a = gui.compute_image(parameters, model, samples=samples, pixels=pixels)
+        b = gui.compute_image(plain, model, samples=samples, pixels=pixels)
+        return float(np.nanmax(np.abs(np.asarray(a[0]) - np.asarray(b[0]))))
+
+    print(f"\nlimb 0.6 changes: numeric {changed('numeric'):.3f}, "
+          f"first-order {changed('first-order'):.3f}, "
+          f"fitted {changed('fitted, l = 0,2,4'):.3f}")
+    assert changed("numeric") > 0.05           # the sampler carries it
+    assert changed("fitted, l = 0,2,4") > 0.02  # the fit absorbs it
+    assert changed("first-order") > 0.01       # the closed form has a coefficient for it
+
+
+def test_at_zero_deformation_the_rows_agree_with_the_limb_on():
+    """No tide and no spin: the surface is a sphere, so the rows are the same disc.
+
+    With limb darkening on this pins three things at once --- the limb law, the
+    normalisation and the frame --- because the two routes are otherwise unrelated: one bins
+    sampled points, the other evaluates a closed form.  They can only agree if both apply
+    the same law the same way.
+    """
+    parameters = gui.Parameters(tide=0.0, spin=0.0, limb=0.6)
+    numeric = gui.compute_image(parameters, "numeric", samples=8000, pixels=41)[0]
+    first = gui.compute_image(parameters, "first-order", samples=8000, pixels=41)[0]
+    difference = float(np.nanmax(np.abs(np.asarray(numeric) - np.asarray(first))))
+    print(f"\nzero deformation, limb 0.6: numeric vs first-order {difference:.3f}")
+    assert difference < 0.10        # sampling noise only

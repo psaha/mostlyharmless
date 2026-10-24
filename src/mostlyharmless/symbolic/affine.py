@@ -85,7 +85,7 @@ def projected_stretch(field, line_of_sight):
     return vectors @ np.diag(np.sqrt(np.maximum(values, 0.0))) @ vectors.T
 
 
-def first_order_coefficients(field, eye):
+def first_order_coefficients(field, eye, limb=0.0):
     """The first-order brightness pattern's harmonics, in closed form (eq. 82).
 
     To first order the pattern is a constant plus two quadrupoles, so the addition theorem
@@ -99,6 +99,16 @@ def first_order_coefficients(field, eye):
     n -> -n.  The two axes are referred to the same observer frame as a sampled direction:
     theta from ``north x east``, phi from North towards East.  That frame rule is not
     optional; it is what makes these coefficients the ones :func:`visibility` expects.
+
+    ``limb`` adds the same law the samplers use, ``1 - u_limb (1 - mu)`` with ``mu`` the cosine
+    to the line of sight.  Since ``mu`` is a dipole about the observer's axis, the factor is a
+    constant plus an ``l = 1`` term, which costs one coefficient at ``m = 0``.
+
+    That factor *multiplies* the pattern, so strictly the quadrupole times ``mu`` couples into
+    ``l = 1`` and ``l = 3`` at ``O(eps limb)``.  Those terms are dropped: the row is a model
+    chosen for algebra, not a truncation of a physical law, and dropping them keeps it a sum
+    of a constant, a dipole and two quadrupoles.  The leading ``l = 1`` term is what the eye
+    reads as limb darkening, and at zero deformation the row is exact.
 
     No quadrature: ten harmonic evaluations and one constant, against ``n_samples``
     evaluations for the projection in :func:`sphere_coefficients`.  Certificate V21 checks
@@ -115,6 +125,11 @@ def first_order_coefficients(field, eye):
     tide_axis, spin_axis = field.axes()
     blocks = [np.zeros(l + 1, dtype=complex) for l in range(3)]
     blocks[0][0] = (1.0 - 4.0 * field.centrifugal) * np.sqrt(4.0 * np.pi)
+    if limb:
+        # I = (1 - limb) + limb mu, and mu = sqrt(4 pi / 3) Y_10 about the observer's axis, so
+        # the limb is a constant plus a dipole and nothing else to leading order.
+        blocks[0][0] *= 1.0 - limb
+        blocks[1][0] += limb * np.sqrt(4.0 * np.pi / 3.0)
     for m in range(3):
         tide_term = sph_harm(2, m, *angles(tide_axis))
         spin_term = sph_harm(2, m, *angles(spin_axis))

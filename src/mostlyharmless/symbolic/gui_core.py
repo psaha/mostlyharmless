@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import numpy as np
 
-__all__ = ["flip", "colour_limit", "Coalescer", "PresetRadio", "PANEL_RECTS",
-           "COLOURBAR_RECT", "panel_axes", "add_slider", "retain_widgets"]
+__all__ = ["flip", "colour_limit", "Coalescer", "PresetRadio", "image_colormap",
+           "darken", "PANEL_RECTS", "COLOURBAR_RECT", "panel_axes", "add_slider",
+           "retain_widgets"]
 
 # The panels and the colourbar sit in one band, with the radios below and the slider stack
 # above.  A radio row placed at the panels' top overlaps their titles, which are set just
@@ -33,6 +34,27 @@ def flip(panel):
     code free of a display convention.
     """
     return np.asarray(panel)[:, ::-1]
+
+
+def image_colormap():
+    """Grayscale for a brightness map, with the unrendered rim black.
+
+    A linear grey ramp is the honest mapping for a brightness: the diverging map the panels
+    used before exaggerates the sign of the excess over the mean, which is useful for
+    diagnosing the model and misleading for judging how the star looks.  The rim outside the
+    silhouette is NaN by design, so it is painted black rather than left at the default pale
+    colour, which would put the star in a halo.
+    """
+    from matplotlib import pyplot as plt
+
+    cmap = plt.get_cmap("gray").copy()
+    cmap.set_bad("black")
+    return cmap
+
+
+def darken(axis_handle):
+    """Paint an axes face to match an unrendered rim."""
+    axis_handle.set_facecolor("black")
 
 
 def colour_limit(key, state, panels):

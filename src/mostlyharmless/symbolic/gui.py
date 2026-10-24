@@ -46,10 +46,10 @@ FIT_L_MAX = 4
 # The model radio, in order.  The fitted row sits last, below first-order, because it is the
 # one that replaces the coefficients rather than the shape or the brightness.
 MODEL_LABELS = ("numeric", "first-order", "fitted, l = 0,2,4",
-                "fitted, l = 0,2,4,6")
+                "fitted, l = 0,2,4,6,8")
 # The truncation each fitted row uses.  Two rows rather than a slider: the point is to see
 # what the extra order buys, and every change costs a full redraw.
-FIT_ORDERS = {"fitted, l = 0,2,4": 4, "fitted, l = 0,2,4,6": 6}
+FIT_ORDERS = {"fitted, l = 0,2,4": 4, "fitted, l = 0,2,4,6,8": 8}
 
 # Named parameter sets, labelled by what they are for rather than by their angles.
 #
@@ -80,7 +80,7 @@ MODEL_TITLES = {"numeric": "the star",
                 "affine": "affine",
                 "first-order": "affine, linear $g$",
                 "fitted, l = 0,2,4": "fitted, l = 0,2,4",
-                "fitted, l = 0,2,4,6": "fitted, l = 0,2,4,6"}
+                "fitted, l = 0,2,4,6,8": "fitted, l = 0,2,4,6,8"}
 VISIBILITY_TITLES = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
 CLOSURE = 0.148
 # Numerical resolution: discrete levels, chosen by radio buttons, because every change
@@ -111,6 +111,12 @@ class Parameters:
     inclination: float = np.radians(60.0)
     latitude: float = 0.0
     longitude: float = np.radians(45.0)
+    # limb darkening, I = I(1 - limb rho^2) with rho the projected radius.  A viewing effect
+    # rather than a property of the surface, so every row has to be told about it: the
+    # numeric one samples it, the fitted ones absorb it by fitting those samples, and the
+    # first-order one carries it as a quadrupole about the observer's axis.  One law for all
+    # three, so the rows differ in the shape and the brightness pattern and not in the limb.
+    limb: float = 0.0
 
     def field(self):
         """The Deformation: the tidal axis tilted by latitude, swung by longitude."""
@@ -191,7 +197,7 @@ def _view(inclination):
 
 def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS,
                   report=None):
-    """The near and far hemispheres, as fractional departures from their own mean.
+    """The near and far hemispheres, as brightness in units of their own mean.
 
     ``report``, if given, is filled with the near side's fit when the row is the fitted
     one.  That is what the panel titles print: recomputing it would render the samples a
@@ -207,15 +213,19 @@ def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS,
     stretch = affine.projected_stretch(field, eye)
     scale = abs(float(np.linalg.det(stretch)))
 
-    def contrast(image):
-        return image / np.nanmean(image) - 1.0
+    def brightness(image):
+        # in units of the mean, so the colourbar's black is zero brightness.  The panels used
+        # to show the departure from the mean, which puts the floor at -1 and needs a
+        # diverging map to read; a brightness is what the star actually has.
+        return image / np.nanmean(image)
 
     panels = []
     for sense in (1.0, -1.0):
         direction = sense * eye
         if model.startswith("fitted"):
             # Lambda still comes from the level surface; only the coefficients are chosen.
-            star = render.surface_samples(field, direction, n_samples=samples)
+            star = render.surface_samples(field, direction, n_samples=samples,
+                                          limb=parameters.limb)
             fit = fitted.fit_image(star, stretch, east, north,
                                    l_max=FIT_ORDERS.get(model, FIT_L_MAX))
             if report is not None and sense > 0.0:
@@ -223,17 +233,18 @@ def compute_image(parameters, model="numeric", samples=SAMPLES, pixels=PIXELS,
             image = fitted.model_image(fit.coefficients, stretch, half_width=1.5,
                                        n=pixels)
         elif model == "numeric":
-            star = render.surface_samples(field, direction, n_samples=samples)
+            star = render.surface_samples(field, direction, n_samples=samples,
+                                          limb=parameters.limb)
             image = render.sky_image(*star, east, north, half_width=1.5, n=pixels)
         else:
             sphere = render.sphere_samples(field, direction, n_samples=samples,
-                                           linear=linear)
+                                           linear=linear, limb=parameters.limb)
             sky = np.stack([sphere[0] @ east, sphere[0] @ north], axis=-1)
             moved = sky @ stretch.T
             points = moved[:, :1] * east + moved[:, 1:] * north
             image = render.sky_image(points, sphere[1] / scale, sphere[2] * scale,
                                      east, north, half_width=1.5, n=pixels)
-        panels.append(contrast(image))
+        panels.append(brightness(image))
     return panels
 
 
@@ -248,14 +259,16 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
     eye, (east, north) = _view(parameters.inclination)
 
     if model == "numeric":
-        star = render.surface_samples(field, eye, n_samples=samples)
+        star = render.surface_samples(field, eye, n_samples=samples,
+                                      limb=parameters.limb)
         flux = render.direct_visibility(*star, east, north, 0.0, 0.0)
 
         def model_visibility(u, v):
             return (render.direct_visibility(*star, east, north, u, v) / flux)
     else:
         if model.startswith("fitted"):
-            star = render.surface_samples(field, eye, n_samples=samples)
+            star = render.surface_samples(field, eye, n_samples=samples,
+                                          limb=parameters.limb)
             fitted_fit = fitted.fit_image(star, affine.projected_stretch(field, eye),
                                           east, north,
                                           l_max=FIT_ORDERS.get(model, FIT_L_MAX))
@@ -263,7 +276,8 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
         elif model == "first-order":
             # the closed form of (83): no quadrature, ten harmonic evaluations.  The
             # ellipse is still the exact one, so only the brightness is linearised.
-            coefficients = affine.first_order_coefficients(field, eye)
+            coefficients = affine.first_order_coefficients(field, eye,
+                                                           limb=parameters.limb)
         else:
             coefficients = affine.sphere_coefficients(
                 field, l_max=SPHERE_L_MAX, n_samples=samples, eye=eye)
@@ -309,6 +323,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
     figure = plt.figure(figsize=(9.2, 6.6))
     axes, colorbar_axis = gui_core.panel_axes(figure)
+    brightness_cmap = gui_core.image_colormap()
 
     def redraw(*_):
         """Mark the view stale and schedule one redraw: a drag fires on every motion."""
@@ -335,7 +350,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
             titles = (f"{name}, near", f"{name}, far")
             extent = (1.5, -1.5, -1.5, 1.5)
             labels = (r"$y$ (East)", r"$x$ (North)")
-            bar_label = r"$g/\langle g\rangle - 1$"
+            bar_label = r"$g/\langle g\rangle$"
 
         # the flip and the shared scale are the scaffolding's, not this model's
         panels = tuple(gui_core.flip(panel) for panel in panels)
@@ -348,11 +363,18 @@ def build(parameters=None):  # pragma: no cover - needs a display
             titles = tuple(f"{title}  (residual {report['fit'].residual:.1e})"
                            for title in titles)
 
+        # a brightness wants a linear grey ramp; a signed Delta V wants a diverging map
+        brightness = not state["visibility"]
+        cmap = brightness_cmap if brightness else "RdBu_r"
+
         drawn = None
         for axis_handle, data, title in zip(axes, panels, titles):
             axis_handle.clear()
-            drawn = axis_handle.imshow(data, origin="lower", cmap="RdBu_r",
-                                       vmin=-limit, vmax=limit, extent=extent)
+            if brightness:
+                gui_core.darken(axis_handle)     # after clear(), which resets the face
+            drawn = axis_handle.imshow(
+                data, origin="lower", cmap=cmap,
+                vmin=0.0 if brightness else -limit, vmax=limit, extent=extent)
             axis_handle.set_title(title, fontsize=9)
             axis_handle.set_xlabel(labels[0], fontsize=8)
             axis_handle.set_ylabel(labels[1], fontsize=8)
@@ -424,7 +446,8 @@ def build(parameters=None):  # pragma: no cover - needs a display
             ("spin", 0.0, 0.09, r"$\epsilon_\mathrm{spin}$", False, "%.3f"),
             ("inclination", 0.0, 90.0, r"$i$  [deg]", True, "%.0f"),
             ("latitude", -90.0, 90.0, r"$\lambda_\mathrm{tide}$  [deg]", True, "%.0f"),
-            ("longitude", 0.0, 360.0, r"$\varphi_\mathrm{tide}$  [deg]", True, "%.0f"))):
+            ("longitude", 0.0, 360.0, r"$\varphi_\mathrm{tide}$  [deg]", True, "%.0f"),
+            ("limb", 0.0, 1.0, r"limb darkening", False, "%.2f"))):
         current = getattr(state["parameters"], name)
         sliders.append(gui_core.add_slider(
             figure, index, label, low, high,

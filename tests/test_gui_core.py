@@ -105,3 +105,15 @@ def test_a_raising_draw_does_not_leave_the_view_stale():
     coalescer = gui_core.Coalescer(_Figure(), boom)
     coalescer.request()                     # prints a traceback, does not raise
     assert coalescer.stale is False
+
+
+def test_the_brightness_colormap_runs_black_to_white_and_hides_the_rim():
+    """A brightness wants a linear ramp; an unrendered rim must not be a pale halo."""
+    cmap = gui_core.image_colormap()
+    low = np.asarray(cmap(0.0))[:3]
+    high = np.asarray(cmap(1.0))[:3]
+    rim = np.asarray(cmap(np.nan))[:3]
+    print(f"\ngrey ramp: {low.round(2)} -> {high.round(2)}, rim {rim.round(2)}")
+    assert low.max() < 0.1                  # black floor
+    assert high.min() > 0.9                 # white peak
+    assert rim.max() < 0.1                  # the rim is black, not pale
