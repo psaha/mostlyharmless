@@ -40,11 +40,11 @@ residual at the roundoff level.
 \label{sec:master}
 
 Substituting \eqref{eq:jacobi-anger} into \eqref{eq:separated} gives the form
-everything else rests on.  For the complex mode $Y_l^m$, whose angular part is
-$N_{lm}P_l^m(\cos\theta)\,e^{im\varphi}$,
+everything else rests on.  For the complex mode $Y_{lm}$, whose angular part is
+$N_{lm}P_{lm}(\cos\theta)\,e^{im\varphi}$,
 \begin{equation}
-  V_l^m(u,v) = 2\pi(-i)^m e^{im\psi}\, N_{lm}
-  \int_0^1 P_l^m\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,\rho\,d\rho .
+  V_{lm}(u,v) = 2\pi(-i)^m e^{im\psi}\, N_{lm}
+  \int_0^1 P_{lm}\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,\rho\,d\rho .
   \label{eq:master-reduction}
 \end{equation}
 Everything after this point is the evaluation of that radial integral: one
@@ -78,11 +78,11 @@ between the two families --- it swaps which of them is easy.
 For given $l$ and $m \ge 0$, \eqref{eq:master-reduction} is a complex constant
 times a radial integral that depends on $q$ alone:
 \begin{equation}
-  V_l^m(u,v) = 2\pi(-i)^m N_{lm}\, e^{im\psi}\, R_{lm}(q) ,
+  V_{lm}(u,v) = 2\pi(-i)^m N_{lm}\, e^{im\psi}\, R_{lm}(q) ,
   \label{eq:mode-visibility}
 \end{equation}
 \begin{equation}
-  R_{lm}(q) = \int_0^1 P_l^m\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,
+  R_{lm}(q) = \int_0^1 P_{lm}\!\left(\sqrt{1-\rho^2}\right) J_m(2\pi q\rho)\,
   \rho\,d\rho .
   \label{eq:radial-integral}
 \end{equation}
@@ -98,41 +98,45 @@ visibility is linear in the map, so it needs the same extension.  Its form is
 simpler.  Using $V(\overline{f})(u,v) = \overline{V(f)(-u,-v)}$ for the transform of
 a conjugate, and the fact that reversing the baseline adds $\pi$ to the azimuth,
 \begin{equation}
-  V_l^{-m}
-  = (-1)^m \overline{V_l^m(-u,-v)}
-  = (-1)^m \overline{(-1)^m V_l^m(u,v)}
-  = \overline{V_l^m} ,
+  V_{l,-m}
+  = (-1)^m \overline{V_{lm}(-u,-v)}
+  = (-1)^m \overline{(-1)^m V_{lm}(u,v)}
+  = \overline{V_{lm}} ,
   \label{eq:visibility-extension}
 \end{equation}
 so \emph{no} sign survives: the $(-1)^m$ of \eqref{eq:ylm-extension} is cancelled by
 the $(-1)^m$ that $e^{im\pi}$ contributes when the baseline is reversed.
 
 The contribution of a stored coefficient follows in one step.  The map carries
-$2\,\mathrm{Re}(a_{lm}Y_l^m)$ at order $m > 0$, which is
-$a_{lm}Y_l^m + (-1)^m\overline{a_{lm}}\,Y_l^{-m}$, so
+$2\,\mathrm{Re}(a_{lm}Y_{lm})$ at order $m > 0$, which is
+$a_{lm}Y_{lm} + (-1)^m\overline{a_{lm}}\,Y_{l,-m}$, so
 \begin{equation}
-  a_{lm} V_l^m + (-1)^m \overline{a_{lm}}\, V_l^{-m}
+  a_{lm} V_{lm} + (-1)^m \overline{a_{lm}}\, V_{l,-m}
   = 4\pi(-i)^m N_{lm} R_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
   \qquad m > 0 ,
   \label{eq:contribution}
 \end{equation}
 on folding the second term onto the first with \eqref{eq:visibility-extension}.  At
-$m = 0$ the contribution is the single term $a_{l0}V_l^0$.  The stored coefficients
+$m = 0$ the contribution is the single term $a_{l0}V_{l0}$.  The stored coefficients
 are complex; it is the map, and the parameters of a fit, that are real.  The pairing of
 \eqref{eq:contribution} with the map's own expansion, and why the two bases treat negative
 orders differently, is collected in section~\ref{sec:pairing}.
 
 Equations \eqref{eq:mode-visibility} and \eqref{eq:contribution} are all that is
-needed.  The real basis of \eqref{eq:real-basis} requires no separate treatment: its
-two branches are
+needed.  The real basis of \eqref{eq:real-basis} needs no separate treatment.  Its branches are
+$R_{l,m,c} = \sqrt2\,\mathrm{Re}\,Y_{lm}$ and $R_{l,m,s} = \sqrt2\,\mathrm{Im}\,Y_{lm}$, and
+a real part is a sum of a function and its conjugate, so
 \begin{equation}
-  V(R_l^{m,c}) \;=\; \frac{V_l^m + (-1)^m V_l^{-m}}{\sqrt2} ,
+  V(R_{l,m,c}) \;=\; \frac{V_{lm} + (-1)^m\,\overline{V_{lm}}}{\sqrt2} ,
   \qquad
-  V(R_l^{m,s}) \;=\; \frac{V_l^m - (-1)^m V_l^{-m}}{i\sqrt2} ,
+  V(R_{l,m,s}) \;=\; \frac{V_{lm} - (-1)^m\,\overline{V_{lm}}}{i\sqrt2} ,
   \label{eq:real-branch-visibilities}
 \end{equation}
-which reduce with \eqref{eq:visibility-extension} to the $\cos(m\psi)$ and
-$\sin(m\psi)$ forms met in the literature.
+using the fact, taken up properly in section~\ref{sec:pairing}, that conjugating a map
+conjugates its transform \emph{and} mirrors the baseline, which multiplies an order-$m$ mode
+by $(-1)^m$.  No object at a negative order appears in either line.  The branches reduce with
+\eqref{eq:visibility-extension} to the $\cos(m\psi)$ and $\sin(m\psi)$ forms met in the
+literature.
 
 One could absorb \eqref{eq:phase-packed} into the azimuth for those branches by
 measuring the baseline direction as a position angle, from North towards East, as is
@@ -154,10 +158,10 @@ $V(-u,-v) = \overline{V(u,v)}$ for a real map.
 \label{sec:parity}
 
 Write $\rho = \sin\theta$, so $\sqrt{1-\rho^2} = \cos\theta$.  The angular factor
-$P_l^m(\cos\theta)$ is either a polynomial in $\rho^2$, or that polynomial times a
+$P_{lm}(\cos\theta)$ is either a polynomial in $\rho^2$, or that polynomial times a
 single factor of $\sqrt{1-\rho^2}$, according to the parity of $l+m$:
 \begin{equation}
-  P_l^m(\cos\theta) =
+  P_{lm}(\cos\theta) =
   \begin{cases}
     \text{polynomial in } \rho^2 , & l+m \text{ even} ,\\[2pt]
     \sqrt{1-\rho^2} \times \text{polynomial in } \rho^2 , & l+m \text{ odd} .

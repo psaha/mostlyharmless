@@ -5,7 +5,7 @@ tag, the rung and the scope are recorded in ROADMAP.md section 4 and quoted in
 the manual next to the claim they support.
 
 Two independent constructions are used throughout, which is what decision D10
-asks for.  The exact checks build Y_l^m from SymPy's ``assoc_legendre``; the
+asks for.  The exact checks build Y_{lm} from SymPy's ``assoc_legendre``; the
 implementation in ``mostlyharmless.visylm`` goes through SciPy's ``lpmv``.
 Nothing is shared but the conventions, and those are written out explicitly in
 both places.
@@ -102,11 +102,11 @@ _ANGLE_PAIRS = [
 
 
 # --------------------------------------------------------------------------
-# Y_l^m in SymPy, for the exact checks
+# Y_{lm} in SymPy, for the exact checks
 # --------------------------------------------------------------------------
 
 def _coefficient(l, m, theta=THETA):
-    """The theta-dependent coefficient of exp(i m phi) in Y_l^m.
+    """The theta-dependent coefficient of exp(i m phi) in Y_{lm}.
 
     Built from SymPy's assoc_legendre, i.e. independently of the lpmv route in
     the implementation, with the negative-order relation applied explicitly.
@@ -122,12 +122,12 @@ def _coefficient(l, m, theta=THETA):
 
 
 def Y(l, m, theta=THETA, phi=PHI):
-    """Y_l^m in the conventions of the manual, as a SymPy expression."""
+    """Y_{lm} in the conventions of the manual, as a SymPy expression."""
     return _coefficient(l, m, theta) * sp.exp(sp.I * m * phi)
 
 
 def Ybar(l, m, theta=THETA, phi=PHI):
-    """The complex conjugate of Y_l^m, written out explicitly.
+    """The complex conjugate of Y_{lm}, written out explicitly.
 
     For real theta the associated Legendre factor is real, so conjugating only
     touches the exponential.  Doing it by construction keeps SymPy from having
@@ -141,7 +141,7 @@ def Ybar(l, m, theta=THETA, phi=PHI):
 # --------------------------------------------------------------------------
 
 def _legendre_poly_part(l, order, x):
-    """Q with P_l^order(x) = (1-x^2)^(order/2) Q(x), for order >= 0.
+    """Q with P_{l,order}(x) = (1-x^2)^(order/2) Q(x), for order >= 0.
 
     The Rodrigues form, so that SymPy only ever integrates polynomials.
     """
@@ -154,7 +154,7 @@ def _legendre_poly_part(l, order, x):
 def check_legendre_orthogonality_exact(l_max=5):
     """V1, exact rung -- the theta factor.
 
-        int_{-1}^{1} P_l^m(x) P_l'^m(x) dx
+        int_{-1}^{1} P_{lm}(x) P_l'^m(x) dx
             = delta_ll' 2/(2l+1) (l+m)!/(l-m)!
 
     with the SIGNED m.  Both sides are polynomials in x, so SymPy is exact and
@@ -237,7 +237,7 @@ def check_orthonormality_numeric(l_max=4, n_theta=None, n_phi=None):
 # --------------------------------------------------------------------------
 
 def check_reality_exact(l_max=4):
-    """V2, exact rung -- Y_l^{-m} = (-1)^m conj(Y_l^m).
+    """V2, exact rung -- Y_{l,-m} = (-1)^m conj(Y_{lm}).
 
     Reduced to the theta coefficients, so what is being tested is the
     cancellation between the factorial ratio of the normalisation and the one
@@ -259,11 +259,11 @@ def check_reality_exact(l_max=4):
 def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
     """V3, numerical rung -- the addition theorem.
 
-        sum_m Y_l^m(1) conj(Y_l^m(2)) = (2l+1)/(4 pi) P_l(cos gamma)
+        sum_m Y_{lm}(1) conj(Y_{lm}(2)) = (2l+1)/(4 pi) P_l(cos gamma)
 
     The theorem itself is classical and cited as such.  What this checks is our
     implementation of it, in two ways.  First, SymPy's evaluation of our own
-    Y_l^m at exact rational angles, to `digits` digits.  Second, the float
+    Y_{lm} at exact rational angles, to `digits` digits.  Second, the float
     implementation against SymPy's Legendre, so that the reference is not the
     limiting error.
 
@@ -311,8 +311,8 @@ def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
 def check_addition_theorem_real_numeric(l_max=6, seed=20261012):
     """V3, numerical rung -- the addition theorem in the real basis.
 
-        R_l^0(1) R_l^0(2)
-          + sum_{m>0} [ R_l^{m,c}(1) R_l^{m,c}(2) + R_l^{m,s}(1) R_l^{m,s}(2) ]
+        R_{l,0}(1) R_{l,0}(2)
+          + sum_{m>0} [ R_{l,m,c}(1) R_{l,m,c}(2) + R_{l,m,s}(1) R_{l,m,s}(2) ]
         = (2l+1)/(4 pi) P_l(cos gamma)
 
     This is the form the manual states, and every index in it is non-negative.
@@ -647,7 +647,7 @@ def check_odd_collapse_exact(l_max=8):
 def check_k_identity(l_max=6, n_theta=200):
     """V18, numerical rung -- the K identity that the odd derivation cites.
 
-        int_{-1}^{1} P_l^m(z) J_m(a sqrt(1-z^2)) dz
+        int_{-1}^{1} P_{lm}(z) J_m(a sqrt(1-z^2)) dz
             = (-1)^m 2 (l+m-1)!!/(l-m)!! j_l(a) ,     l + m even,
 
     in our Condon-Shortley convention.  The sign is the one thing the citation
@@ -702,7 +702,7 @@ def check_odd_closed_form(l_max=5, q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0)):
 def check_zernike_jacobi(n_max=8):
     """V8, exact rung -- the Jacobi form of the Zernike radial polynomial.
 
-        R_n^m(rho) = (-1)^k rho^m P_k^(m,0)(1 - 2 rho^2) ,   k = (n-m)/2 ,
+        R_{n,m}(rho) = (-1)^k rho^m P_k^{(m,0)}(1 - 2 rho^2) ,   k = (n-m)/2 ,
 
     compared as polynomials by expansion.  Exact over the stated range.
     """
@@ -720,7 +720,7 @@ def check_zernike_jacobi(n_max=8):
 
 
 def check_zernike_orthogonality(n_max=8):
-    """V9, exact rung -- int_0^1 R_n^m R_n'^m rho drho = delta_{nn'}/(2n+2)."""
+    """V9, exact rung -- int_0^1 R_{n,m} R_n'^m rho drho = delta_{nn'}/(2n+2)."""
     rho = sp.Symbol("rho", nonnegative=True)
     worst = sp.Integer(0)
     for m in range(n_max + 1):
@@ -739,10 +739,10 @@ def check_zernike_orthogonality(n_max=8):
 def check_zernike_hankel(n_max=6, order=6):
     """V10, exact rung -- the Zernike-Hankel identity, through its power series.
 
-        int_0^1 R_n^m(rho) J_m(a rho) rho drho = (-1)^k J_{n+1}(a)/a ,
+        int_0^1 R_{n,m}(rho) J_m(a rho) rho drho = (-1)^k J_{n+1}(a)/a ,
         k = (n-m)/2 .
 
-    Both sides are expanded in a: the left from the exact moments of R_n^m and the
+    Both sides are expanded in a: the left from the exact moments of R_{n,m} and the
     Bessel series, the right from the Bessel series alone.  Every power up to
     a^(n + 2*order) is compared, so the rung is exact with a stated series scope
     rather than a proof of the identity for all a.  The identity itself is cited;
@@ -780,7 +780,7 @@ def check_zernike_projection(l_max=6):
 
     The same c_k obtained two ways: from the orthogonality integral, and by
     matching powers of rho from the top down.  The highest power in
-    P_l^m = sum_k c_k R_{m+2k}^m occurs in R_l^m alone, so the system is triangular
+    P_{lm} = sum_k c_k R_{m+2k}^m occurs in R_{l,m} alone, so the system is triangular
     once solved downwards, and the leftover polynomial must vanish identically.
     Exact rational arithmetic throughout.
     """
@@ -994,8 +994,8 @@ def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000)
     explicit by the addition theorem.  With the orthonormal basis of section 2,
 
         a_00 = (1 - 4 eps_spin) sqrt(4 pi) ,
-        a_2m = -(16 pi / 5) [ eps_tide conj(Y_2^m(t_hat))
-                              - eps_spin conj(Y_2^m(s_hat)) ] ,
+        a_2m = -(16 pi / 5) [ eps_tide conj(Y_{2m}(t_hat))
+                              - eps_spin conj(Y_{2m}(s_hat)) ] ,
 
     every other coefficient zero --- no odd order at all, since the pattern is even under
     n -> -n.  The axes are expressed in the observer frame exactly as a sampled direction
@@ -1026,9 +1026,9 @@ def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000)
 def check_zernike_bessel_identity(n_max=8, values=(0.7, 1.7, 3.0, 6.0)):
     """V22, numerical rung -- the identity the disk-mode surrogate rests on.
 
-    For ``n - m`` even and the normalisation ``R_n^m(1) = 1`` of section 6.2,
+    For ``n - m`` even and the normalisation ``R_{n,m}(1) = 1`` of section 6.2,
 
-        int_0^1 R_n^m(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v ,
+        int_0^1 R_{n,m}(rho) J_m(v rho) rho d rho = (-1)^((n-m)/2) J_{n+1}(v) / v ,
 
     which is what makes one disk mode cost exactly one ordinary Bessel function, so that a
     series of M modes costs M of them and nothing more.
@@ -1062,7 +1062,7 @@ def check_zernike_bessel_identity(n_max=8, values=(0.7, 1.7, 3.0, 6.0)):
 def check_baseline_parity(l_max=6, q_values=(0.3, 1.1, 2.5, 5.0)):
     """V23, algebraic -- the mode at the opposite baseline.
 
-        V_l^m(-u, -v) = (-1)^m V_l^m(u, v) ,
+        V_{lm}(-u, -v) = (-1)^m V_{lm}(u, v) ,
 
     which is what makes the plain conjugation of the negative-order visibility correct, and
     so what produces the ``(-i)^m`` phase of the mode sum.  It follows from ``psi -> psi + pi``,

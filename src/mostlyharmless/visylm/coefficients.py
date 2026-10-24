@@ -2,7 +2,7 @@
 
 A real map is expanded as
 
-    I(theta, phi) = sum_{l=0}^{L} sum_{m=-l}^{l} a_lm Y_l^m(theta, phi) ,
+    I(theta, phi) = sum_{l=0}^{L} sum_{m=-l}^{l} a_lm Y_{lm}(theta, phi) ,
 
 but only the non-negative orders are stored.  The negative orders are derived from
 the reality condition
@@ -50,7 +50,7 @@ confirmation.
 
 A limitation worth knowing
 --------------------------
-``Coeffs`` describes a *real* map.  A single complex mode, such as one Y_l^m on
+``Coeffs`` describes a *real* map.  A single complex mode, such as one Y_{lm} on
 its own, is not a real map and will be rejected; use the mode-level visibility
 functions for that, which is what the derivations are written in terms of.
 """

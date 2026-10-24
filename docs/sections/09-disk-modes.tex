@@ -118,14 +118,14 @@ section~\ref{sec:conventions}, the plane-wave factor integrates to a Bessel func
 azimuthal order:
 \begin{equation}
   \widehat{Z}_n^m(q,\psi) \;=\; 2\pi\,(-i)^m e^{im\psi}
-  \int_0^1 R_n^m(\rho)\, J_m(2\pi q\rho)\, \rho \, d\rho ,
+  \int_0^1 R_{n,m}(\rho)\, J_m(2\pi q\rho)\, \rho \, d\rho ,
   \label{eq:zernike-transform}
 \end{equation}
 the angular integral being the standard representation of $J_m$.  The Zernike radial
-polynomials $R_n^m$ are those already introduced in section~\ref{sec:zernike} for the even
+polynomials $R_{n,m}$ are those already introduced in section~\ref{sec:zernike} for the even
 family, and they carry the classical identity
 \begin{equation}
-  \int_0^1 R_n^m(\rho)\, J_m(v\rho)\, \rho\, d\rho
+  \int_0^1 R_{n,m}(\rho)\, J_m(v\rho)\, \rho\, d\rho
   \;=\; (-1)^{(n-m)/2}\,\frac{J_{n+1}(v)}{v} ,
   \label{eq:zernike-identity}
 \end{equation}
@@ -137,8 +137,8 @@ The identity is \textbf{certificate \vtag{22}}, and it is worth being clear abou
 be certified so cleanly.  The integrand is a polynomial times a Bessel function, so
 Gauss--Legendre quadrature evaluates the integral to machine precision: any residual is the
 identity's own, not the quadrature's.  The check runs over every $(n,m)$ with $n \le 8$ and
-$n-m$ even, against the library's own $R_n^m$, so it certifies that the convention of
-section~\ref{sec:zernike} --- in particular the normalisation $R_n^m(1) = 1$ --- is the one
+$n-m$ even, against the library's own $R_{n,m}$, so it certifies that the convention of
+section~\ref{sec:zernike} --- in particular the normalisation $R_{n,m}(1) = 1$ --- is the one
 the identity holds for.  That is the point worth having: an identity of this kind is easy to
 quote with the wrong normalisation, and the check fails immediately if the conventions
 disagree.
@@ -212,7 +212,7 @@ of radial modes rather than of Gaunt coefficients.
 \hline
 tag & what is checked & kind \\
 \hline
-\vtag{22} & the Zernike transform identity, against the library's $R_n^m$ & numerical \\
+\vtag{22} & the Zernike transform identity, against the library's $R_{n,m}$ & numerical \\
 \hline
 \end{tabular}
 \end{center}

@@ -16,7 +16,7 @@ indices of the representation, never as coefficients.
 With $\hat n$ a direction in the body frame and $R$ the body-to-observer rotation,
 the harmonics transform as
 \begin{equation}
-  Y_l^m(R^{-1}\hat n) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_l^{m'}(\hat n) ,
+  Y_{lm}(R^{-1}\hat n) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_{lm'}(\hat n) ,
   \label{eq:rotation-law}
 \end{equation}
 so a map whose coefficients are $A_{lm}$ in the body frame has coefficients
@@ -28,9 +28,26 @@ in the observer frame: the matrix contracts the \emph{second} index of $D$, and 
 conjugation is involved.  The two symbols are kept apart throughout: capital $A_{lm}$ is
 body-frame, lower case $a_{lm}$ is observer-frame, and the visibility of
 sections~\ref{sec:visibility}--\ref{sec:full-map} always takes the latter, since that is
-the frame the modes $V_l^m$ are defined in.  Equation \eqref{eq:rotation-law} says that the two
+the frame the modes $V_{lm}$ are defined in.  Equation \eqref{eq:rotation-law} says that the two
 descriptions are one physical map evaluated at rotated arguments --- a statement
 that certif\-icate \vtag{6} tests directly.
+
+Only non-negative orders need be carried, because the negative-order coefficients are
+determined.  Splitting the sum in \eqref{eq:coefficient-rotation} by sign, and substituting
+the conjugate for each $m < 0$, gives an expression in which every coefficient carries a
+non-negative order:
+\begin{equation}
+  a_{lm'} = D^l_{m'0} \, A_{l0}
+  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, A_{lm}
+  + (-1)^m \, D^l_{m',-m} \, \overline{A_{lm}} \, \Big] ,
+  \qquad m' \ge 0 .
+  \label{eq:rotation-nonnegative}
+\end{equation}
+The $m = 0$ term appears once and not twice, because $A_{l0}$ is real: written as a pair it
+would be doubled.  Every negative order in \eqref{eq:rotation-nonnegative} is an index of
+$D$; none is a coefficient.  This is the one place the negative orders are needed as
+\emph{indices}, and section~\ref{sec:pairing} shows that the visibility needs no more than
+their consequence.
 
 \subsection{The Wigner matrices}
 \label{sec:wigner-matrices}
@@ -90,23 +107,6 @@ applied first and the position angle then carries the result to its place on the
 sky.  The body $z$ axis, which is the spin, maps to
 $(\sin\beta\cos\PA,\ \sin\beta\sin\PA,\ \cos\beta)$, so it tilts toward the azimuth
 $\PA$ and sits $\cos\beta$ above the sky plane.
-
-\subsection{The transform without negative-order coefficients}
-\label{sec:rotation-nonnegative}
-
-Splitting the sum in \eqref{eq:coefficient-rotation} into $m \ge 0$ and $m < 0$,
-and substituting the value of each negative-order coefficient, gives an expression
-in which every coefficient carries a non-negative order:
-\begin{equation}
-  a_{lm'} = D^l_{m'0} \, A_{l0}
-  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, A_{lm}
-  + (-1)^m \, D^l_{m',-m} \, \overline{A_{lm}} \, \Big] ,
-  \qquad m' \ge 0 .
-  \label{eq:rotation-nonnegative}
-\end{equation}
-The $m = 0$ term appears once and not twice, because $A_{l0}$ is real: written as
-a pair it would be doubled.  Every negative order in \eqref{eq:rotation-nonnegative}
-is an index of $D$; none is a coefficient.
 
 \subsection{What was checked}
 \label{sec:wigner-register}

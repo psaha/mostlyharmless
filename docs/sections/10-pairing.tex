@@ -21,69 +21,107 @@ orders are determined rather than stored:
 \end{equation}
 Expanding over all orders and folding the negative ones back onto the stored half gives
 \begin{equation}
-  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_l^0(n)
-    \;+\; \sum_{m=1}^{l}\Bigl( a_{lm}\,Y_l^m(n)
-    \;+\; (-1)^m\,\overline{a_{lm}}\,Y_l^{-m}(n) \Bigr) \Bigr] ,
+  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_{l0}(n)
+    \;+\; \sum_{m=1}^{l}\Bigl( a_{lm}\,Y_{lm}(n)
+    \;+\; (-1)^m\,\overline{a_{lm}}\,Y_{l,-m}(n) \Bigr) \Bigr] ,
   \label{eq:pairing-map}
 \end{equation}
 and because the harmonics obey
 \begin{equation}
-  Y_l^{-m} \;=\; (-1)^m\,\overline{Y_l^m} ,
+  Y_{l,-m} \;=\; (-1)^m\,\overline{Y_{lm}} ,
   \label{eq:pairing-y-negative}
 \end{equation}
 the two terms are conjugates of one another and
 \begin{equation}
-  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_l^0(n)
-    \;+\; \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl( a_{lm}\,Y_l^m(n) \bigr) \Bigr] .
+  I(n) \;=\; \sum_{l}\Bigl[\, a_{l0}\,Y_{l0}(n)
+    \;+\; \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl( a_{lm}\,Y_{lm}(n) \bigr) \Bigr] .
   \label{eq:pairing-map-real}
 \end{equation}
 
 \subsection{The visibility}
 \label{sec:pairing-visibility}
 
-The same coefficients, the same pairing, and the same stored half give
+The visibility is linear in the map, so applying it term by term to the stored expansion
+\eqref{eq:pairing-map-real} needs one fact about the transform and nothing more: how it
+treats a conjugate.  Writing the transform as $\mathcal{F}$,
 \begin{equation}
-  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_l^0(u,v)
-    \;+\; \sum_{m=1}^{l}\Bigl( a_{lm}\,V_l^m(u,v)
-    \;+\; (-1)^m\,\overline{a_{lm}}\,V_l^{-m}(u,v) \Bigr) \Bigr] .
-  \label{eq:pairing-visibility}
+  \mathcal{F}\bigl[\,\overline{f}\,\bigr](u,v)
+  \;=\; \overline{\mathcal{F}[f](-u,-v)} ,
+  \label{eq:transform-conjugate}
 \end{equation}
-Here, however, the negative orders obey a different rule,
+which says that conjugating a map conjugates its transform \emph{and} mirrors the baseline,
+a plane wave with its phase conjugated being the wave travelling the other way.  No negative
+order appears in that statement, and none is needed to apply it: the second half of
+$2\,\mathrm{Re}(a_{lm}Y_{lm}) = a_{lm}Y_{lm} + \overline{a_{lm}}\,\overline{Y_{lm}}$ is a
+conjugate, and \eqref{eq:transform-conjugate} is all there is to know about its transform.
+
+What the mirror does to a single mode is a phase.  Reversing both components of the baseline
+sends $\psi \to \psi + \pi$ in \eqref{eq:mode-visibility}, and the order-$m$ mode picks up
+$e^{im\pi} = (-1)^m$:
 \begin{equation}
-  V_l^{-m} \;=\; \overline{V_l^m} ,
+  V_{lm}(-u,-v) \;=\; (-1)^m\,V_{lm}(u,v) .
+  \label{eq:pairing-baseline-sign}
+\end{equation}
+Composing the two, the conjugate of a mode transforms to
+\begin{equation}
+  \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} ,
   \label{eq:pairing-v-negative}
 \end{equation}
-so the second term is \emph{not} the conjugate of the first, and the $(-1)^m$ survives.  It
-combines with the mode's own phase to leave
+so the stored term and its conjugate partner contribute
 \begin{equation}
-  a_{lm}V_l^m + (-1)^m\overline{a_{lm}}\,\overline{V_l^m}
-  \;=\; 4\pi(-i)^m N_{lm}R_{lm}(q)\,\mathrm{Re}\bigl(a_{lm}e^{im\psi}\bigr) ,
+  a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
+  \;=\;
+  \begin{cases}
+    2\,\mathrm{Re}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ even},\\[2pt]
+    2i\,\mathrm{Im}\bigl(a_{lm}V_{lm}\bigr) , & m \text{ odd}.
+  \end{cases}
   \label{eq:pairing-contribution}
+\end{equation}
+Summing over the stored half therefore splits the inner sum by parity, which is the
+visibility's counterpart of the map's \eqref{eq:pairing-map},
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
+    \;+\; \sum_{m=1}^{l}
+      \begin{cases}
+        2\,\mathrm{Re}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ even},\\[2pt]
+        2i\,\mathrm{Im}\bigl( a_{lm}\,V_{lm}(u,v) \bigr) , & m \text{ odd}.
+      \end{cases}
+  \Bigr] .
+  \label{eq:pairing-visibility-parity}
+\end{equation}
+That is the whole difference from the map, in one sign.  In \eqref{eq:pairing-map} the
+harmonics' own $(-1)^m$ met the coefficient's and the two squared away, leaving
+$2\,\mathrm{Re}$ at every order; here there is nothing for it to cancel against.
+
+Substituting the mode sum into either branch, both reduce to the same expression, because
+$(-i)^m$ is real for even $m$ and imaginary for odd $m$; each multiplies its branch into a
+common form,
+\begin{equation}
+  a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
+  \;=\; 4\pi(-i)^m N_{lm}R_{lm}(q)\,\mathrm{Re}\bigl(a_{lm}e^{im\psi}\bigr) ,
+  \label{eq:pairing-compact}
 \end{equation}
 which is the contribution quoted in section~\ref{sec:visibility}.  So
 \begin{equation}
-  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_l^0(u,v)
+  V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
     \;+\; \sum_{m=1}^{l} 4\pi(-i)^m N_{lm}R_{lm}(q)\,
       \mathrm{Re}\bigl( a_{lm}\,e^{im\psi} \bigr) \Bigr] .
   \label{eq:pairing-visibility-real}
 \end{equation}
 
-\subsection{Why the two negative orders differ}
+\subsection{Why the parity survives the transform}
 \label{sec:pairing-why}
 
-Equation~\eqref{eq:pairing-y-negative} is a definition of the basis.  For the visibility the
-instruction ``take the mode at order $-m$'' contains a second operation: conjugating a
-harmonic also conjugates its phase, and a plane wave whose phase is conjugated is the wave at
-the opposite baseline.  What saves the derivation is
-\begin{equation}
-  V_l^m(-u,-v) \;=\; (-1)^m\,V_l^m(u,v) ,
-  \label{eq:pairing-baseline-sign}
-\end{equation}
-which follows from $\psi \to \psi + \pi$ in \eqref{eq:mode-visibility}: the order-$m$ mode
-picks up $e^{im\pi} = (-1)^m$.  Combined with the conjugation, the two signs cancel and leave
-plain conjugation, \eqref{eq:pairing-v-negative}.  That cancellation is the whole reason the
-map carries a $(-1)^m$ and the visibility does not, and the reason the mode sum shows a
-$(-i)^m$ phase at all.
+Equation~\eqref{eq:pairing-y-negative} is a definition of the basis, and it is what makes the
+map's inner sum carry no parity at all: the harmonic's own $(-1)^m$ meets the coefficient's
+and the two square away, leaving $2\,\mathrm{Re}$ at every order.
+
+For the visibility there is only \emph{one} sign to be had.  Conjugation contributes none,
+\eqref{eq:transform-conjugate} being a plain conjugation at the mirrored baseline, and the
+mirror contributes $(-1)^m$.  Nothing meets it, so nothing cancels it, and it survives as the
+switch between real and imaginary parts in \eqref{eq:pairing-contribution}.  That is the whole
+reason the map carries a $(-1)^m$ and the visibility does not, and the reason the mode sum
+shows a $(-i)^m$ phase at all.
 
 \subsection{What the pairing buys}
 \label{sec:pairing-buys}

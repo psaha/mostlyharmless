@@ -17,13 +17,13 @@ argument and which is algebra delegated to a certificate.
 With negative orders defined by \eqref{eq:ylm-extension}, the complex harmonics
 are orthonormal over the full range,
 \begin{equation}
-  \int_{S^2} Y_l^m \, \overline{Y_{l'}^{m'}} \, d\Omega
+  \int_{S^2} Y_{lm} \, \overline{Y_{l'm'}} \, d\Omega
   = \delta_{ll'} \, \delta_{mm'} , \qquad -l \le m, m' \le l ,
   \label{eq:ylm-orthonormal}
 \end{equation}
 and the real basis \eqref{eq:real-basis} is orthonormal and complete:
 \begin{equation}
-  \int_{S^2} R_l^{m,\sigma} \, R_{l'}^{m',\sigma'} \, d\Omega
+  \int_{S^2} R_{l,m,\sigma} \, R_{l',m',\sigma'} \, d\Omega
   = \delta_{ll'} \, \delta_{mm'} \, \delta_{\sigma\sigma'} ,
   \label{eq:real-orthonormal}
 \end{equation}
@@ -39,12 +39,12 @@ Fourier statement
 \end{equation}
 and the polar factor is
 \begin{equation}
-  \int_{-1}^{1} P_l^m(x) \, P_{l'}^m(x) \, dx
+  \int_{-1}^{1} P_{lm}(x) \, P_{l'}^m(x) \, dx
   = \delta_{ll'} \, \frac{2}{2l+1} \frac{(l+m)!}{(l-m)!} , \qquad m \ge 0 .
   \label{eq:legendre-orthogonality}
 \end{equation}
 Equation \eqref{eq:legendre-orthogonality} is a polynomial identity.  Substituting
-the Rodrigues form $P_l^m(x) = (1-x^2)^{m/2} Q_l^m(x)$ with
+the Rodrigues form $P_{lm}(x) = (1-x^2)^{m/2} Q_{lm}(x)$ with
 $Q_l^m = (-1)^m d^m P_l / dx^m$ turns it into an integral of a polynomial, which
 certificate \vtag{1} evaluates exactly for every $0 \le m \le l \le 5$.
 \emph{Exact}, range-limited to $l \le 5$.  The negative orders need no separate
@@ -56,7 +56,7 @@ Multiplying \eqref{eq:fourier-orthogonality} by
 the normalisation together account for the surviving $2/(2l+1)$.  That
 multiplication is the argument; the two identities are the certified part.  The
 real basis then inherits \eqref{eq:real-orthonormal} directly, since
-$R_l^{m,c}$ and $R_l^{m,s}$ are the real and imaginary parts of $Y_l^m$ scaled by
+$R_{l,m,c}$ and $R_{l,m,s}$ are the real and imaginary parts of $Y_{lm}$ scaled by
 $\sqrt{2}$.
 
 The implementation is checked end to end on a Gauss--Legendre grid in
@@ -74,15 +74,15 @@ the claim.
 
 In the real basis the addition theorem reads
 \begin{equation}
-  R_l^0(\hat n_1) R_l^0(\hat n_2)
-  + \sum_{m=1}^{l} \Big[ R_l^{m,c}(\hat n_1) R_l^{m,c}(\hat n_2)
-  + R_l^{m,s}(\hat n_1) R_l^{m,s}(\hat n_2) \Big]
+  R_{l,0}(\hat n_1) R_{l,0}(\hat n_2)
+  + \sum_{m=1}^{l} \Big[ R_{l,m,c}(\hat n_1) R_{l,m,c}(\hat n_2)
+  + R_{l,m,s}(\hat n_1) R_{l,m,s}(\hat n_2) \Big]
   = \frac{2l+1}{4\pi} \, P_l(\cos\gamma) ,
   \label{eq:addition}
 \end{equation}
 with $\cos\gamma = \hat n_1 \cdot \hat n_2$.  Every index is non-negative.  The
 form one usually meets in the literature,
-$\sum_{m=-l}^{l} Y_l^m \overline{Y_l^m} = \frac{2l+1}{4\pi} P_l(\cos\gamma)$,
+$\sum_{m=-l}^{l} Y_{lm} \overline{Y_{lm}} = \frac{2l+1}{4\pi} P_l(\cos\gamma)$,
 agrees with \eqref{eq:addition}: the negative orders there are exactly the
 conjugates of the non-negative ones, so each $m > 0$ contributes its real and
 imaginary parts separately, which is what the cosine and sine branches are.
@@ -110,7 +110,7 @@ this work needs it, but the translation is what makes published coefficients
 directly comparable.
 
 Second, complex coefficients for a real map are sometimes defined without the
-$\sqrt{2}$ of \eqref{eq:half-complex}, in which case
+$\sqrt{2}$ that normalises the real branches in \eqref{eq:real-basis}, in which case
 \eqref{eq:map-from-half-complex} carries a different numerical factor.  The
 relation above is the one used here, and it is the one pyshtools documents for the
 coefficients of a real function.

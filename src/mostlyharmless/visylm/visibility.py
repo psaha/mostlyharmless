@@ -6,7 +6,7 @@ because both are easy to get wrong and both are certified:
 * the measure is planar over the projected disk, so the Jacobi-Anger step turns
   the azimuthal integral into a Bessel function and leaves
 
-      V_lm = 2 pi (-i)^m e^{i m psi} N_lm int_0^1 P_l^m(sqrt(1-rho^2))
+      V_lm = 2 pi (-i)^m e^{i m psi} N_lm int_0^1 P_{lm}(sqrt(1-rho^2))
                                           J_m(2 pi q rho) rho drho ,
 
   with q and psi the polar form of (u, v);
@@ -14,9 +14,9 @@ because both are easy to get wrong and both are certified:
 * modes are labelled by non-negative orders only.  Negative orders are never
   computed: they are related to the non-negative ones by
 
-      V_l^{-m} = conj(V_l^m) ,
+      V_{l,-m} = conj(V_{lm}) ,
 
-  which is the analogue of the harmonic extension Y_l^{-m} = (-1)^m conj(Y_l^m),
+  which is the analogue of the harmonic extension Y_{l,-m} = (-1)^m conj(Y_{lm}),
   with the sign absent because the (-1)^m is cancelled when the baseline is
   reversed.  That relation is what lets a stored coefficient pair up with its
   partner, and it is the only place a negative order is needed at all.
@@ -136,7 +136,7 @@ def _n_nodes(q):
 
 
 def radial_integral(l, m, q, n_nodes=None):
-    """int_0^1 P_l^m(sqrt(1-rho^2)) J_m(2 pi q rho) rho drho.
+    """int_0^1 P_{lm}(sqrt(1-rho^2)) J_m(2 pi q rho) rho drho.
 
     The intermediate of the master reduction, without the harmonic
     normalisation.
@@ -144,7 +144,7 @@ def radial_integral(l, m, q, n_nodes=None):
     The quadrature is done in theta, with rho = sin(theta), so that the integrand
     is analytic on the interval:
 
-        int_0^{pi/2} P_l^m(cos theta) J_m(2 pi q sin theta)
+        int_0^{pi/2} P_{lm}(cos theta) J_m(2 pi q sin theta)
                      sin(theta) cos(theta) dtheta .
 
     Integrating in rho instead would carry the factor sqrt(1-rho^2) to the end
@@ -182,9 +182,9 @@ def radial_integral(l, m, q, n_nodes=None):
 
 
 def visibility_mode(l, m, u, v):
-    """The complex visibility of the harmonic Y_l^m, for m >= 0.
+    """The complex visibility of the harmonic Y_{lm}, for m >= 0.
 
-        V_l^m = 2 pi (-i)^m N_lm exp(i m psi) R_lm(q)
+        V_{lm} = 2 pi (-i)^m N_lm exp(i m psi) R_lm(q)
 
     For ``l + m`` odd the radial integral is the closed form of section 5, a single
     spherical Bessel function; for ``l + m`` even it is the closed form of section
@@ -193,7 +193,7 @@ def visibility_mode(l, m, u, v):
     never used in production --- it is the reference the two are checked against.
 
     The negative orders are not computed here.  They are given by
-    ``V_l^{-m} = conj(V_l^m)``, which is what :func:`visibility` uses to pair a
+    ``V_{l,-m} = conj(V_{lm})``, which is what :func:`visibility` uses to pair a
     stored coefficient with its partner.
     """
     m = int(m)
@@ -215,11 +215,11 @@ def visibility(coeffs, u, v):
 
     A stored coefficient a_lm with m > 0 contributes
 
-        a_lm V_l^m + (-1)^m conj(a_lm) conj(V_l^m) ,
+        a_lm V_{lm} + (-1)^m conj(a_lm) conj(V_{lm}) ,
 
     the second term being the partner that the reality of the map determines.
     Their sum is 4 pi (-i)^m N_lm R_lm(q) Re(a_lm exp(i m psi)).  At m = 0 there
-    is a single term, a_l0 V_l^0.
+    is a single term, a_l0 V_{l0}.
     """
     total = 0.0
     for l, block in enumerate(coeffs.blocks):

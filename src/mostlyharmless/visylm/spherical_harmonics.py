@@ -1,10 +1,10 @@
 """Spherical harmonics, in the conventions of section 01 of the manual.
 
-    Y_l^m(theta, phi) = N_lm P_l^m(cos theta) exp(i m phi)
+    Y_{lm}(theta, phi) = N_lm P_{lm}(cos theta) exp(i m phi)
 
     N_lm = sqrt((2l+1)/(4 pi) * (l-m)! / (l+m)!)      <- the SIGNED m
 
-with the Condon-Shortley phase carried inside P_l^m, theta the polar angle and
+with the Condon-Shortley phase carried inside P_{lm}, theta the polar angle and
 phi the azimuthal angle.
 
 Two details are easy to get wrong, so they are done explicitly here rather than
@@ -13,7 +13,7 @@ left to a library's convention:
 1. The factorials in N_lm take the signed m.  With ``abs(m)`` the negative
    orders come out unnormalised, by a factor [(l-|m|)!/(l+|m|)!]^2.
 2. Negative orders go through the standard relation
-   P_l^{-m} = (-1)^m (l-m)!/(l+m)! P_l^m for m >= 0, applied here rather than
+   P_{l,-m} = (-1)^m (l-m)!/(l+m)! P_{lm} for m >= 0, applied here rather than
    relying on how scipy treats a negative order.
 
 The real basis used by the public interface is cos(m phi) for m >= 0 and
@@ -60,11 +60,11 @@ def normalisation(l, m):
 
 
 def associated_legendre(l, m, x):
-    """P_l^m(x) with the Condon-Shortley phase, for -l <= m <= l.
+    """P_{lm}(x) with the Condon-Shortley phase, for -l <= m <= l.
 
     The negative-order branch uses the standard relation, written for m >= 0,
 
-        P_l^{-m} = (-1)^m (l-m)!/(l+m)! P_l^m,
+        P_{l,-m} = (-1)^m (l-m)!/(l+m)! P_{lm},
 
     applied explicitly rather than trusting scipy's convention for a negative
     order.  This is the one place in the package where a magnitude is needed at
@@ -80,7 +80,7 @@ def associated_legendre(l, m, x):
 
 
 def sph_harm(l, m, theta, phi):
-    """Y_l^m(theta, phi), complex, with theta the polar angle."""
+    """Y_{lm}(theta, phi), complex, with theta the polar angle."""
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
     return (normalisation(l, m)
@@ -91,9 +91,9 @@ def sph_harm(l, m, theta, phi):
 def real_sph_harm(l, m, theta, phi):
     """The real basis, orthonormal on the sphere.
 
-        m > 0 :  sqrt(2) Re Y_l^m
-        m = 0 :  Y_l^0
-        m < 0 :  sqrt(2) Im Y_l^{-m}
+        m > 0 :  sqrt(2) Re Y_{lm}
+        m = 0 :  Y_{l0}
+        m < 0 :  sqrt(2) Im Y_{l,-m}
 
     The order -m is written out rather than as a magnitude, since m is negative
     in that branch.  No (-1)^m is inserted; several other real-basis conventions
@@ -107,7 +107,7 @@ def real_sph_harm(l, m, theta, phi):
 
 
 def sph_harm_addition(l, theta1, phi1, theta2, phi2):
-    """sum_m Y_l^m(theta1,phi1) conj(Y_l^m(theta2,phi2)).
+    """sum_m Y_{lm}(theta1,phi1) conj(Y_{lm}(theta2,phi2)).
 
     By the addition theorem this equals (2l+1)/(4 pi) P_l(cos gamma), with
 

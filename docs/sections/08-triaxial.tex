@@ -327,12 +327,12 @@ wrong by order the anisotropy for anything else.
 $V_\text{sph}$ is the mode sum of section~\ref{sec:mode-visibility}, evaluated on the
 brightness pattern projected onto the harmonics.  Keeping $l \le 2$ is not a compromise: at
 first order in the deformation the pattern is exactly $l = 0$ and $l = 2$, since the
-$l = 4$ content first appears at second order from $P_2^2$.
+$l = 4$ content first appears at second order from $P_{2,2}$.
 
 No odd $l$ appears at any order, and the reason is symmetry rather than truncation.  Every
 term of \eqref{eq:deformation-potential} is even under $n \to -n$ --- the monopole depends
 on $r$ alone, and the others are squares of projections --- so $r(n)$ and $g(n)$ are even
-functions of direction.  Since $Y_l^m(-n) = (-1)^l Y_l^m(n)$, an even function carries only
+functions of direction.  Since $Y_{lm}(-n) = (-1)^l Y_{lm}(n)$, an even function carries only
 even $l$, and the argument is frame-independent because the point reflection is.  Spin and
 the first-order tide therefore produce $l = 0$ and $l = 2$ and nothing else, in the body
 frame and the observer frame alike; an $l = 1$ term would be a photocentre displacement,
@@ -350,13 +350,13 @@ two quadrupoles --- \eqref{eq:deformation-gravity-first-order} with $p = 1$ ---
 \end{equation}
 and each $P_2(n\cdot\hat e)$ is proportional to a zonal $l = 2$ harmonic about its own
 axis.  The addition theorem,
-$\sum_m Y_l^m(n)\overline{Y_l^m(\hat e)} = \frac{2l+1}{4\pi}P_l(n\cdot\hat e)$, therefore
+$\sum_m Y_{lm}(n)\overline{Y_{lm}(\hat e)} = \frac{2l+1}{4\pi}P_l(n\cdot\hat e)$, therefore
 gives the coefficients directly in the observer frame:
 \begin{equation}
   a_{00} \;=\; (1 - 4\epsilon_\text{spin})\sqrt{4\pi} , \qquad
   a_{2m} \;=\; -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,
-      \overline{Y_2^m(\hat e_\text{tide})}
-    \;-\; \epsilon_\text{spin}\,\overline{Y_2^m(\hat e_\text{spin})}\Bigr] ,
+      \overline{Y_{2m}(\hat e_\text{tide})}
+    \;-\; \epsilon_\text{spin}\,\overline{Y_{2m}(\hat e_\text{spin})}\Bigr] ,
   \label{eq:first-order-coefficients}
 \end{equation}
 every other coefficient being zero, with the two axes referred to the observer frame by the
@@ -376,9 +376,9 @@ frame:
 \begin{equation}
   A_{00} = (1 - 4\epsilon_\text{spin})\sqrt{4\pi} , \qquad
   A_{2m} = -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,
-      \overline{Y_2^m\bigl(\hat e_\text{tide}^{(b)}\bigr)}
+      \overline{Y_{2m}\bigl(\hat e_\text{tide}^{(b)}\bigr)}
     \;-\; \epsilon_\text{spin}\,
-      \overline{Y_2^m\bigl(\hat e_\text{spin}^{(b)}\bigr)}\Bigr] ,
+      \overline{Y_{2m}\bigl(\hat e_\text{spin}^{(b)}\bigr)}\Bigr] ,
   \label{eq:first-order-coefficients-body}
 \end{equation}
 where the axes are those the model carries, $\hat e_\text{spin}^{(b)} = \hat z$ and
@@ -434,7 +434,7 @@ sky's North is the projection of the body's North axis and the sky's East is
 $\hat e_\text{obs}\times\text{North}$, the pairing section~\ref{sec:conventions} fixes.  Taking
 East from a helper axis instead gives a North that is the projection of \emph{minus} North ---
 the same handedness, but rotated by $\pi$ in the sky plane.  The consequence is a reflection of
-the sphere, and since $Y_l^m(\pi-\theta,\varphi) = (-1)^{l+m}Y_l^m(\theta,\varphi)$ it leaves
+the sphere, and since $Y_{lm}(\pi-\theta,\varphi) = (-1)^{l+m}Y_{lm}(\theta,\varphi)$ it leaves
 every $|a_{lm}|$ unchanged while negating the $m = 1$ coefficients and leaving $m = 2$ alone:
 the coefficients look plausible, every imaginary part has the wrong sign, and only a
 diagnostic that compares two routes to the same number shows it.  Then
@@ -480,7 +480,7 @@ near good enough, and the numerical model is what decides.
 
 Section~\ref{sec:deformation-affine} takes $\Lambda$ from the ellipsoid and the coefficients from
 the pattern's projection onto the sphere.  That is not the best the class
-$\sum A_{lm}V_l^m(\Lambda^{T}u)$ can do at \emph{fixed} $\Lambda$: the coefficients can be chosen
+$\sum A_{lm}V_{lm}(\Lambda^{T}u)$ can do at \emph{fixed} $\Lambda$: the coefficients can be chosen
 instead of projected, by minimising the residual.  This subsection defines the quantities; the
 model's fitted rows compute them, at $l \le 4$ and $l \le 6$, with $\Lambda$ still taken from
 the level surface as in section~\ref{sec:deformation-affine}; comparing the two orders is what
@@ -488,27 +488,27 @@ separates the truncation from the shape model's error.
 
 \paragraph{The model in image space.}  The visibility is the transform of an image, and writing
 that image explicitly is what makes the fit a projection.  By
-\eqref{eq:affine-image-transform}, $V = \sum A_{lm}V_l^m(\Lambda^{T}u)$ is the transform of
+\eqref{eq:affine-image-transform}, $V = \sum A_{lm}V_{lm}(\Lambda^{T}u)$ is the transform of
 \begin{equation}
   I_\text{model}(x) \;=\; \frac{1}{|\det\Lambda|}\,F\bigl(\Lambda^{-1}x\bigr) ,
   \qquad F(y) \;=\; \sum_{lm} A_{lm}\,\Phi_{lm}(y) ,
   \label{eq:fitted-model-image}
 \end{equation}
-where the \textbf{disk harmonic} $\Phi_{lm}$ is the projection of $Y_l^m$ onto the unit disk.  It
+where the \textbf{disk harmonic} $\Phi_{lm}$ is the projection of $Y_{lm}$ onto the unit disk.  It
 needs no integral and no Zernike expansion, because the projection \emph{is} the visible surface
 value: the opaque convention absorbs the viewing cosine into the area element,
 $d^{2}x = (\hat n\cdot\hat e)\,d\Omega$, so the image at a sky position is the brightness there, and
 \begin{equation}
-  \Phi_{lm}(x,y) \;=\; Y_l^m(n) ,
+  \Phi_{lm}(x,y) \;=\; Y_{lm}(n) ,
   \qquad n \;=\; x\,\text{east} + y\,\text{north} + \sqrt{1-\rho^{2}}\;\hat e_\text{obs} ,
   \label{eq:disk-harmonic}
 \end{equation}
-with $Y_l^m$ evaluated in the observer frame by the rule of \eqref{eq:observer-angles}.  There is no
+with $Y_{lm}$ evaluated in the observer frame by the rule of \eqref{eq:observer-angles}.  There is no
 cosine factor: for a uniform star $\Phi_{00}$ is constant, the image is the uniform disk whose flux
 is $\pi$, and the visibility is the anchor of section~\ref{sec:visibility}.  The parametrisation
 $\rho = \sin\theta$ makes every $\Phi_{lm}$ smooth on $\theta \in [0,\pi/2]$, the
 $\sqrt{1-\rho^{2}}$ of the odd family being $\cos\theta$ there --- it comes from the parity of
-$P_l^m$ in its argument, not from a viewing cosine --- so inner products converge spectrally under
+$P_{lm}$ in its argument, not from a viewing cosine --- so inner products converge spectrally under
 Gauss--Legendre.
 
 \paragraph{The fit.}  Substituting $y = \Lambda^{-1}x$ in the image-plane residual gives

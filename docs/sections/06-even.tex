@@ -15,7 +15,7 @@ coefficients that are exact rationals.
 With $u = \rho^2$ and $x = \sqrt{1-u} = \cos\theta$, the associated Legendre
 function is
 \begin{equation}
-  P_l^m\!\left(\sqrt{1-u}\right) = u^{m/2} A(u) , \qquad
+  P_{lm}\!\left(\sqrt{1-u}\right) = u^{m/2} A(u) , \qquad
   A(u) = (-1)^m \left. \frac{d^m P_l}{dx^m} \right|_{x^2 = 1-u} ,
   \label{eq:even-A}
 \end{equation}
@@ -29,23 +29,23 @@ doubling, and here its absence is what forces a sum.
 \label{sec:zernike}
 
 These are the natural basis for functions of $\rho$ with a fixed parity.  With the
-normalisation $R_n^m(1) = 1$, and $n-m$ even,
+normalisation $R_{n,m}(1) = 1$, and $n-m$ even,
 \begin{equation}
-  R_n^m(\rho) = \sum_{s=0}^{(n-m)/2} (-1)^s
+  R_{n,m}(\rho) = \sum_{s=0}^{(n-m)/2} (-1)^s
   \frac{(n-s)!}{s! \left(\frac{n-m}{2}+m-s\right)! \left(\frac{n-m}{2}-s\right)!}\,
   \rho^{n-2s} .
   \label{eq:zernike-sum}
 \end{equation}
 Equivalently, and better for evaluation,
 \begin{equation}
-  R_n^m(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
+  R_{n,m}(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
   \label{eq:zernike-jacobi}
 \end{equation}
 a Jacobi polynomial in $1-2\rho^2$.
 
 They are orthogonal against the weight $\rho$,
 \begin{equation}
-  \int_0^1 R_n^m(\rho)\, R_{n'}^m(\rho)\, \rho\, d\rho
+  \int_0^1 R_{n,m}(\rho)\, R_{n'}^m(\rho)\, \rho\, d\rho
   = \frac{\delta_{nn'}}{2n+2} ,
   \label{eq:zernike-orthogonality}
 \end{equation}
@@ -81,7 +81,7 @@ there is no data file and no maximum $l$.
 \begin{itemize}
   \item[$\checkmark$] \code{check_zernike_projection} obtains the same coefficients a second
     way, by matching powers of $\rho$ from the highest downwards.  That system is triangular,
-    since the highest power of the mode occurs in $R_l^m$ alone, and the two routes agree,
+    since the highest power of the mode occurs in $R_{l,m}$ alone, and the two routes agree,
     in rational arithmetic, for $l \le 6$.
     \\[1pt] \vtag{12}\quad \emph{Exact}
 \end{itemize}
@@ -92,13 +92,13 @@ there is no data file and no maximum $l$.
 The integral of a Zernike polynomial against a Bessel function is elementary
 \citep{zernike1934,bornwolf}:
 \begin{equation}
-  \int_0^1 R_n^m(\rho)\, J_m(a\rho)\, \rho\, d\rho
+  \int_0^1 R_{n,m}(\rho)\, J_m(a\rho)\, \rho\, d\rho
   = (-1)^{(n-m)/2} \frac{J_{n+1}(a)}{a} .
   \label{eq:zernike-hankel}
 \end{equation}
 This is the identity that converts the expansion into Bessel functions, so its sign
 and normalisation matter.  Certificate \vtag{10} expands both sides in powers of $a$
---- the left from the exact moments of $R_n^m$, the right from the Bessel series ---
+--- the left from the exact moments of $R_{n,m}$, the right from the Bessel series ---
 and compares every power up to $a^{n+2J}$.  \emph{Exact}, with that stated series
 scope, $n \le 6$ and $J = 6$.
 

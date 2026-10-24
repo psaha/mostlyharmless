@@ -11,7 +11,7 @@ Conventions, from section 01 of the manual and D14 of the roadmap:
 
 * The harmonic rotation law is
 
-      Y_l^m(R^-1 n) = sum_{m'} D^l_{m'm}(R) Y_l^{m'}(n) ,
+      Y_{lm}(R^-1 n) = sum_{m'} D^l_{m'm}(R) Y_{lm'}(n) ,
 
   hence a map's coefficients transform as
 

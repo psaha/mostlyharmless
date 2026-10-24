@@ -36,7 +36,7 @@ def _lift(east_coordinate, north_coordinate):
 
 
 def disk_harmonic(l, m, east_coordinate, north_coordinate):
-    """``Phi_lm``, the projection of ``Y_l^m`` onto the disk, in closed form (eq. 89).
+    """``Phi_lm``, the projection of ``Y_{lm}`` onto the disk, in closed form (eq. 89).
 
     The projection *is* the visible surface value: the opaque convention absorbs the
     viewing cosine into the area element, so there is none here.  For a uniform star
@@ -46,7 +46,7 @@ def disk_harmonic(l, m, east_coordinate, north_coordinate):
 
     Off the unit disk it is zero, and that must be explicit: the clip confines
     ``arccos`` to a real angle, but it does not make the harmonic vanish there --- at
-    ``rho > 1`` the lifted direction is the limb direction, and ``Y_l^m`` of it is a
+    ``rho > 1`` the lifted direction is the limb direction, and ``Y_{lm}`` of it is a
     perfectly ordinary number.  The star has no support beyond the silhouette, so the
     mask is part of the definition and not a convenience.
     """
@@ -79,7 +79,7 @@ def design(l_max=4):
 def _evaluate(plan, east_coordinate, north_coordinate):
     """The design functions at disk points, shape ``(len(plan),) + shape``.
 
-    The pairing is the harmonics' own, ``Y_l^{-m} = (-1)^m conj(Y_l^m)``, so the
+    The pairing is the harmonics' own, ``Y_{l,-m} = (-1)^m conj(Y_{lm})``, so the
     contribution of order ``m`` to the real image is ``2 Re(A_lm Phi_lm)``: the two real
     columns are ``2 Re Phi`` and ``-2 Im Phi``.  That is *not* the visibility's pairing of
     section 10, and the two must not be confused.

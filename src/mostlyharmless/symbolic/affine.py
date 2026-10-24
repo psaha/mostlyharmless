@@ -92,8 +92,8 @@ def first_order_coefficients(field, eye):
     gives its coefficients directly:
 
         a_00 = (1 - 4 eps_spin) sqrt(4 pi) ,
-        a_2m = -(16 pi / 5) [ eps_tide conj(Y_2^m(t_hat))
-                              - eps_spin conj(Y_2^m(s_hat)) ] ,
+        a_2m = -(16 pi / 5) [ eps_tide conj(Y_{2m}(t_hat))
+                              - eps_spin conj(Y_{2m}(s_hat)) ] ,
 
     every other coefficient zero --- no odd order at all, since the pattern is even under
     n -> -n.  The two axes are referred to the same observer frame as a sampled direction:
