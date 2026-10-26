@@ -104,6 +104,26 @@ def rotation_matrix(alpha, beta, pa):
     return Rz_g @ Ry_b @ Rz_a
 
 
+_D_MATRICES = {"beta": None, "matrices": None}
+
+
+def d_matrices(l_max, beta):
+    """``wigner_d(l, beta)`` for ``l = 0 .. l_max``, remembered for the current beta.
+
+    The two z-rotations are already phases, so the d-matrix is nearly all of a rotation's
+    cost, and it does not depend on alpha or PA.  A single-entry cache is enough for the
+    interactive case: a slider drag changes one angle per event, so a drag in alpha reuses
+    what the previous event built, and only a drag in beta rebuilds.
+    """
+    beta = float(beta)
+    cached = _D_MATRICES["matrices"]
+    if (_D_MATRICES["beta"] != beta or cached is None or len(cached) <= l_max):
+        cached = [wigner_d(l, beta) for l in range(l_max + 1)]
+        _D_MATRICES["beta"] = beta
+        _D_MATRICES["matrices"] = cached
+    return cached
+
+
 def rotate_coefficients(coeffs, alpha, beta, pa):
     """Rotate a map's coefficients from the body frame to the observer frame.
 
@@ -115,10 +135,12 @@ def rotate_coefficients(coeffs, alpha, beta, pa):
     """
     gamma = pa
     inner = alpha
+    unfolded = list(coeffs.unfolded())
+    matrices = d_matrices(len(unfolded) - 1, beta)
     rotated_blocks = []
-    for l, block in enumerate(coeffs.unfolded()):
+    for l, block in enumerate(unfolded):
         m = np.arange(-l, l + 1)
         shifted = np.exp(-1j * inner * m) * block
-        rotated = wigner_d(l, beta) @ shifted
+        rotated = matrices[l] @ shifted
         rotated_blocks.append(np.exp(-1j * gamma * m) * rotated)
     return Coeffs.from_unfolded(rotated_blocks)

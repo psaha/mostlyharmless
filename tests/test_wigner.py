@@ -114,3 +114,33 @@ def test_rotation_leaves_the_uniform_component_alone():
     for alpha, beta, pa in ((0.7, 1.1, 2.4), (3.0, 0.2, -0.5)):
         assert rotate_coefficients(c, alpha, beta, pa)[0, 0] == pytest.approx(
             1.0, abs=1e-14)
+
+
+def test_the_cached_rotation_matches_a_fresh_d_matrix():
+    """The d-matrix cache must not change a rotation, only its cost.
+
+    It is keyed on beta alone, so the risk is a stale matrix surviving a change of
+    inclination --- which would rotate the map by the previous angle.
+    """
+    import numpy as np
+
+    from mostlyharmless.visylm.coefficients import Coeffs
+    from mostlyharmless.visylm import wigner
+
+    rng = np.random.default_rng(3)
+    blocks = []
+    for l in range(4):
+        block = rng.standard_normal(l + 1) + 1j * rng.standard_normal(l + 1)
+        block[0] = block[0].real
+        blocks.append(block)
+    coefficients = Coeffs(tuple(blocks))
+
+    # two rotations at different inclinations, then back to the first: the second call at
+    # the first angle must not reuse the matrix built for the second
+    first = wigner.rotate_coefficients(coefficients, 0.3, 0.7, 0.1)
+    second = wigner.rotate_coefficients(coefficients, 0.3, 1.2, 0.1)
+    again = wigner.rotate_coefficients(coefficients, 0.3, 0.7, 0.1)
+
+    print(f"\nrepeated rotation agrees to {np.max(np.abs(first.to_real()[3] - again.to_real()[3])):.1e}")
+    assert np.allclose(first.to_real()[3], again.to_real()[3], atol=1e-12)
+    assert not np.allclose(first.to_real()[3], second.to_real()[3], atol=1e-3)

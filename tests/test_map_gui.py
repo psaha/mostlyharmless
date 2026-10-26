@@ -22,8 +22,12 @@ def test_every_l_max_is_band_limited():
 
 
 def test_a_zero_depth_spot_is_a_uniform_disk():
-    """No spot, so no departure from the uniform disk: Delta V vanishes identically."""
-    parameters = map_gui.MapParameters(depth=0.0, l_max=16)
+    """No spot, so no departure from the uniform disk: Delta V vanishes identically.
+
+    At l = 4 on purpose: the identity holds at every degree, and the higher ones only added
+    cost.  Both this and the monopole test below were the suite's slowest.
+    """
+    parameters = map_gui.MapParameters(depth=0.0, l_max=4)
     values = map_gui.compute_visibility(parameters, grid=11, q_max=2.0)
     print(f"\nuniform map: max |Delta V| = {np.max(np.abs(values)):.2e}")
     assert np.max(np.abs(values)) < 1e-12
@@ -38,7 +42,7 @@ def test_the_spot_is_scaled_to_unit_monopole():
     """
     from mostlyharmless.visylm.visibility import visibility
 
-    parameters = map_gui.MapParameters(depth=0.6, beta=1.05, l_max=16)
+    parameters = map_gui.MapParameters(depth=0.6, beta=1.05, l_max=4)
     coeffs = map_gui.coefficients(parameters)
     assert abs(coeffs.blocks[0][0] - 1.0) < 1e-12
 
@@ -158,3 +162,45 @@ def test_the_earth_is_tapered_so_the_continents_are_visible():
     print(f"\ntop degree, raw {float(top_raw):.3e} vs tapered {float(top_tapered):.3e}")
     assert top_tapered < 0.3 * top_raw
     assert float(np.max(np.abs(map_gui.earth_coefficients()[0].blocks[0]))) > 0.0
+
+
+def test_the_fast_renderer_matches_the_slow_reference():
+    """The rewritten sky_map must equal the per-mode sum it replaced.
+
+    The fast path builds the Legendre functions by a single recurrence up each column of the
+    table, where the old one called ``lpmv`` per (l, m).  A slip in the phase, the
+    normalisation or the sine sign would give a wrong map rather than a slow one, and the
+    pictures would still look like a planet, so this compares against the direct sum.
+    """
+    from mostlyharmless.symbolic import maps
+    from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
+
+    l_max, n = 4, 31
+    rng = np.random.default_rng(7)
+    # the real basis indexes a block by m + l, so each has 2l + 1 entries
+    plan = [rng.standard_normal(2 * l + 1) for l in range(l_max + 1)]
+    plan[0][0] = 2.0                                           # a definite monopole
+    coefficients = Coeffs.from_real(plan)
+
+    axis = np.linspace(-1.0, 1.0, n)
+    x_east, x_north = np.meshgrid(axis, axis)
+    rho_squared = x_east ** 2 + x_north ** 2
+    z = np.sqrt(np.clip(1.0 - rho_squared, 0.0, None))
+    theta = np.arccos(np.clip(z, -1.0, 1.0))
+    phi = np.arctan2(x_east, x_north)
+
+    expected = np.zeros((n, n))
+    real = coefficients.to_real()
+    for l, row in enumerate(real):
+        expected += row[l] * real_sph_harm(l, 0, theta, phi)
+        for m in range(1, l + 1):
+            expected += (row[l + m] * real_sph_harm(l, m, theta, phi)
+                         + row[l - m] * real_sph_harm(l, -m, theta, phi))
+
+    fast = maps.sky_map(coefficients, n=n)
+    inside = rho_squared <= 1.0
+    difference = float(np.max(np.abs(fast[inside] - expected[inside])))
+    print(f"\nfast vs per-mode sum: {difference:.2e}")
+    assert difference < 1e-10
+    # and outside the disk it is still NaN, which the comparison above would hide
+    assert np.all(np.isnan(fast[~inside]))

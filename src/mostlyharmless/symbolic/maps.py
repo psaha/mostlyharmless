@@ -19,17 +19,15 @@ from scipy.special import eval_legendre
 from mostlyharmless.symbolic import affine, render
 from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.deformation import Deformation
-from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
+from mostlyharmless.visylm.spherical_harmonics import normalisation
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
 from mostlyharmless.visylm.wigner import rotate_coefficients
 
 __all__ = [
     "cap_coefficients",
+    "legendre_rows",
     "sky_map",
-    "figure_map",
-    "figure_uv",
-    "figure_convergence",
-    "write",
+    "sky_map_batch",
 ]
 
 # A cap this size has a peak brightness about four and a half times its mean, so
@@ -89,14 +87,49 @@ def cap_coefficients(l_max=16, half_angle=HALF_ANGLE, depth=SPOT_DEPTH):
     return Coeffs(tuple(blocks))
 
 
-def sky_map(coeffs, back=False, n=241):
-    """The map on one hemisphere, as seen down the frame's z axis.
+def legendre_rows(order, l_max, x):
+    """``P_l^order(x)`` for ``l = order .. l_max``, in one pass up the recurrence.
 
-    Each point of the projected disk is a direction on the unit sphere, and the map
-    is evaluated there in the real basis, in the frame the coefficients belong to.
-    ``back`` renders the far hemisphere, mirrored so that it reads like a view from
-    the other side.  Outside the disk it is NaN.
+    With the Condon-Shortley phase, so these are the functions
+    ``spherical_harmonics.associated_legendre`` returns, evaluated as a whole column of the
+    table rather than one entry at a time.  That distinction is the whole point: calling
+    ``lpmv`` per ``(l, m)`` re-walks the recurrence from ``m`` to ``l`` every time, so a
+    panel costs ``O(L^3)`` rather than ``O(L^2)`` --- at ``L = 32`` that was fifteen seconds
+    for a single panel.
     """
+    x = np.asarray(x, dtype=float)
+    root = np.sqrt(np.clip(1.0 - x * x, 0.0, None))
+
+    value = np.ones_like(x)                       # P_0^0, then up to P_order^order
+    for k in range(order):
+        value = -(2 * k + 1) * root * value        # the phase lives here
+
+    rows = [value]
+    if l_max > order:
+        value_next = (2 * order + 1) * x * value
+        rows.append(value_next)
+        for l in range(order + 2, l_max + 1):
+            value_next, value = (
+                ((2 * l - 1) * x * value_next - (l + order - 1) * value) / (l - order),
+                value_next)
+            rows.append(value_next)
+    return rows
+
+
+def sky_map_batch(coeff_sets, back=False, n=241):
+    """The map on one hemisphere for several coefficient sets, sharing one basis.
+
+    The Legendre functions and the azimuthal factors depend on the direction and the degree,
+    not on the coefficients, so three colour channels can be rendered in one pass over the
+    modes instead of three.  That is the second factor the timing table showed: ``all 6``
+    was exactly three times the two faces.
+
+    ``back`` renders the far hemisphere, mirrored so that it reads like a view from the
+    other side.  Outside the disk the result is NaN.
+    """
+    coefficient_sets = tuple(coeff_sets)
+    l_max = max(len(s.blocks) - 1 for s in coefficient_sets)
+
     axis = np.linspace(-1.0, 1.0, n)
     x_east, x_north = np.meshgrid(axis, axis)
     if back:
@@ -106,13 +139,39 @@ def sky_map(coeffs, back=False, n=241):
     theta = np.arccos(np.clip(z, -1.0, 1.0))
     # By D24 the body x axis is North, so the map's azimuth is measured from North.
     phi = np.arctan2(x_east, x_north)
-    image = np.zeros_like(x_east)
-    real = coeffs.to_real()
-    for l, row in enumerate(real):
-        image = image + row[l] * real_sph_harm(l, 0, theta, phi)
-        for m in range(1, l + 1):
-            image = image + (row[l + m] * real_sph_harm(l, m, theta, phi)
-                             + row[l - m] * real_sph_harm(l, -m, theta, phi))
-    return np.where(rho_squared <= 1.0, image, np.nan)
+    cos_phi = [np.cos(m * phi) for m in range(l_max + 1)]
+    sin_phi = [np.sin(m * phi) for m in range(l_max + 1)]
+
+    reals = [s.to_real() for s in coefficient_sets]
+    images = [np.zeros_like(x_east) for _ in reals]
+
+    for m in range(l_max + 1):
+        rows = legendre_rows(m, l_max, np.cos(theta))
+        for l in range(m, l_max + 1):
+            p = rows[l - m]
+            if m == 0:
+                factor = normalisation(l, 0) * p
+                for image, real in zip(images, reals):
+                    image += real[l][l] * factor
+            else:
+                # R_{l,m,c} = sqrt(2) Re Y and R_{l,m,s} = sqrt(2) Im Y, and the real block
+                # indexes them at l + m and l - m respectively
+                scale = np.sqrt(2.0) * normalisation(l, m) * p
+                cosine = scale * cos_phi[m]
+                sine = scale * sin_phi[m]
+                for image, real in zip(images, reals):
+                    image += real[l][l + m] * cosine + real[l][l - m] * sine
+
+    inside = rho_squared <= 1.0
+    return tuple(np.where(inside, image, np.nan) for image in images)
+
+
+def sky_map(coeffs, back=False, n=241):
+    """The map on one hemisphere, as seen down the frame's z axis.
+
+    One coefficient set.  The several-channel form is :func:`sky_map_batch`, which this
+    calls with a single-element tuple so that the sum has one implementation.
+    """
+    return sky_map_batch((coeffs,), back=back, n=n)[0]
 
 

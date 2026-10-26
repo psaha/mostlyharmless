@@ -628,6 +628,30 @@ committed table, not a formula. Retiring the spot entirely means moving those te
 Earth's coefficients, which is worth doing only if the analytic case stops being needed for
 something else.
 
+**The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
+before anything was changed, which was worth doing: the guess that the panel's Legendre
+evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by
+two orders. Three fixes, all measured:
+
+- `sky_map` used to call `lpmv` per `(l, m)`, re-walking the recurrence from `m` to `l` every
+  time --- `O(L^3)` per panel. `maps.legendre_rows` builds a whole column of the table in one
+  pass instead, and the panel became `O(L^2)`: at `l = 32`, 361 pixels, 14.93 s to 0.28 s.
+- The three colour channels rebuilt the same basis. `maps.sky_map_batch` renders several
+  coefficient sets in one pass, which is another factor of three.
+- `rotate_coefficients` rebuilt every `wigner_d(l, beta)` on every call, and the two
+  z-rotations are already phases. The matrices are now cached per `beta`: the cold cost is
+  0.39 s at `l = 32` and a warm rotation is a millisecond.
+
+End to end, all six renders at `l = 32`, 361 pixels went from 91.4 s to 1.18 s, and at
+`l = 16` from 12.9 s to 0.26 s.
+
+The suite was separately trimmed by `--durations=10`, which is the lesson: every slow test
+found that way had a parameter nobody needed. The `(u,v)` view was filling its grid with a
+double Python loop over 121 baselines when the mode sum was already vectorised, and three
+tests were rendering or transforming at `l = 16` while asserting properties that hold at any
+degree. All are now at the degree they actually need, and the suite runs in about 9 s rather
+than 45.
+
 ### Decisions deliberately left open
 
 **O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the

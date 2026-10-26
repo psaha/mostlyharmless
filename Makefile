@@ -18,11 +18,16 @@ PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
 
-.PHONY: all check check-fast retest docs data earth gui mapgui clean distclean
+.PHONY: all check check-fast retest versions docs data earth time-earth gui mapgui clean distclean
 
 all: check docs
 
 # The full suite, logged so that a run can be inspected afterwards without re-running it.
+# Which interpreter and library versions the checks actually use.  Worth running after any
+# install, since an upgraded numpy or scipy can change timings across the whole suite.
+versions:
+	$(PYTHON) -c "import sys, numpy, scipy, matplotlib, pytest; print('python', sys.version.split()[0]); print('numpy', numpy.__version__); print('scipy', scipy.__version__); print('matplotlib', matplotlib.__version__); print('pytest', pytest.__version__)"
+
 check:
 	$(PYTHON) -m pytest -rP -n auto --durations=10 2>&1 | tee tests/check.log
 
@@ -64,7 +69,12 @@ mapgui:
 # Run by hand: it needs matplotlib only, writes a committed module, and is the one
 # step that reads a picture.
 earth:
-	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.earth misc/Blue_Marble_2002.png --lmax 16
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.earth misc/Blue_Marble_2002.png --lmax 32
+
+# Where the Earth's redraw time goes: one rotation, one panel, both faces, and all six
+# renders, at each degree and resolution on offer.  Run this before optimising anything here.
+time-earth:
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.earth --time
 
 $(GENERATED):
 	$(MAKE) data

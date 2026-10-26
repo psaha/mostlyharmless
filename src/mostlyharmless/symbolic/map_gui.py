@@ -33,7 +33,7 @@ __all__ = ["MapParameters", "L_MAX_LABELS", "VIEW_LABELS", "RESOLUTIONS",
 
 # The truncations offered.  A radio rather than a slider because changing it recomputes the
 # coefficients, and because the comparison is between named orders.
-L_MAX_LABELS = (4, 6, 8, 16)
+L_MAX_LABELS = (4, 8, 16, 32)
 VIEW_LABELS = ("map", "u,v")
 # The Earth is a different kind of model: three colour channels rather than one brightness,
 # so its panels are composited rather than shaded.
@@ -122,20 +122,22 @@ def earth_coefficients():
 def _earth_panels(parameters, pixels, l_max=None):
     """The Earth's near and far faces as RGB arrays, one colour per channel.
 
-    Each channel is rendered separately and then scaled by its own maximum over both faces,
-    so the two panels share one colour balance and the disc is the only thing that differs.
-    ``l_max`` truncates the emitted set: three channels times two faces is six renders per
-    redraw, and the cost is the mode count.
+    The three channels are rendered in one pass over the modes, because the Legendre
+    functions and the azimuthal factors are the expensive part and do not depend on the
+    coefficients.  Each channel is then scaled by its own maximum over both faces, so the two
+    panels share one colour balance and the disc is the only thing that differs.
+
+    ``l_max`` truncates the emitted set: the cost is the mode count times the pixel count,
+    and at the top degree the fine resolution is still several seconds per redraw.
     """
     from mostlyharmless.symbolic.earth import truncate
 
-    near, far = [], []
-    for coeffs in earth_coefficients():
-        if l_max is not None:
-            coeffs = truncate(coeffs, l_max)
-        faced = rotate_coefficients(coeffs, parameters.alpha, parameters.beta, parameters.pa)
-        near.append(maps.sky_map(faced, n=pixels))
-        far.append(maps.sky_map(faced, back=True, n=pixels))
+    channels = [truncate(coeffs, l_max) if l_max is not None else coeffs
+                for coeffs in earth_coefficients()]
+    faced = [rotate_coefficients(coeffs, parameters.alpha, parameters.beta, parameters.pa)
+             for coeffs in channels]
+    near = list(maps.sky_map_batch(faced, n=pixels))
+    far = list(maps.sky_map_batch(faced, back=True, n=pixels))
     panels = []
     for channels in (near, far):
         stack = np.stack(channels, axis=-1)
@@ -192,7 +194,9 @@ def compute_visibility(parameters, grid=23, q_max=Q_MAX, model="spot"):
     axis = np.linspace(-q_max, q_max, grid)
     u_grid, v_grid = np.meshgrid(axis, axis, indexing="ij")
     reference = visibility_uniform_disk(u_grid, v_grid, 1.0)
-    values = np.array([[visibility(coeffs, u, v) for v in axis] for u in axis])
+    # the mode sum is vectorised over the baseline, so the whole grid is one call: a loop
+    # over grid^2 baselines made this the slowest test in the suite by a wide margin
+    values = visibility(coeffs, u_grid, v_grid)
     return values / flux - reference
 
 

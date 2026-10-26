@@ -31,7 +31,8 @@ import numpy as np
 from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
 
-__all__ = ["read_grid", "channel", "channels", "taper", "truncate", "emit", "main"]
+__all__ = ["read_grid", "channel", "channels", "taper", "truncate", "emit",
+           "timing", "main"]
 
 DEFAULT_L_MAX = 40
 
@@ -161,15 +162,69 @@ def emit(path, l_max=DEFAULT_L_MAX, target=None):
     return write(*channels(path, l_max=l_max), l_max=l_max, target=target)
 
 
+def timing(l_values=(4, 8, 16, 32), pixels_values=(121, 241, 361)):  # pragma: no cover
+    """Cost of the render path, per degree and per resolution.
+
+    The Earth needs six panels per redraw --- three colour channels by two faces --- so the
+    renderer's cost is six times one panel's.  This breaks the redraw into its parts, so that
+    a slow setting can be attributed rather than guessed at: the rotation is Wigner-D, the
+    panel is one ``sky_map`` over every mode, and the pair is what a channel costs.
+    """
+    import time
+
+    from mostlyharmless.symbolic import map_gui, maps
+    from mostlyharmless.visylm.wigner import rotate_coefficients
+
+    red = map_gui.earth_coefficients()[0]        # one channel is representative
+    print(f"{'l':>3} {'px':>4} {'rotate':>8} {'warm':>6} {'1 panel':>8} {'2 faces':>8} {'all 6':>8}")
+    for l_max in l_values:
+        for pixels in pixels_values:
+            channel = truncate(red, l_max)
+            start = time.perf_counter()
+            faced = rotate_coefficients(channel, 0.3, 0.9, 0.2)
+            rotate_time = time.perf_counter() - start
+
+            # a second rotation at the same inclination: the difference between the two is
+            # the d-matrix build, and what remains is the per-mode work
+            start = time.perf_counter()
+            rotate_coefficients(channel, 0.5, 0.9, 0.2)
+            warm_time = time.perf_counter() - start
+
+            start = time.perf_counter()
+            maps.sky_map(faced, n=pixels)
+            one_panel = time.perf_counter() - start
+
+            start = time.perf_counter()
+            maps.sky_map(faced, n=pixels)
+            maps.sky_map(faced, back=True, n=pixels)
+            both_faces = time.perf_counter() - start
+
+            start = time.perf_counter()
+            map_gui.compute_map(map_gui.MapParameters(l_max=l_max), pixels=pixels,
+                                model="Earth")
+            all_six = time.perf_counter() - start
+
+            print(f"{l_max:>3} {pixels:>4} {rotate_time:>8.3f} {warm_time:>6.3f} "
+                  f"{one_panel:>8.3f} {both_faces:>8.3f} {all_six:>8.3f}")
+
+
 def main(argv=None):  # pragma: no cover - command line
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("image", help="an equirectangular global colour image, north at top")
+    parser.add_argument("image", nargs="?",
+                        help="an equirectangular global colour image, north at top")
+    parser.add_argument("--time", action="store_true",
+                        help="time the render path instead of extracting")
     parser.add_argument("--lmax", type=int, default=DEFAULT_L_MAX)
     parser.add_argument("--target", default=None)
     arguments = parser.parse_args(argv)
 
+    if arguments.time:
+        timing()
+        return
+    if not arguments.image:
+        parser.error("an image is needed unless --time is given")
     written = emit(arguments.image, arguments.lmax, arguments.target)
     print(f"wrote {written} at l_max = {arguments.lmax}")
 
