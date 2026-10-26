@@ -590,6 +590,44 @@ the superscript on `R_{l,m,c}` also carries a branch label. No certificate can c
 change; the check is that the PDF still builds and that the sections that reconcile our conventions
 with published ones (section 5 in particular) say which form we use.
 
+**T9 — Tikhonov regularisation for the fitted rows.** The fitted rows ring at the rim, where
+the brightness falls to zero, and near the cusp at the equator; with the grayscale rendering the
+ripples are the most conspicuous thing in the panel. The truncation is real (V28 measures its
+rate), so this is about presentation, not about the model being wrong.
+
+The classical remedy is tapering the coefficients with Lanczos σ-factors,
+`sin(pi l/L)/(pi l/L)`, which Arfken and Weber introduce for exactly this in Fourier series,
+with Fejér (`1 - l/L`) and raised-cosine as the other members of the family: all are positive
+kernels, so they convolve the image with something smooth and overshoot cannot occur. But that
+theory assumes an orthonormal series, and our basis is orthonormal on the *sphere*, not on the
+*disc* --- the fit is a least-squares projection onto a non-orthogonal span. Tapering would
+still damp the ripples and blur the edge, but without the guarantee. Hence Tikhonov: it is
+data-aware and degrades gracefully instead of blurring everything equally.
+
+The code is small, because the fit already solves normal equations: replace
+`gram(l_max)` by `gram(l_max) + lam * penalty`, with a diagonal `P` rising with `l` (say
+`(l/l_max)^(2p)`, or an indicator above a threshold), and `lam` scaled to the trace of the Gram
+so that a slider from 0 to 1 means a fraction of the data term rather than a number with units.
+Then a `lam` argument through `fit_image`, a slider, and the certificate untouched: at
+`lam = 0` both of its residuals reduce to what they are now.
+
+One property to state rather than discover: the residual the row prints is the *data* residual,
+`norm - rhs . values`, which does not include the penalty. Regularising therefore *raises* it,
+correctly --- the fit stops being optimal in its own norm --- so the row becomes "cleaner
+picture, worse number", and the number is the honest one.
+
+**T10 — retire the spot model.** The Earth does everything the spot does and is easier to
+interpret: a user recognises the continents, so a wrong orientation is visible at a glance,
+whereas a circular cap is nearly symmetric and hid a reflected frame for months. The *radio*
+can therefore go, and the four geometry presets can be re-labelled around the Earth.
+
+The *function* cannot, or not yet. `cap_coefficients` is the one model with a closed-form
+coefficient set --- `a_l0` from the Legendre moments of the cap, no quadrature --- so it is what
+V28 and the fitted rows' tests use; the Earth's coefficients come from an extraction and are a
+committed table, not a formula. Retiring the spot entirely means moving those tests onto the
+Earth's coefficients, which is worth doing only if the analytic case stops being needed for
+something else.
+
 ### Decisions deliberately left open
 
 **O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the

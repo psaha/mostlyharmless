@@ -25,6 +25,7 @@ import numpy as np
 
 from mostlyharmless.symbolic import gui_core, maps
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
+from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.wigner import rotate_coefficients
 
 __all__ = ["MapParameters", "L_MAX_LABELS", "VIEW_LABELS", "RESOLUTIONS",
@@ -34,6 +35,9 @@ __all__ = ["MapParameters", "L_MAX_LABELS", "VIEW_LABELS", "RESOLUTIONS",
 # coefficients, and because the comparison is between named orders.
 L_MAX_LABELS = (4, 6, 8, 16)
 VIEW_LABELS = ("map", "u,v")
+# The Earth is a different kind of model: three colour channels rather than one brightness,
+# so its panels are composited rather than shaded.
+MODEL_LABELS = ("spot", "Earth")
 RESOLUTION_LABELS = ("coarse", "medium", "fine")
 # (pixels, (u,v) grid).  There are no samples here: the map is analytic, so the only
 # numerical choices are display resolution and the size of the frequency grid.
@@ -95,7 +99,63 @@ def coefficients(parameters):
                                parameters.pa)
 
 
-def compute_map(parameters, pixels=241):
+_EARTH = {}
+
+
+def earth_coefficients():
+    """The Earth's three channels, Lanczos-tapered, in the body frame.
+
+    Cached because the taper is a pass over 3 x 1681 coefficients and the renderer asks for
+    them on every redraw.  The taper is not optional here: a colour image of the Earth is
+    close to a jump at every coastline, and without it the panels show the ringing and not
+    the continents.
+    """
+    if not _EARTH:
+        from mostlyharmless.symbolic import earth, earth_coefficients as emitted
+
+        for name in ("RED", "GREEN", "BLUE"):
+            blocks = tuple(np.asarray(block, dtype=complex) for block in getattr(emitted, name))
+            _EARTH[name] = earth.taper(Coeffs(blocks), l_max=emitted.L_MAX)
+    return _EARTH["RED"], _EARTH["GREEN"], _EARTH["BLUE"]
+
+
+def _earth_panels(parameters, pixels, l_max=None):
+    """The Earth's near and far faces as RGB arrays, one colour per channel.
+
+    Each channel is rendered separately and then scaled by its own maximum over both faces,
+    so the two panels share one colour balance and the disc is the only thing that differs.
+    ``l_max`` truncates the emitted set: three channels times two faces is six renders per
+    redraw, and the cost is the mode count.
+    """
+    from mostlyharmless.symbolic.earth import truncate
+
+    near, far = [], []
+    for coeffs in earth_coefficients():
+        if l_max is not None:
+            coeffs = truncate(coeffs, l_max)
+        faced = rotate_coefficients(coeffs, parameters.alpha, parameters.beta, parameters.pa)
+        near.append(maps.sky_map(faced, n=pixels))
+        far.append(maps.sky_map(faced, back=True, n=pixels))
+    panels = []
+    for channels in (near, far):
+        stack = np.stack(channels, axis=-1)
+        peak = float(np.nanmax(stack)) or 1.0
+        panels.append(np.clip(stack / peak, 0.0, 1.0))
+    return panels
+
+
+def compute_map(parameters, pixels=241, model="spot"):
+    """Near and far hemispheres, in units of the mean, East increasing leftward.
+
+    ``sky_map`` already mirrors the far hemisphere so that it reads as a view from the
+    other side.  The display flip is the scaffolding's, applied once by ``build``.
+
+    For ``model == "Earth"`` the panels are RGB arrays rather than brightnesses, so
+    ``build`` must draw them with ``imshow`` and no colour map at all.
+    """
+    if model == "Earth":
+        return _earth_panels(parameters, pixels, l_max=parameters.l_max)
+    coeffs = coefficients(parameters)
     """Near and far hemispheres, in units of the mean, East increasing leftward.
 
     ``sky_map`` already mirrors the far hemisphere so that it reads as a view from the
@@ -107,14 +167,26 @@ def compute_map(parameters, pixels=241):
             factor * maps.sky_map(coeffs, back=True, n=pixels))
 
 
-def compute_visibility(parameters, grid=23, q_max=Q_MAX):
+def compute_visibility(parameters, grid=23, q_max=Q_MAX, model="spot"):
     """Re and Im of Delta V against the uniform disk, normalised at the origin.
 
     Subtracting the uniform disk is what makes the deformation's signature visible; the
     map is normalised so that ``V(0,0)`` is the flux, and the map being non-negative makes
     ``|V| <= V(0,0)`` hold, which is the bound the manual's figure uses.
     """
-    coeffs = coefficients(parameters)
+    if model == "Earth":
+        # V is linear in the map, so the three channels add before the transform: the
+        # visibility of the colour image is the sum of the channel visibilities.
+        from mostlyharmless.symbolic.earth import truncate
+
+        channels = [truncate(channel, parameters.l_max)
+                    if parameters.l_max else channel
+                    for channel in earth_coefficients()]
+        total = Coeffs(tuple(sum(block for block in blocks)
+                             for blocks in zip(*(channel.blocks for channel in channels))))
+        coeffs = rotate_coefficients(total, parameters.alpha, parameters.beta, parameters.pa)
+    else:
+        coeffs = coefficients(parameters)
     flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
 
     axis = np.linspace(-q_max, q_max, grid)
@@ -130,8 +202,8 @@ def build(parameters=None):  # pragma: no cover - needs a display
     from matplotlib.widgets import RadioButtons
 
     state = {"parameters": parameters or MapParameters(),
-             "view": "map", "resolution": 1, "limit_key": None, "limit": None,
-             "colorbar": None, "refreshing": False}
+             "model": "spot", "view": "map", "resolution": 1, "limit_key": None,
+             "limit": None, "colorbar": None, "refreshing": False}
 
     figure = plt.figure(figsize=(9.2, 6.6))
     axes, colorbar_axis = gui_core.panel_axes(figure)
@@ -142,22 +214,47 @@ def build(parameters=None):  # pragma: no cover - needs a display
     def _draw():
         pixels, grid = RESOLUTIONS[state["resolution"]]
         current = state["parameters"]
+        model = state["model"]
+        is_earth = model == "Earth" and state["view"] == "map"
+
         if state["view"] == "u,v":
-            values = compute_visibility(current, grid=grid)
+            values = compute_visibility(current, grid=grid, model=model)
             panels = (values.real, values.imag)
             titles = (r"$\mathrm{Re}\,\Delta V$", r"$\mathrm{Im}\,\Delta V$")
             extent = (Q_MAX, -Q_MAX, -Q_MAX, Q_MAX)
             labels = (r"$v$ (East)", r"$u$ (North)")
             bar_label = r"$\Delta V$"
+        elif is_earth:
+            # RGB: three rendered channels, no colour map and no colourbar
+            panels = compute_map(current, pixels=pixels, model=model)
+            titles = ("Earth, near side", "Earth, far side")
+            extent = (1.0, -1.0, -1.0, 1.0)
+            labels = (r"$y$ (East)", r"$x$ (North)")
+            bar_label = None
         else:
-            panels = compute_map(current, pixels=pixels)
+            panels = compute_map(current, pixels=pixels, model=model)
             titles = (r"$I/\langle I\rangle$, near", r"$I/\langle I\rangle$, far")
             extent = (1.0, -1.0, -1.0, 1.0)
             labels = (r"$y$ (East)", r"$x$ (North)")
             bar_label = r"$I/\langle I\rangle$"
 
-        # the flips and the shared scale are the scaffolding's, not this model's
+        # the flip is the scaffolding's, not this model's
         panels = tuple(gui_core.flip(panel) for panel in panels)
+
+        if is_earth:
+            for axis_handle, data, title in zip(axes, panels, titles):
+                axis_handle.clear()
+                gui_core.darken(axis_handle)
+                axis_handle.imshow(np.clip(data, 0.0, 1.0), origin="lower",
+                                   extent=extent, interpolation="nearest")
+                axis_handle.set_title(title, fontsize=9)
+                axis_handle.set_xlabel(labels[0], fontsize=8)
+                axis_handle.set_ylabel(labels[1], fontsize=8)
+            if state["colorbar"] is not None:
+                state["colorbar"].ax.set_visible(False)     # a colour image needs no bar
+            figure.canvas.draw_idle()
+            return
+
         limit = gui_core.colour_limit(
             (current, state["view"], state["resolution"]), state, panels)
 
@@ -181,6 +278,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
             state["colorbar"] = figure.colorbar(drawn, cax=colorbar_axis)
         else:
             state["colorbar"].update_normal(drawn)
+        state["colorbar"].ax.set_visible(True)
         state["colorbar"].set_label(bar_label, fontsize=8)
         figure.canvas.draw_idle()
 
@@ -249,20 +347,28 @@ def build(parameters=None):  # pragma: no cover - needs a display
     # the radio must start on the degree the parameters actually carry, or it shows l = 4
     # while the map is built at 16 --- a mismatch nothing in the picture reveals
     l_max_radio = RadioButtons(
-        figure.add_axes([0.06, 0.02, 0.18, 0.21]),
+        figure.add_axes([0.22, 0.02, 0.16, 0.21]),
         tuple(f"l = {value}" for value in L_MAX_LABELS),
         active=L_MAX_LABELS.index(state["parameters"].l_max))
     l_max_radio.on_clicked(l_max_callback)
-    view_radio = RadioButtons(figure.add_axes([0.30, 0.06, 0.18, 0.13]), VIEW_LABELS)
+    view_radio = RadioButtons(figure.add_axes([0.40, 0.06, 0.16, 0.13]), VIEW_LABELS)
     view_radio.on_clicked(view_callback)
-    resolution_radio = RadioButtons(figure.add_axes([0.54, 0.02, 0.18, 0.21]),
+    resolution_radio = RadioButtons(figure.add_axes([0.58, 0.02, 0.16, 0.21]),
                                     RESOLUTION_LABELS, active=state["resolution"])
     resolution_radio.on_clicked(resolution_callback)
+
+    def model_callback(label):
+        state["model"] = label
+        redraw()
+
+    model_radio = RadioButtons(figure.add_axes([0.04, 0.02, 0.16, 0.13]), MODEL_LABELS)
+    model_radio.on_clicked(model_callback)
 
     preset = gui_core.PresetRadio(figure, [0.76, 0.02, 0.18, 0.21], PRESETS, apply_preset)
 
     gui_core.retain_widgets(
-        figure, (sliders, l_max_radio, view_radio, resolution_radio, preset.radio))
+        figure, (sliders, model_radio, l_max_radio, view_radio, resolution_radio,
+                 preset.radio))
 
     coalescer.now()
     return figure, state

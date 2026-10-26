@@ -138,9 +138,9 @@ def test_the_fitted_row_beats_the_projected_one_in_its_own_norm():
     field = parameters.field()
     eye, (east, north) = gui._view(parameters.inclination)
     stretch = affine.projected_stretch(field, eye)
-    star = render.surface_samples(field, eye, n_samples=8000)
+    star = render.surface_samples(field, eye, n_samples=4000)
 
-    projected = affine.sphere_coefficients(field, l_max=2, n_samples=8000, eye=eye)
+    projected = affine.sphere_coefficients(field, l_max=2, n_samples=4000, eye=eye)
     projected_residual, norm = fitted.residual_of(projected, star, stretch, east, north)
     fit = fitted.fit_image(star, stretch, east, north, l_max=4)
 
@@ -156,7 +156,7 @@ def test_the_fitted_report_agrees_with_the_row_it_reports():
     than a modelling failure at the sliders' default amplitudes.
     """
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    report = gui.fitted_report(parameters, samples=6000)
+    report = gui.fitted_report(parameters, samples=3000)
     assert 0.0 < report.residual < 0.2
     assert abs(report.residual - report.residual_direct) < 1e-9 * report.norm
     assert len(report.condition) == 5
@@ -185,12 +185,12 @@ def test_the_imaginary_part_keeps_its_sign_between_the_rows():
     what rules out a sign flip; an O(eps) discrepancy is the model, not the convention.
     """
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    affine = gui.compute_visibility(parameters, "affine", samples=8000, grid=9, q_max=1.0)
-    numeric = gui.compute_visibility(parameters, "numeric", samples=8000, grid=9, q_max=1.0)
+    affine = gui.compute_visibility(parameters, "affine", samples=4000, grid=9, q_max=1.0)
+    numeric = gui.compute_visibility(parameters, "numeric", samples=4000, grid=9, q_max=1.0)
 
     fitted_row = gui.compute_visibility(parameters, "fitted, l = 0,2,4",
-                                        samples=8000, grid=9, q_max=1.0)
-    first_order = gui.compute_visibility(parameters, "first-order", samples=8000,
+                                        samples=4000, grid=9, q_max=1.0)
+    first_order = gui.compute_visibility(parameters, "first-order", samples=4000,
                                          grid=9, q_max=1.0)
 
     index = np.unravel_index(np.argmax(np.abs(numeric.imag)), numeric.shape)
@@ -238,8 +238,8 @@ def test_at_zero_deformation_the_rows_agree_with_the_limb_on():
     the same law the same way.
     """
     parameters = gui.Parameters(tide=0.0, spin=0.0, limb=0.6)
-    numeric = gui.compute_image(parameters, "numeric", samples=8000, pixels=41)[0]
-    first = gui.compute_image(parameters, "first-order", samples=8000, pixels=41)[0]
+    numeric = gui.compute_image(parameters, "numeric", samples=4000, pixels=41)[0]
+    first = gui.compute_image(parameters, "first-order", samples=4000, pixels=41)[0]
     difference = float(np.nanmax(np.abs(np.asarray(numeric) - np.asarray(first))))
     print(f"\nzero deformation, limb 0.6: numeric vs first-order {difference:.3f}")
     assert difference < 0.10        # sampling noise only

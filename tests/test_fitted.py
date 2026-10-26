@@ -22,7 +22,7 @@ TIDE = 0.096
 SPIN = 0.032
 
 
-def _fit(field, eye=EYE, samples=40000, l_max=4):
+def _fit(field, eye=EYE, samples=20000, l_max=4):
     east, north = render.sky_basis(eye)
     star = render.surface_samples(field, eye, n_samples=samples)
     from mostlyharmless.symbolic import affine

@@ -160,6 +160,30 @@ needs no preset --- for a real map $V(-u,-v) = \overline{V(u,v)}$, so the real p
 $\Delta V$ is even under $(u,v) \to (-u,-v)$ and the imaginary part odd
 \eqref{eq:hermitian}.
 
+\paragraph{Reading the page.}  Both models draw the sky with North up and East to the left, so
+the screen carries the manual's $x$ and $y$ as its axes, and the third axis is the line of
+sight.  Stated once, because every orientation question reduces to these:
+\begin{enumerate}
+  \item Near side: $x$ up, $y$ to the left, $z$ out of the screen towards the observer.  That
+    frame is right-handed as drawn, $x\times y = z$, which is the
+    $(\text{North},\text{East},\text{observer})$ of section~\ref{sec:conventions}.
+  \item Far side: the same page, with $z$ into the screen --- the visible surface's outward
+    normal points away from you.  But the panel is the \emph{sky's mirror}, since a view from
+    behind is what it shows, so its labels mean the mirrored directions and the sense of a
+    rotation on that page is reversed.  Point 6 is the same statement.
+  \item Increasing $\alpha$ turns the near-side picture \emph{anticlockwise}: a feature at the
+    top moves towards the left, which is what the \code{spot left} preset does at
+    $\alpha = 90°$.
+  \item Increasing $\beta$ sends the middle of the near side \emph{upwards}, because it tilts
+    the body's $+z$ towards North.
+  \item PA acts like $\alpha$ --- the same anticlockwise sense --- but about the line of sight
+    and after $\beta$, since $R = R_z(\text{PA})R_y(\beta)R_z(\alpha)$.
+  \item On the far side every rotation appears \emph{reversed}, as a consequence of the
+    mirroring in point 2.
+\end{enumerate}
+Points 3 and 5 are worth keeping together: $\alpha$ rotates the body and PA rotates the sky,
+and both turn the near-side picture the same way.
+
 \subsection{What the checks are worth}
 \label{sec:models-worth}
 

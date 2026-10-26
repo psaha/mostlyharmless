@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from mostlyharmless.symbolic import map_gui
+from mostlyharmless.visylm.coefficients import Coeffs
 
 
 def test_every_l_max_is_band_limited():
@@ -72,8 +73,14 @@ def test_the_mean_removed_map_is_unnormalised_by_the_square():
 
 
 def test_every_view_and_resolution_computes():
-    """Each radio setting produces finite panels of the documented shape."""
-    parameters = map_gui.MapParameters()
+    """Each radio setting produces finite panels of the documented shape.
+
+    Run at the spot's lowest degree on purpose.  The assertions are about shapes and
+    finiteness, which are degree-independent, while the cost of a render is the mode count
+    times the pixel count --- at the default degree the 361-pixel setting alone took most of
+    the suite's runtime.
+    """
+    parameters = map_gui.MapParameters(l_max=4)
     for pixels, grid in map_gui.RESOLUTIONS:
         near, far = map_gui.compute_map(parameters, pixels=pixels)
         assert near.shape == (pixels, pixels)
@@ -115,3 +122,39 @@ def test_the_position_angle_rotates_the_picture():
     print(f"\nPA: max |difference| = "
           f"{np.nanmax(np.abs(near_upright - near_turned)):.2e}")
     assert np.nanmax(np.abs(near_upright - near_turned)) > 0.05
+
+
+def test_the_earth_mode_is_three_colour_channels():
+    """The Earth's panels are RGB, so the two faces share one colour balance.
+
+    The emitted coefficients are committed, so this runs without the image and without
+    pyshtools --- which is the whole point of emitting them.
+    """
+    # l = 4 and 31 pixels: the properties below are about the RGB structure, not the degree,
+    # and six renders at the emitted degree are what made this module slow
+    parameters = map_gui.MapParameters(alpha=0.0, beta=np.radians(60.0), pa=0.0, l_max=4)
+    near, far = map_gui.compute_map(parameters, pixels=31, model="Earth")
+    # the rim is NaN by design, as in the renderer's own images, so every statistic here
+    # has to be the nan-aware one
+    print(f"\nEarth panels: {near.shape}, peak {float(np.nanmax(near)):.3f}")
+    assert near.shape == (31, 31, 3)
+    assert far.shape == (31, 31, 3)
+    # normalised to the brightest channel, so the colour is a ratio and not an absolute
+    assert float(np.nanmax(near)) == pytest.approx(1.0, rel=1e-6)
+    assert float(np.nanmin(near)) >= 0.0
+    assert np.isfinite(near).sum() > 0.5 * near.size
+    # the two faces must differ, or the renderer is showing one hemisphere twice
+    assert np.nanmax(np.abs(near - far)) > 0.1
+
+
+def test_the_earth_is_tapered_so_the_continents_are_visible():
+    """Un-tapered, the coastline ringing is larger than the continents themselves."""
+    from mostlyharmless.symbolic import earth, earth_coefficients as emitted
+
+    raw = tuple(Coeffs(tuple(np.asarray(block, dtype=complex) for block in getattr(emitted, name)))
+                for name in ("RED", "GREEN", "BLUE"))
+    top_raw = np.max(np.abs(raw[0].blocks[emitted.L_MAX]))
+    top_tapered = np.max(np.abs(map_gui.earth_coefficients()[0].blocks[emitted.L_MAX]))
+    print(f"\ntop degree, raw {float(top_raw):.3e} vs tapered {float(top_tapered):.3e}")
+    assert top_tapered < 0.3 * top_raw
+    assert float(np.max(np.abs(map_gui.earth_coefficients()[0].blocks[0]))) > 0.0
