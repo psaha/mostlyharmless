@@ -32,7 +32,7 @@ from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
 
 __all__ = ["read_grid", "channel", "channels", "taper", "truncate", "emit",
-           "timing", "main"]
+           "land_mask", "levels", "land_sea", "emit_levels", "timing", "main"]
 
 DEFAULT_L_MAX = 40
 
@@ -162,6 +162,89 @@ def emit(path, l_max=DEFAULT_L_MAX, target=None):
     return write(*channels(path, l_max=l_max), l_max=l_max, target=target)
 
 
+def land_mask(rgb):
+    """Land as a two-level mask: warm, or bright enough to be ice.
+
+    Two tests, because one is not enough.  Ocean is blue-dominant, but ice is *also*
+    slightly blue-dominant --- snow reads as bluish white --- so a bare "warmer than blue"
+    test would make Greenland sea.  Ice is distinguished by being bright and desaturated.
+    """
+    rgb = np.asarray(rgb, dtype=float)
+    warm = rgb[..., 0] > rgb[..., 2]
+    bright = np.min(rgb, axis=-1) > 0.7
+    return (warm | bright).astype(float)
+
+
+def levels(fraction, ratio=1.5):
+    """The two brightness levels whose sphere mean is one.
+
+    With ``f`` the land fraction and ``r = land/sea``, the mean is
+    ``s(1 - f) + r s f = 1``, so ``s = 1 / (1 + f(r - 1))``.  Fixing the *ratio* rather than
+    the levels is what keeps the map readable: a 3:1 contrast rings badly, since the overshoot
+    at a truncation is a fraction of the step.
+    """
+    sea = 1.0 / (1.0 + fraction * (ratio - 1.0))
+    return sea, ratio * sea
+
+
+def _sphere_fraction(mask):
+    """The cosine-weighted area fraction of a lat-lon mask."""
+    mask = np.asarray(mask, dtype=float)
+    n_lat, n_lon = mask.shape
+    theta = (np.arange(n_lat) + 0.5) * np.pi / n_lat
+    area = np.sin(theta)[:, None] * (np.pi / n_lat) * (2.0 * np.pi / n_lon)
+    return float(np.sum(area * mask) / np.sum(np.broadcast_to(area, mask.shape)))
+
+
+def land_sea(path, l_max=DEFAULT_L_MAX, ratio=1.5, n_lat=180, n_lon=360):
+    """A two-level Earth as one coefficient set, scaled so the sphere mean is one.
+
+    Returns ``(coefficients, fraction, (sea, land))``.  The fraction is measured from the
+    image rather than assumed, so the levels adapt if the colour test finds more or less
+    land than the accepted 29.2 per cent.
+    """
+    grid = read_grid(path, n_lat=n_lat, n_lon=n_lon)
+    mask = land_mask(grid)
+    fraction = _sphere_fraction(mask)
+    sea, land = levels(fraction, ratio)
+    field = sea + (land - sea) * mask
+    return channel(field, l_max=l_max), fraction, (sea, land)
+
+
+def emit_levels(path, l_max=DEFAULT_L_MAX, ratio=1.5, target=None):
+    """Write the two-level map as a Python module, tapered and ready to render."""
+    from pathlib import Path
+
+    target = Path(target or "src/mostlyharmless/symbolic/earth_levels.py")
+    coefficients, fraction, (sea, land) = land_sea(path, l_max=l_max, ratio=ratio)
+    tapered = taper(coefficients, l_max)
+
+    lines = [
+        '"""The Earth at two levels, emitted by ``make earth-levels``.',
+        "",
+        "Do not edit: regenerate instead.  Sea and land are at fixed brightnesses chosen so",
+        "that the sphere mean is one, and the coefficients carry the Lanczos taper already.",
+        "Extracted from a Blue Marble image; NASA, public domain.",
+        '"""',
+        "",
+        f"L_MAX = {int(l_max)}",
+        f"RATIO = {float(ratio)!r}",
+        f"FRACTION = {float(fraction)!r}",
+        f"SEA = {float(sea)!r}",
+        f"LAND = {float(land)!r}",
+        "",
+        "LEVELS = (",
+    ]
+    for block in tapered.blocks:
+        values = ", ".join(f"complex({float(value.real):.6e}, {float(value.imag):.6e})"
+                           for value in block)
+        lines.append(f"    ({values}),")
+    lines.append(")")
+    lines.append("")
+    target.write_text("\n".join(lines))
+    return target, fraction, (sea, land)
+
+
 def timing(l_values=(4, 8, 16, 32), pixels_values=(121, 241, 361)):  # pragma: no cover
     """Cost of the render path, per degree and per resolution.
 
@@ -216,6 +299,10 @@ def main(argv=None):  # pragma: no cover - command line
                         help="an equirectangular global colour image, north at top")
     parser.add_argument("--time", action="store_true",
                         help="time the render path instead of extracting")
+    parser.add_argument("--levels", action="store_true",
+                        help="extract the two-level land/sea map instead of the colour one")
+    parser.add_argument("--ratio", type=float, default=1.5,
+                        help="land-to-sea brightness ratio for --levels")
     parser.add_argument("--lmax", type=int, default=DEFAULT_L_MAX)
     parser.add_argument("--target", default=None)
     arguments = parser.parse_args(argv)
@@ -225,6 +312,13 @@ def main(argv=None):  # pragma: no cover - command line
         return
     if not arguments.image:
         parser.error("an image is needed unless --time is given")
+    if arguments.levels:
+        written, fraction, (sea, land) = emit_levels(
+            arguments.image, arguments.lmax, arguments.ratio, arguments.target)
+        print(f"wrote {written} at l_max = {arguments.lmax}")
+        print(f"  land fraction {fraction:.4f}, sea {sea:.3f}, land {land:.3f}, "
+              f"ratio {arguments.ratio:g}")
+        return
     written = emit(arguments.image, arguments.lmax, arguments.target)
     print(f"wrote {written} at l_max = {arguments.lmax}")
 

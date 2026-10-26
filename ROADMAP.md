@@ -621,6 +621,13 @@ interpret: a user recognises the continents, so a wrong orientation is visible a
 whereas a circular cap is nearly symmetric and hid a reflected frame for months. The *radio*
 can therefore go, and the four geometry presets can be re-labelled around the Earth.
 
+A two-level variant exists as `levels_gui`, extracted by `make earth-levels`: one brightness
+channel, sea and land at a fixed *ratio* rather than fixed levels, so the sphere mean is one
+whatever land fraction the colour test finds.  It finds 0.281 against the accepted 0.292 ---
+a point low, from a mask that tests "warmer than blue, or bright enough to be ice" --- giving
+sea 0.877 and land 1.315, a 50 per cent jump.  The ratio is the knob: a 3:1 step rings badly
+because the overshoot at a truncation is a fraction of the step.
+
 The *function* cannot, or not yet. `cap_coefficients` is the one model with a closed-form
 coefficient set --- `a_l0` from the Legendre moments of the cap, no quadrature --- so it is what
 V28 and the fitted rows' tests use; the Earth's coefficients come from an extraction and are a
@@ -649,8 +656,15 @@ The suite was separately trimmed by `--durations=10`, which is the lesson: every
 found that way had a parameter nobody needed. The `(u,v)` view was filling its grid with a
 double Python loop over 121 baselines when the mode sum was already vectorised, and three
 tests were rendering or transforming at `l = 16` while asserting properties that hold at any
-degree. All are now at the degree they actually need, and the suite runs in about 9 s rather
+degree. All are now at the degree they actually need, and the suite runs in about 4 s rather
 than 45.
+
+One measurement caveat, found by chasing a slowdown that no code change explained: **the suite
+takes twice as long on battery as on mains** --- 3.7 s against 7.5 s for the same 163 tests ---
+because of the power policy's frequency scaling.  Earlier runs also showed a further factor of
+two, which was contention with something else; the two together made the wall time vary by 4x
+and made four separate explanations look plausible and wrong.  Time a benchmark on mains, or
+compare only the `--durations` column within a single run.
 
 ### Decisions deliberately left open
 

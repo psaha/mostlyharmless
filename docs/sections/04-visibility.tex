@@ -121,15 +121,12 @@ function and its conjugate, so its visibility follows from the one fact about co
 throughout, and the results are collected with the rest of the published conventions in
 section~\ref{sec:other-conventions}.
 
-One could absorb \eqref{eq:phase-packed} into the azimuth for those branches by
-measuring the baseline direction as a position angle, from North towards East, as is
-conventional on the sky.  With $\PA_{uv} = \pi/2 - \psi$ the stray factor would
-disappear.  It costs more than it saves, because the branches pair $\cos(m\varphi)$
-with $\cos(m\psi)$: the body azimuth $\varphi$ is a longitude, not a position angle,
-and re-expressing the baseline factor in the sky convention makes the cosine branch
-contribute $\cos(m\PA_{uv} - m\pi/2)$, which is $\pm\sin(m\PA_{uv})$ for odd $m$ and
-$\pm\cos(m\PA_{uv})$ for even $m$.  The branch names would alternate meaning with
-$m$.  The two azimuths are measured the same way here on purpose.
+The body azimuth and the baseline angle are both measured from North through East, so
+no conversion between them is needed: the pairing of $\cos(m\varphi)$ with $\cos(m\psi)$ is
+already in one convention, and the branch names keep their meaning for every $m$.  A
+convention that measured one of them from a different axis would swap the two branches
+according to the parity of $m$, which is the principal reason both are taken from North
+here.
 
 The model in \code{make mapgui} draws exactly this: the real and imaginary parts of
 $\Delta V$, in the observer's frame, on a common scale, with the origin at the centre of

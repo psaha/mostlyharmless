@@ -18,7 +18,7 @@ PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
 
-.PHONY: all check check-fast retest versions docs data earth time-earth gui mapgui clean distclean
+.PHONY: all check check-fast retest versions docs data earth earth-levels time-earth gui mapgui mapgui-levels clean distclean
 
 all: check docs
 
@@ -65,6 +65,10 @@ gui:
 mapgui:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.map_gui
 
+# The fork: the two-level Earth, one brightness channel, no spot and no colour.
+mapgui-levels:
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.levels_gui
+
 # Re-extract the Earth's colour coefficients from the equirectangular image in misc/.
 # Run by hand: it needs matplotlib only, writes a committed module, and is the one
 # step that reads a picture.
@@ -75,6 +79,11 @@ earth:
 # renders, at each degree and resolution on offer.  Run this before optimising anything here.
 time-earth:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.earth --time
+
+# The two-level land/sea map: sea and land at a fixed ratio, scaled so the sphere mean is one.
+# A 1.5 ratio is a 50 per cent jump --- visible, without the ringing a 3:1 step would give.
+earth-levels:
+	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.earth misc/Blue_Marble_2002.png --levels --lmax 32
 
 $(GENERATED):
 	$(MAKE) data
