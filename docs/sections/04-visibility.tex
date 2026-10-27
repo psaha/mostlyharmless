@@ -128,7 +128,15 @@ convention that measured one of them from a different axis would swap the two br
 according to the parity of $m$, which is the principal reason both are taken from North
 here.
 
-The model in \code{make mapgui} draws exactly this: the real and imaginary parts of
+An observation is the visibility normalised at the origin against a reference,
+\begin{equation}
+  \Delta V(u,v) \;=\; \frac{V(u,v)}{V(0,0)} - \frac{V_\text{ref}(u,v)}{V_\text{ref}(0,0)} ,
+  \label{eq:normalised-visibility}
+\end{equation}
+so that $\Delta V(0,0) = 0$ and everything the two models have in common --- the Airy lobes
+of the disk --- is removed, leaving the departure being looked for.
+
+The model in \code{make mapgui-levels} draws exactly this: the real and imaginary parts of
 $\Delta V$, in the observer's frame, on a common scale, with the origin at the centre of
 each panel.  Both halves of \eqref{eq:pairing-visibility-parity} are then visible at once ---
 the real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since

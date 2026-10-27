@@ -32,9 +32,16 @@ DEFAULT_L_MAX = 16
 
 
 class Parameters:
-    """The rotation and the cache key: the map itself is fixed."""
+    """The rotation and the cache key: the map itself is fixed.
 
-    def __init__(self, alpha=0.0, beta=np.radians(60.0), pa=0.0, l_max=DEFAULT_L_MAX):
+    The defaults open at alpha 155 degrees and beta 75: Africa facing the observer, mostly
+    Pacific on the far side.  That was settled by looking at the globe rather than by deriving
+    it --- alpha is the angle whose sense is easiest to get backwards, and 180 degrees from it
+    shows the same planet with the two faces exchanged.
+    """
+
+    def __init__(self, alpha=np.radians(155.0), beta=np.radians(75.0), pa=0.0,
+                 l_max=DEFAULT_L_MAX):
         self.alpha = alpha
         self.beta = beta
         self.pa = pa
@@ -75,8 +82,11 @@ def compute_map(parameters, pixels=241):
     path, with no compositing anywhere.
     """
     faced = _faced(parameters)
-    near = maps.sky_map(faced, n=pixels)
-    far = maps.sky_map(faced, back=True, n=pixels)
+    # the coefficients obey D16 --- a_00 = 1, so the sphere mean is 1/sqrt(4 pi) --- while the
+    # panel is in units of the mean; the factor is what makes sea read 0.877 and land 1.315
+    factor = maps.MEAN_FACTOR
+    near = factor * maps.sky_map(faced, n=pixels)
+    far = factor * maps.sky_map(faced, back=True, n=pixels)
     return near, far
 
 
@@ -150,7 +160,7 @@ def build(parameters=None):  # pragma: no cover - needs a display
         state["refreshing"] = True
         current = state["parameters"]
         for slider, value in zip(sliders, (current.alpha, current.beta, current.pa)):
-            slider.set_val(value)
+            slider.set_val(np.degrees(value))
         degree_radio.set_active(DEGREES.index(current.l_max))
         view_radio.set_active(VIEW_LABELS.index(state["view"]))
         resolution_radio.set_active(state["resolution"])
@@ -164,18 +174,21 @@ def build(parameters=None):  # pragma: no cover - needs a display
         def callback(value):
             if state["refreshing"]:
                 return
-            setattr(state["parameters"], name, value)
+            setattr(state["parameters"], name, np.radians(value))
             coalescer.request()
         return callback
 
     axes, colorbar_axis = gui_core.panel_axes(figure)
+    # the widgets read in degrees, which is how the angles are quoted on the sky; the
+    # parameters stay in radians, so the conversion lives in the callback and in write_back
+    current = state["parameters"]
     sliders = [
-        gui_core.add_slider(figure, 2, "alpha", -np.pi, np.pi,
-                            state["parameters"].alpha, "%.2f", changed("alpha")),
-        gui_core.add_slider(figure, 1, "beta", 0.0, np.pi,
-                            state["parameters"].beta, "%.2f", changed("beta")),
-        gui_core.add_slider(figure, 0, "pa", -np.pi, np.pi,
-                            state["parameters"].pa, "%.2f", changed("pa")),
+        gui_core.add_slider(figure, 0, "alpha", -180.0, 180.0,
+                            np.degrees(current.alpha), "%.0f", changed("alpha")),
+        gui_core.add_slider(figure, 1, "beta", 0.0, 180.0,
+                            np.degrees(current.beta), "%.0f", changed("beta")),
+        gui_core.add_slider(figure, 2, "gamma", -180.0, 180.0,
+                            np.degrees(current.pa), "%.0f", changed("pa")),
     ]
 
     def degree_callback(label):

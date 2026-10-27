@@ -60,3 +60,18 @@ def test_the_fork_visibility_grid_is_finite():
     print(f"\nDelta V at the centre: {abs(values[midpoint, midpoint]):.2e}")
     # q = 0 is not exactly a grid point on an odd grid, so this is a small neighbourhood
     assert abs(values[midpoint, midpoint]) < 0.05
+
+
+def test_every_view_and_resolution_computes():
+    """Each radio setting produces finite panels of the documented shape.
+
+    At the lowest degree on purpose: the assertions are about shapes and finiteness, which are
+    degree-independent, while a render's cost is the mode count times the pixel count.
+    """
+    parameters = levels_gui.Parameters(l_max=4)
+    for pixels, grid in levels_gui.RESOLUTIONS:
+        near, far = levels_gui.compute_map(parameters, pixels=pixels)
+        assert near.shape == far.shape == (pixels, pixels)
+        values = levels_gui.compute_visibility(parameters, grid=grid)
+        assert values.shape == (grid, grid)
+        assert np.all(np.isfinite(values))

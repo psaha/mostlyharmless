@@ -34,9 +34,10 @@ still open.
 | D20 | **The application is intensity (HBT) interferometry.** The measured quantity is `|V|^2`, so the phase of `V` is not observable — but it is retained throughout, both for visualisation and because discarding it early would make the intermediate results harder to check, and squared only at the end. Two design consequences: the deliverable for deformed sources is a *diagnostic* evaluable on a sparse set of `(u,v)` points rather than an image, since a fitting loop over orientations makes a numerical transform per model too expensive; and the (u,v) sampling being sparse means the high-frequency behaviour of the transform is not the design driver. |
 | D21 | **Brightness is proportional to `g`, for now.** The surface brightness of the deformed star is set by the bolometric von Zeipel law, `T_eff^4 ∝ g` and hence `I ∝ g`, which is the simplest law that is also the standard one for radiative envelopes. The literature favours a weaker dependence — `T_eff ∝ g^beta` with `beta ≈ 0.25` radiative but nearer 0.08 for convective envelopes, so `I ∝ g^(4 beta)` and about `g^0.3` in the convective case, a much flatter law. **Closed as a decision, not a task.** The exponent stays unexposed. In the numeric and fitted rows it would be trivial --- `surface_samples` already takes `power` --- but the first-order row is too approximate to carry another parameter: its brightness is a linearisation of the pattern, so an exponent other than 1 would have to be linearised again and the row would gain a knob whose effect is smaller than its own error. Exposing it for two rows out of three would also invite reading the third as a like-for-like comparison, which it is not. |
 | D22 | **The observable is normalised at the origin.** Intensity interferometry measures `|V|^2` in units of the zero-baseline correlation, so what is modelled is `V/V(0,0)`, which is 1 at the origin by definition. Every difference is therefore taken between *normalised* visibilities, so `Delta V(0,0) = 0` by construction, and the absolute flux — which the normalisation removes — is not modelled at all. This also settles the normalisation rung 1 had left open: the affine model is normalised by its own origin, and the unobservable flux difference between the star and its reference is divided out rather than carried. The *squared* difference `|V_tri|^2 - |V_ref|^2` is deliberately not used: the phase is retained, and the difference is taken on `V` itself. Worth recording why the normalisation is needed even against a volume-equivalent reference: the flux is the *projected area*, not the volume, so the two agree only for a sphere, and the deformed star's projected area depends on the viewing direction. |
-| D23 | **The azimuth reference is North, through East.** Position angles are measured from the observer's North toward East, the astronomical convention, which fixes both the reference axis and the sense. With `u` along North and `v` along East (D24), `psi = arctan2(v, u)` *is* the position angle, so `PA = psi` and no offset appears anywhere. Had the older convention been kept — `u` along East — the consequence would have been `PA = pi/2 - psi`, the other sign corresponding to North-through-West, and the two differ by a *reflection* rather than a rotation, flipping every odd-`m` sign and changing the meaning of the mirror symmetry of section 8. The body's longitude zero remains the body `x` axis, which is already the convention for the harmonic azimuth. The real-basis branch labelling (T2) is a separate convention and is untouched by this. |
+| D23 | **The azimuth reference is North, through East.** Position angles are measured from the observer's North toward East, the astronomical convention, which fixes both the reference axis and the sense. With `u` along North and `v` along East (D24), `psi = arctan2(v, u)` *is* the baseline's position angle, so no offset appears anywhere between the baseline and the spin's `gamma` (D29). Had the older convention been kept — `u` along East — the consequence would have been `PA = pi/2 - psi`, the other sign corresponding to North-through-West, and the two differ by a *reflection* rather than a rotation, flipping every odd-`m` sign and changing the meaning of the mirror symmetry of section 8. The body's longitude zero remains the body `x` axis, which is already the convention for the harmonic azimuth. The real-basis branch labelling (T2) is a separate convention and is untouched by this. |
 | D24 | **The sky's orientation is shared by the ground and the image, departing from the radio convention.** `u` is the **North** component of the baseline and `v` the **East** component, so `V(u,v) = ∫ I(x_E, x_N) exp(-2 pi i (u x_N + v x_E))`. The third axis points from the sky *toward* the observer — into the ground for an observer looking up — so (North, East, toward the observer) is right-handed *given* the sky convention that North is up and East is to the left. The point of the swap is that `psi` becomes the position angle directly (D23), and that the coordinates on the sky and on the ground have the same orientation. The cost is deliberate: radio interferometry takes `u` as East-West and `v` as North-South, so this is a departure, justified only because our `(u,v)` are used throughout as *sky-plane* coordinates rather than as baseline hardware coordinates. Every image is therefore drawn with North vertical and East horizontal increasing leftward, images and `(u,v)` planes alike. *Status: decided, not yet implemented.* The obstacle is that the mode reduction's `psi` is tied to the harmonics' `phi`, which is measured from the body `x` axis; relabelling `(u,v)` alone rotates `psi` by `pi/2` while `phi` stays put, and V15 detects exactly that as a 0.14 residual. Doing it properly means re-referencing the body `x` axis to North as well — so the display maps the body `x` to the vertical — together with the transform and the V15 pairing. |
 | D25 | **The interactive GUI is a separate, optional front end.** Matplotlib widgets, since there is no Jupyter here, and nothing added to the library. Two radio buttons: the view is image or `(u,v)`, and the model has **four** settings, chosen so that the shape model, the brightness approximation and the truncation can be varied one at a time --- `numeric` (exact level surface), `first-order` (ellipsoid shape, brightness linearised as in the manual's equation 89), and two fitted orders, `l <= 4` and `l <= 8`, whose coefficients are chosen by least squares in the image plane rather than taken from the brightness pattern. The readings are these: `numeric` against `first-order` is the whole analytic stack at `O(eps)`; `first-order` against the exact pattern at the same order isolates the *brightness* linearisation at `O(eps^2)`; and `l <= 4` against `l <= 8` isolates the *truncation* from the shape model, which the earlier rows conflated. The top row was at `l <= 6` until a visual pass showed that it still carried a visible hard edge at the ceiling in the tilt check, where the brightness falls to zero; at 8 it does not. The `affine` row --- ellipsoid shape with the pattern's coefficients projected rather than fitted --- was in the interface until the fitted row existed and left it under T4, being strictly worse in the same norm; its code is still there pending that item. The spin's position angle is *pinned to zero*, because for a single observation the sky's orientation is a gauge; the model keeps it for real data. The light is **fixed at the von Zeipel law**, `I ∝ g` (D21), with the exponent to be exposed as a slider later; and the analytic row keeps **only `l <= 2`**, discarding `l = 4` and above. Note what that is and is not: it is *not* "first order in `eps`". The `l = 4` content first appears at `eps^2` from `P_{2,2}`, so dropping it *is* the `eps^2` truncation — but the projection keeps the `l = 2` coefficient to all orders, including its own `eps^2` correction, so the retained set is "`l <= 2`, resummed in `eps`". The difference from a true first-order truncation is itself `O(eps^2)`, below the model's error, so the simpler and more accurate choice is `l <= 2`: `SPHERE_L_MAX = 2`, with no further decision to make. The free parameters are `eps_tide`, `eps_spin`, `i`, `lambda_tide` and `phi_tide`. The spin phase `alpha` is deliberately *absent*: this front end is for a spin and tide alone, and with no starspots the phase is degenerate with the tide's longitude — only their difference is observable — so a slider for it would move a gauge. The **latitude slider is constrained** rather than the amplitudes, and in the direction that is easy to get backwards: raising `lambda` *loosens* the bound, since at the equator the centrifugal quadrupole deepens the potential by `1.5 eps_spin` while along the spin it contributes nothing, so the infeasible region is near `lambda = 0` and the limit on the slider is a **lower** one. The eps sliders get upper limits from the same function. Clamping is applied after every change rather than by restricting ranges, because the feasible set is a polygon in the amplitudes rather than a box. Sliders show **degrees**; the conversion lives at the widget boundary, so the model and everything outside the GUI stay in radians. *Implemented so far:* single-threaded redraws, with a **numerical resolution control** of three labelled radio buttons in a column --- coarse, medium, fine. Discrete rather than continuous because every change costs a full redraw. Each level sets the surface samples, the image pixels and the `(u,v)` grid together (10 000/140/17, 30 000/220/23, 150 000/360/31), keeping the sample density per pixel roughly constant; only the samples are physics, so the control trades speed against noise, which is what makes it the way to tell a sampling artefact from a model error. The finest level matches the Stage 6 figures --- 150 000 samples for a rendering, a 31-point grid for a visibility map --- so it is publication quality at the cost of a visible pause, since the numeric `(u,v)` row costs `grid^2 x samples`, about fifty times the coarsest level. Widget references are held on the figure so that they are not collected; and clamping is written **back into the widgets**, so the thumb tracks the state rather than sitting where it was dragged. That last one matters because the clamp often moves a parameter other than the one being dragged --- raising `eps_tide` pushes `lambda` up --- so every slider is refreshed, with a guard flag to stop `Slider.set_val` re-firing its own callback. *Planned, not yet done:* coalescing updates --- numpy cannot be interrupted, so the intent is a worker thread, a latest-values slot holding the newest parameters, and stale results discarded, with the GUI thread only drawing --- and caching the level radii and brightness pattern across orientation changes, since they depend on the deformation alone. |
+| D29 | **The third Euler angle is `gamma`, not `PA`.** The rotation is `R_z(gamma) R_y(beta) R_z(alpha)` in the zyz convention, and section 3 already wrote it that way in one sentence while writing `PA` in the next --- three names for one angle (`gamma`, `PA`, `pa`). The manual now uses `gamma` throughout; the code keeps `pa` as the argument name, which names the observable, and the GUI slider says `gamma`. The baseline's position angle stays `psi` and is a different object. |
 | D26 | **The linearised level radii are not offered.** Taking the ellipsoid's radii from `delta r = -phi_1` instead of the level condition would remove the last root-find from the analytic rows and make them fully closed form. It is exact only to first order, and the next term is not small where it matters: `delta r = E + 3E^2 + ...` diverges as the closure bound is approached, giving a bulge of 0.144 where the cubic gives 0.366 at the ceiling. The saving is three bisections per parameter set --- some fifty scalar evaluations against the 10^5 the replaced quadrature cost --- so a shortcut that is safe only in a corner and buys nothing measurable is a hazard rather than an option. The brightness is linearised instead, which is exact at first order with no such divergence, and `principal_axes` always solves the level condition. |
 | D28 | **Limb darkening is a viewing effect, so it lives in the sampler.** The GUI applies linear limb darkening, `I = I (1 - u_limb (1 - mu))` with `mu = sqrt(1 - rho^2)` the cosine to the line of sight, and every row carries the same law: `render.surface_samples` and `render.sphere_samples` multiply the sampled brightness, `affine.first_order_coefficients` adds it in closed form as a constant plus a dipole about the observer's axis --- `mu = sqrt(4 pi / 3) Y_10`, one coefficient at `m = 0` --- and the fitted rows inherit it from the samples they fit. Both samplers keep only visible points, so `mu > 0` throughout and the law is monotone across the disc. A quadratic law in `rho^2` was tried first and rejected as too drastic at mid-disc: it gives `1 - 0.75 u_limb` there against the linear law's `1 - 0.5 u_limb`. The numeric row's law is a placeholder for what a stellar-atmosphere model would give, so its exact shape is provisional; using the same `rho^2` law everywhere means the rows differ in the shape and the brightness pattern, which is what they are for, and not additionally in the limb. The consequence to keep in mind is that a fit in the *body* frame absorbs the darkening as though it were painted onto the surface, so its coefficients are meaningful only at the orientation they were fitted at --- a limitation of the surrogate's frame, and one of the things the disk-mode route of section 9 would remove. This is the GUI-level half of T1; the analytic visibility still has no limb term. |
 | D27 | **The surrogate is fitted in `(x,y)`, not in `(u,v)`.** By Plancherel an image-space fit is an `L2` fit over *all* `(u,v)`, so the answer no longer depends on which baselines were sampled --- which is what left the sparse-`(u,v)` least-squares underdetermined, since the coefficient count at `l <= 4` is comparable to a sparse baseline count. The procedure: unstretch the numerical image, `I'(y) = |det Lambda| I_num(Lambda y)` (the inverse of the manual's eq. 81), then project `I'` onto the *projected* harmonics on the unit disk --- the section 6 objects, with `exp(i m phi)` angular dependence and a Jacobi radial part. Their Gram matrix depends only on the mode count: not on `Lambda` and not on the node, so it is computed and inverted once, and a node costs one quadrature over the samples the numeric model already produced. Three consequences: `A_lm` becomes a linear functional of the image samples and therefore smooth in the parameters, which is what the interpolant needs; the sampling-driven part of the conditioning disappears, leaving only the intrinsic mode near-dependence, now a single `Lambda`-independent condition number checked once; and because the unstretched image should be supported inside the unit disk, the overshoot is a free diagnostic on `Lambda`. *Caveat recorded:* this is not a noise-weighted fit to real baselines. If the surrogate is used inside a fit to actual interferometric data, the `(u,v)` metric with those weights matches the use better; for interpolating the model, the image metric is the more robust choice because it is uniform in baseline rather than in sampling. |
@@ -283,7 +284,7 @@ docs/
     06-even.tex             F14-F17, the Zernike route
     07-full-map.tex         F18
     08-triaxial.tex         the deformation field, the affine model, rung 1, the closed form
-    09-disk-modes.tex       a disk-mode surrogate, and a possible route to limb darkening
+    09-disk-modes.tex       (retired) a disk-mode surrogate, and a possible route to limb darkening
     10-models.tex           the two interactive models, and the geometry checks
     11-limb-darkening.tex   F19-F20
     12-numerics.tex         accuracy, range of validity
@@ -621,6 +622,12 @@ interpret: a user recognises the continents, so a wrong orientation is visible a
 whereas a circular cap is nearly symmetric and hid a reflected frame for months. The *radio*
 can therefore go, and the four geometry presets can be re-labelled around the Earth.
 
+*Done for the code.*  The RGB map GUI is retired, kept at tag `rgb-mapgui`; `levels_gui` is the
+surviving basic model and `gui` the research one.  The renderer and cap tests moved to
+`test_maps.py`, the view sweep to the surviving GUI's tests, and the three-channel data is
+deleted since `make earth` regenerates it.  Section 10.2 of the manual still describes the
+retired GUI --- its spot, its presets, its sliders --- and needs rewriting around the survivor.
+
 A two-level variant exists as `levels_gui`, extracted by `make earth-levels`: one brightness
 channel, sea and land at a fixed *ratio* rather than fixed levels, so the sphere mean is one
 whatever land fraction the colour test finds.  It finds 0.281 against the accepted 0.292 ---
@@ -634,6 +641,62 @@ V28 and the fitted rows' tests use; the Earth's coefficients come from an extrac
 committed table, not a formula. Retiring the spot entirely means moving those tests onto the
 Earth's coefficients, which is worth doing only if the analytic case stops being needed for
 something else.
+
+**T11 — make the five parts the document's structure.** The manual has five parts, and they are
+not its section structure:
+
+| part | sections | status |
+| --- | --- | --- |
+| 1. spherical harmonics and Wigner D | 1--3 | standard |
+| 2. the `V_lm` structure, up to `X_lm` as an integral | 4 | standard |
+| 3. simplifying `X_lm` | 5--7 | Dholakia & Pope's split, with an explicit closed form per `(l, m)` rather than a basis-change matrix |
+| 4. spin, tide, limb darkening | 8 | new |
+| 5. the two GUIs | 9 | new |
+
+Parts 4 and 5 are already one section each. Parts 1--3 are seven sections, and 1--3 and 5--7
+each want coalescing, which would leave three. That is the proposal; whether it is right is the
+open question.
+
+The fault lines are real, not editorial: part 2 ends when the visibility is reduced to one
+unknown integral per mode, and part 3 begins because that integral splits by the parity of
+`l + m` into a single spherical Bessel function and a finite ordinary-Bessel sum. Part 4 begins
+when the map stops being given and starts being computed.
+
+The cost is that the roadmap's own prose quotes section numbers, and the equation numbering
+shifts again; every cross-reference is by label, so those follow. The benefit is that the
+structure is visible from the first page, which reading nine flat sections does not give. A
+paragraph in the preamble naming the five parts would be the cheap half of it, and is worth
+doing whether or not the coalescing happens.
+
+Started as O3, which recorded three parts and quoted "sections 8--9". The five-part reading is
+finer and came from reading the thing as a reader rather than as an author.
+
+*A six-part variant.* One part in front of the other five: a survey chapter that states the
+results at a high level, so a reader can stop after it and still have the essentials, with the
+rest of the manual as the derivations. The working notes call this the "Russian style"; there
+is no standard English name that I know, though *synopsis*, *overview* and *survey* all occur,
+and publishing would call it an extended abstract.
+
+The genre has exemplars and no settled English name.  Two, both opening with a section that
+carries the whole argument in outline before the derivations begin:
+
+- Shakura & Sunyaev (1973), "Black holes in binary systems. Observational appearance",
+  *A&A* 24, 337 --- the accretion-disc paper, author order Shakura first;
+- Braginsky & Vorontsov (1974), "Quantum-mechanical limitations in macroscopic experiments and
+  modern experimental technique", *Sov. Phys. Usp.* 17, 644 (Russian original *UFN* 114, 199)
+  --- the standard-quantum-limit review.  Both are Soviet, which is presumably where
+the slang comes from.  "Extended abstract" is the publishing term and the closest;
+"synopsis", "summary chapter" and "survey" are the descriptive ones.  If the manual ever has
+such a chapter it should be titled plainly --- "Summary" or "Overview" --- rather than with a
+label that needs explaining.
+
+It suits this document because the results are few and sharp --- the mode formula, the two
+closed forms for `X_lm`, the deformation coefficients, the four rows --- so such a chapter would
+be two pages and would survive on its own. The risk is drift: a summary that no longer matches
+the sections is worse than none, because a reader trusts it and stops. This session alone
+changed the `a_00` convention, added the limb factor, retired the spot model and deleted a
+section, and a survey chapter would have needed touching for most of them.  So it is worth
+writing once the structure settles, not before.
 
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
@@ -666,6 +729,14 @@ two, which was contention with something else; the two together made the wall ti
 and made four separate explanations look plausible and wrong.  Time a benchmark on mains, or
 compare only the `--durations` column within a single run.
 
+**The normalisation is `a_00 = 1`, and the two-level fork now obeys it.** D16 fixes `a_00 = 1`,
+which puts the sphere mean at `1/sqrt(4 pi) = 0.2821` --- not at one.  The retired map GUI
+`multiplied` by `sqrt(4 pi)` for display, so its panels were in units of the mean while its
+coefficients were not; the fork inherited the panels' convention in the coefficients, giving
+`a_00 = sqrt(4 pi)` and quietly contradicting D16.  Now `emit_levels` divides by `sqrt(4 pi)`,
+`levels_gui` multiplies on the way to the screen, and the test asserts both facts: `a_00 = 1`
+gives 0.2821, and `a_00 = sqrt(4 pi)` gives 1.  `SEA` and `LAND` stay the brightness levels.
+
 ### Decisions deliberately left open
 
 **O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
@@ -674,37 +745,66 @@ compare only the `--durations` column within a single run.
    or a fit of the low-order azimuthal harmonics — have not been compared against it, and the
    comparison should account for what the sparse sampling can actually constrain.
 
-**O3 — whether the manual's three parts should be its top-level structure.** The manual has three
-parts, though nothing says so: definitions and conventions (sections 1--3); the derivation of the
-`V_lm` basis (4--7), which follows published work with the conventions reconciled in section 5; and
-the new material (8--9), the deformation field, the affine and fitted rows, and the disk basis.
-(The former section 10, a summary of the coefficient pairing, has since been dissolved into
-sections 1 and 4, where its material is used rather than recited afterwards.)
+**O4 --- the `a_00` convention, and the three integrals it gets confused with.** Three objects
+carry coefficients and they do not agree on scale:
 
-Two ways to make that visible.  **Coalesce**: three sections, the present sections demoted to
-subsections and their subsections to subsubsections.  Nothing else changes --- every
-cross-reference is a `\label`, so numbers update themselves, and the files can stay as they are ---
-but `article` numbers down to `subsection` only, so the preamble needs `secnumdepth=4` and
-`tocdepth=3` or the demoted headings lose their numbers and every reference to them with them.  The
-real cost is outside the manual: the roadmap's own text carries 32 section references, 27 inventory
-entries with a section column, and 17 file names, so about sixty numbers to renumber by hand, which
-is the kind of change that goes wrong quietly.
+| object | `a_00` | where the scale comes from |
+| --- | --- | --- |
+| `cap_coefficients` (a supplied map) | 1 | D16, a unit choice |
+| `earth_levels` (a map from an image) | 1, viewer multiplying by `sqrt(4 pi)` | the same, plus a display factor |
+| `affine`, `fitted` (forward models) | `(1-u)(1-4 eps) sqrt(4 pi)` | the physics |
 
-**Or leave the numbering alone** and put three unnumbered dividers between the sections --- `\part`
-in `article` gives exactly that --- plus a two-sentence statement of which part is which.  That gets
-the shape visible in the contents for almost nothing.
+The manual says both things and flags neither as a convention: D16 normalises supplied maps to
+`a_00 = 1`, while eq. (106) gives the affine model its physical value. Neither is wrong --- a
+forward model must carry its own scale, since the limb darkening and the area change *are* what it
+predicts --- but the rule is stated too broadly and the exception is not stated at all.
 
-*What would settle it:* whether the parts need to be the top-level structure rather than visible
-dividers, which is a question about the reader rather than about the LaTeX; and, if so, whether the
-roadmap's sixty numbers are worth rewriting to match.
+Compounding it, "mean brightness" has been used for three different functionals. For an ellipsoid
+with limb darkening:
 
-### Further ideas
+- the *sphere* mean of the pattern is `a_00/sqrt(4 pi)`, which eq. (106) makes `(1-u)(1-4 eps)`;
+- the mean over the *visible disc* is a different number again;
+- the *flux* `V(0,0)` is the cosine-weighted one, and that is what an interferometer measures.
+
+Section 1 already says `a_00/sqrt(4 pi)` is *neither* the disc mean *nor* the flux, so the material
+is there; what is missing is one statement of which convention governs which object.
+
+The choice is nearly cosmetic, because the scale cancels in `Delta V` --- normalised at the origin
+--- so it affects the absolute flux and the displayed map and nothing else.  That is precisely why
+it survived this long.
+
+To settle: pick one rule for supplied maps; state it once, with its forward-model exception; replace
+"mean brightness" by the integral meant; and decide whether a display factor is acceptable at all.
+`levels_gui` needs one today, and the manual does not mention it.
 
 **I1 — Spectral scope.** Gravity darkening is temperature-dependent, and intensity interferometry can
    observe in more than one band, so a *ratio* of `|V|^2` between bands would isolate the
    temperature variation from the shape. In scope now or later.
 
-**I2 — A disk-mode surrogate, and whether limb darkening needs Gaunt.** The affine model's error is **second order in
+   A data point for the degree question, since it recurs: Dholakia & Pope (2025, PASP,
+   arXiv:2509.25433) paint the word SPOT on the surface in their Figure 3 at
+   **`l_max = 15`**, and it is legible. The painted lettering comes from earlier work
+   (arXiv:2110.06271). So our `l = 16`-`32` for the two-level Earth is *finer* than the
+   published demonstration, not coarser, and `l = 20` being a featureless blob for Greenland is
+   consistent: a word is a simpler test pattern than a coastline.
+
+   It is also a *stress* test rather than a like-for-like one: the lettering is near-black on a
+   bright surface, so the step at every stroke is the full brightness and the ringing around it is
+   severe.  The two-level map here is 1.5:1 and tapered, so it is doing the harder thing at lower
+   contrast --- which is the reason to be content with what it shows.
+
+**I2 — A disk-mode surrogate, and whether limb darkening needs Gaunt.**  The Gaunt half is
+answered: limb darkening on the *disk* needs no Gaunt coefficient, because
+`mu = sqrt(1 - rho^2)` is a function of the impact parameter alone, so a limb law is a radial
+profile and a Zernike expansion with `m = 0` is a two-term Bessel combination.  That is now
+stated in section 8.4.  The disk-mode surrogate has not been built, and section 9 has been
+retired in its favour, because the fitted row *is* that construction with the projected
+harmonics as its basis.
+
+What a different basis would have to beat, if it were ever tried: the residual at the working
+amplitudes, 0.0016 at `E = 0.033`; a residual that falls with mode count rather than
+plateauing, since a plateau means geometry the basis cannot see; and a per-frequency cost small
+against the projection. The affine model's error is **second order in
    `eps`**, which is what linearising a stretch should give. Against the direct sum over three
    baselines it is **0.0016** at `E = 0.033`, **0.00021** at half of it --- a ratio of 0.23, close
    to the 1/4 of a quadratic --- and 0.0000 for the undeformed sphere. The projection machinery is

@@ -36,7 +36,7 @@ angle (D23).  For a source of unit angular radius, $\rho \in [0,1]$.
 The body frame is the frame in which the surface map is specified, with $z$ along
 the spin axis.  Its orientation relative to the observer is fixed by three
 angles: the spin phase $\alpha$, the inclination $\beta$ measured from the line
-of sight, and the position angle $\PA$ measured from North towards East.  The
+of sight, and the position angle $\PA$ of the sky frame, measured from North towards East.  The
 body-to-observer rotation is
 \begin{equation}
   R(\alpha,\beta,\PA) =
@@ -204,9 +204,9 @@ therefore those with $l \ge 1$.
 
 A map drawn on the page follows the axis conventions of D24, with North up and East to the
 left and azimuths measured from North through East (D23); a map referred to East instead
-would show the same spot a quarter turn away.  The model in \code{make mapgui} draws the
-same quantity live, and section~\ref{sec:full-map} describes what a truncated map costs at
-its limb.
+would show the same feature a quarter turn away.  The models in \code{make gui} and
+\code{make mapgui-levels} draw the same quantity live, and section~\ref{sec:full-map}
+describes what a truncated map costs at its limb.
 
 \subsection{Symbols}
 

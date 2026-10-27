@@ -18,8 +18,8 @@ undeformed radius is $1$.
 Write $n = \mathbf{x}/r$ for the direction, with $\mathbf{x}$ the position in space, and
 $P_2(\xi) = \tfrac12(3\xi^2-1)$ for the Legendre polynomial.  Bold symbols are points in
 space throughout; plain $x$ and $y$ are the sky coordinates of
-section~\ref{sec:conventions}, so that $x_{N,i}$ and $x_{E,i}$ are the North and East
-components of a sample's sky position and are not components of a position vector.  The
+section~\ref{sec:conventions}, so that $x_i$ and $y_i$ are the North and East components
+of a sample's sky position and are not components of a position vector.  The
 potential is a monopole plus two quadrupoles and one constant,
 \begin{equation}
   \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
@@ -94,57 +94,8 @@ the centrifugal term, which has no gradient along the spin axis, so tilting the 
 is more constrained, and it is what makes the latitude a useful parameter rather than a
 nuisance.
 
-\subsection{The principal axes and the ellipsoid}
-\label{sec:deformation-axes}
-
-Expanding the Legendre polynomials in \eqref{eq:level-depth} and simplifying puts the depth
-in monomial form,
-\begin{equation}
-  E(n) \;=\; \tfrac32\Bigl[\epsilon_\text{tide}\,(n\cdot\hat e_\text{tide})^2
-    - \epsilon_\text{spin}\,(n\cdot\hat e_\text{spin})^2\Bigr]
-    + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} ,
-  \label{eq:depth-form}
-\end{equation}
-every direction now entering as a squared projection.  Since
-$(n\cdot\hat e)^2 = n^{T}(\hat e\hat e^{T})n$, the bracket is the quadratic form
-$n^{T}Mn$ built from
-\begin{equation}
-  M \;=\; \tfrac32\Bigl(\epsilon_\text{tide}\,\hat e_\text{tide}\hat e_\text{tide}^{T}
-    - \epsilon_\text{spin}\,\hat e_\text{spin}\hat e_\text{spin}^{T}\Bigr) ,
-  \label{eq:depth-tensor}
-\end{equation}
-and the depth is
-\begin{equation}
-  E(n) \;=\; n^{T}Mn + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} .
-  \label{eq:depth-quadratic}
-\end{equation}
-The constant does not spoil the identification.  On the unit sphere it equals $c\,n^{T}In$
-with $c = \tfrac12(3\epsilon_\text{spin}-\epsilon_\text{tide})$, so
-$E(n) = n^{T}(M + cI)\,n$: adding $cI$ shifts every eigenvalue by the same $c$ and moves no
-eigenvector.  The principal directions are therefore the eigenvectors of $M$ itself, and the
-constant only shifts the depths along them.
-The principal axes of the level surface are those eigenvectors, and the radii along them
-are the exact level radii from \eqref{eq:level-condition}.  Taking the ellipsoid through
-those three points gives the shape the affine model of section~\ref{sec:deformation-affine}
-needs.
-
-The temptation is to use the tide axis itself as the frame.  That is wrong whenever the
-tide is weak or absent: with $\epsilon_\text{tide} = 0$ the tide's direction has no effect
-on the potential, yet it would still rotate the frame, and on an oblate body the level
-radius along a tilted direction differs from the equatorial one.  The shape would then
-change with a parameter that cannot physically affect it.  The eigenvectors of
-\eqref{eq:depth-tensor} do not have that defect, and when the equatorial eigenvalues are
-degenerate the freedom they leave is harmless, because the radii there are equal.
-
-\subsection{Surface brightness}
-\label{sec:deformation-brightness}
-
-The surface gravity is $g = |\nabla\Phi|$ evaluated on the level surface, and it equals
-$1$ for the undeformed star, so the brightness falls out dimensionless:
-\begin{equation}
-  I \;\propto\; g^{p} , \qquad g = |\nabla\Phi| .
-  \label{eq:brightness-law}
-\end{equation}
+\subsection{The surface gravity}
+\label{sec:deformation-gravity}
 
 The gradient is worth writing out explicitly.  The $\Phi$ of
 \eqref{eq:deformation-potential} simplifies once $r^2(n\cdot\hat e)^2 =
@@ -195,6 +146,16 @@ for it: the code evaluates $|\nabla\Phi|$ from \eqref{eq:deformation-gradient}, 
 what certificate \vtag{19} compares it against.  The sign is the physically expected one: a
 rotating star is brightest at its poles and dimmest at its equator, six
 $\epsilon_\text{spin}$ below the undeformed value there.
+\subsection{Surface brightness}
+\label{sec:deformation-brightness}
+
+The surface gravity is $g = |\nabla\Phi|$ evaluated on the level surface, and it equals
+$1$ for the undeformed star, so the brightness falls out dimensionless:
+\begin{equation}
+  I \;\propto\; g^{p} , \qquad g = |\nabla\Phi| .
+  \label{eq:brightness-law}
+\end{equation}
+
 The bolometric von Zeipel law is $p = 1$.  Physically motivated laws have $p \le 1$: a
 convective envelope is nearer to $p \approx 0.3$, because the flux there is carried by
 convection and so responds to gravity more weakly.  Thus $p = 1$ is an upper bound rather
@@ -205,43 +166,41 @@ gravity, not on the angle between the surface normal and the line of sight.  Tha
 deliberate scope restriction until the limb-darkening stage, and any figure caption or
 comparison with a resolved observation has to say so.
 
-\subsection{Parameters, frames, and what is a gauge}
-\label{sec:deformation-frames}
 
-The model has two amplitudes, and the geometry of the observation is fixed by the
-inclination $i$ between the spin axis and the line of sight, the position angle $\PA$ of the
-spin on the sky, and two angles locating the tide: its latitude $\lambda$ measured from the
-equator and its longitude $\varphi$ measured about the spin from the body $x$ axis.
-
-The sky conventions are those of section~\ref{sec:conventions}.  Position angles run from
-North through East, and with $u$ along North and $v$ along East the baseline azimuth
-$\psi = \operatorname{atan2}(v,u)$ \emph{is} the position angle, so $\PA = \psi$ and no
-offset appears anywhere.  The frame is $(x,y,z) = (\text{North}, \text{East},
-\text{toward the observer})$ with $x\times y = z$ and the line of sight along $-z$.  Body to
-observer is the rotation
+Limb darkening multiplies this by a function of the viewing angle, and the code applies it
+in the same place to every row: the sampled brightness, the linearised pattern and the fitted
+coefficients all carry the factor
 \begin{equation}
-  R \;=\; R_z(\PA)\,R_y(\beta)\,R_z(\alpha) ,
-  \label{eq:deformation-rotation}
+  1 - u_\text{limb}\,(1-\mu) , \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  \label{eq:limb-factor}
 \end{equation}
-so that $R\hat z = (\sin\beta\cos\PA, \sin\beta\sin\PA, \cos\beta)$: the middle axis stays
-$y$, and the spin's projection on the sky makes the angle $\PA$ with North.
+so $u_\text{limb} = 0$ recovers \eqref{eq:brightness-law} and $u_\text{limb} = 1$ darkens the
+limb to nothing.  It is linear in $\mu$ rather than a power law because $\mu$ is a single
+harmonic, which is what keeps the coefficients of section~\ref{sec:model-map} closed; the
+first-order coefficients of \eqref{eq:limb-coefficients} treat it as a dipole about the
+observer's axis.
 
-Two of these angles are gauges in the present model.  For a single observation the sky's
-orientation is a choice, so $\PA$ can be pinned; and with a smooth deformation and no
-starspots, the spin phase $\alpha$ is degenerate with the tide's longitude $\varphi$,
-because only their difference is observable --- a rotation of the star cannot be told from a
-rotation of the perturbation.  Both stop being gauges as soon as the surface carries
-structure of its own: spots see $\alpha$, and a non-synchronous tide makes it independent.
-
-Finally, the normalisation.  The observable is the visibility normalised at the origin,
+\paragraph{Why the limb is not done analytically.}  The original plan was to expand the star
+and the limb-darkening factor separately and multiply them with Gaunt coefficients, which
+would be fully analytic.  On the disk that product is cheaper than it looks: for a disk seen
+face-on
 \begin{equation}
-  \Delta V(u,v) \;=\; \frac{V(u,v)}{V(0,0)} - \frac{V_\text{ref}(u,v)}{V_\text{ref}(0,0)} ,
-  \label{eq:deformation-normalisation}
+  \mu \;=\; \sqrt{1-\rho^2}
+  \label{eq:limb-mu-disk}
 \end{equation}
-so that $\Delta V(0,0) = 0$ and the reference's lobes are removed.  The reference is
-normally the uniform disk of section~\ref{sec:uniform-disk}.  Subtracting the reference's
-own normalised visibility rather than a bare measurement removes everything the two models
-have in common --- the Airy lobes of the disk --- and leaves the deformation's signature.
+is a function of the impact parameter alone, so a limb law is a radial profile, and an
+expansion in Zernike modes with $m = 0$ needs no Gaunt at all --- $\mu$ is already the
+variable the basis is built from.  That is why the classical visibility of a linearly
+limb-darkened disk is a two-term combination of Bessel functions.  On the sphere $\mu$ is
+instead a degree-one factor, and re-expanding its product with the map's harmonics needs the
+$2\times1 \to 1$ and $2\times1 \to 3$ coefficients, which is where the Gaunt coefficients would
+enter.
+
+What settled the question was not the limb but the shape.  Spin and tide make the silhouette
+and the brightness both depend on $\epsilon$, with no closed form for the level surface, so
+the analytic route has no route through the shape.  The row that is implemented therefore fits
+the rendered image instead, and carries the limb as a factor rather than as a product of
+expansions.
 
 \subsection{The exact visibility}
 \label{sec:deformation-exact}
@@ -251,7 +210,7 @@ surface that section~\ref{sec:mode-visibility} defines, weighted by the sky-plan
 sample projects to:
 \begin{equation}
   V(u,v) \;=\; \sum_i I(n_i)\,\frac{(N_i\cdot\hat e_\text{obs})\, r_i^2}{n_i\cdot N_i}\,
-    \Delta\Omega_i \; e^{-2\pi i (u x_{N,i} + v x_{E,i})} .
+    \Delta\Omega_i \; e^{-2\pi i (u x_i + v y_i)} .
   \label{eq:deformation-visibility}
 \end{equation}
 Two properties of a level surface make this cheap.  The outward normal $N$ \emph{is} the
@@ -267,12 +226,62 @@ FFT, is the reference for every certificate in this part.  The level radii come 
 bisection that brackets the \emph{inner} crossing of \eqref{eq:level-condition}: the left
 side is not monotone, and the outer branch is the far side of the lobe.
 
-\subsection{Rung 1: the affine model}
-\label{sec:deformation-affine}
+\subsection{The principal axes and the ellipsoid}
+\label{sec:deformation-axes}
 
-The first rung replaces the map \eqref{eq:deformation-visibility} by a linear one.  For an
-ellipsoid the projection onto the sky is exact and is an ellipse, so it is captured by a
-single $2\times2$ positive-definite matrix,
+Expanding the Legendre polynomials in \eqref{eq:level-depth} and simplifying puts the depth
+in monomial form,
+\begin{equation}
+  E(n) \;=\; \tfrac32\Bigl[\epsilon_\text{tide}\,(n\cdot\hat e_\text{tide})^2
+    - \epsilon_\text{spin}\,(n\cdot\hat e_\text{spin})^2\Bigr]
+    + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} ,
+  \label{eq:depth-form}
+\end{equation}
+every direction now entering as a squared projection.  Since
+$(n\cdot\hat e)^2 = n^{T}(\hat e\hat e^{T})n$, the bracket is the quadratic form
+$n^{T}Mn$ built from
+\begin{equation}
+  M \;=\; \tfrac32\Bigl(\epsilon_\text{tide}\,\hat e_\text{tide}\hat e_\text{tide}^{T}
+    - \epsilon_\text{spin}\,\hat e_\text{spin}\hat e_\text{spin}^{T}\Bigr) ,
+  \label{eq:depth-tensor}
+\end{equation}
+and the depth is
+\begin{equation}
+  E(n) \;=\; n^{T}Mn + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} .
+  \label{eq:depth-quadratic}
+\end{equation}
+The constant does not spoil the identification.  On the unit sphere it equals $c\,n^{T}In$
+with $c = \tfrac12(3\epsilon_\text{spin}-\epsilon_\text{tide})$, so
+$E(n) = n^{T}(M + cI)\,n$: adding $cI$ shifts every eigenvalue by the same $c$ and moves no
+eigenvector.  The principal directions are therefore the eigenvectors of $M$ itself, and the
+constant only shifts the depths along them.
+The principal axes of the level surface are those eigenvectors, and the radii along them
+are the exact level radii from \eqref{eq:level-condition}.  Taking the ellipsoid through
+those three points gives the shape the affine model of section~\ref{sec:deformation-stretch}
+needs.
+
+The temptation is to use the tide axis itself as the frame.  That is wrong whenever the
+tide is weak or absent: with $\epsilon_\text{tide} = 0$ the tide's direction has no effect
+on the potential, yet it would still rotate the frame, and on an oblate body the level
+radius along a tilted direction differs from the equatorial one.  The shape would then
+change with a parameter that cannot physically affect it.  The eigenvectors of
+\eqref{eq:depth-tensor} do not have that defect, and when the equatorial eigenvalues are
+degenerate the freedom they leave is harmless, because the radii there are equal.
+
+\subsection{The stretch, and what it can and cannot model}
+\label{sec:deformation-stretch}
+
+The stretch replaces the map \eqref{eq:deformation-visibility} by a linear one.  Write the
+deformed surface as $r(n)\,n$ with $n$ a unit direction and $n_\perp$ its sky-plane component;
+the sky position of the emitting point is
+\begin{equation}
+  \mathbf{x}_\perp(n) \;=\; r(n)\, n_\perp .
+  \label{eq:sky-map}
+\end{equation}
+That map is \emph{radial-nonlinear}: $r$ depends on the full direction, including its
+component along the line of sight, so no constant matrix reproduces it.  What follows replaces
+it by its linear part, $\Lambda n_\perp$.  For an ellipsoid the projection onto the sky is
+exact and is an ellipse, so it is captured by a single $2\times2$ positive-definite matrix,
 \begin{equation}
   \Lambda \;=\; \sqrt{A A^{T}} , \qquad A = P\,(\text{frame}\cdot\text{radii}) ,
   \label{eq:deformation-stretch}
@@ -286,9 +295,15 @@ the visibility of a sphere carrying the same brightness pattern, the surrogate i
 \end{equation}
 There is \emph{no flux factor}.  The change of variables that stretches the image puts
 $1/|\det\Lambda|$ on the brightness and $|\det\Lambda|$ on the measure, and the two cancel;
-in the normalised quantity \eqref{eq:deformation-normalisation} the determinant cancels
+in the normalised quantity \eqref{eq:normalised-visibility} the determinant cancels
 again.  So only the shape is modelled, while the brightness pattern --- gravity darkening
 included --- is carried exactly.
+
+$\Lambda$ is best read as a \emph{preconditioner} rather than as part of the answer.  It enters
+twice --- in the frequency argument above and in the pull-back of the image --- and a different
+but equally defensible $\Lambda$ changes the coefficients of any series built on it without
+changing the exact answer; only the rate at which a truncated series converges depends on it.
+Circularising the silhouette well is what makes a short series possible.
 
 \paragraph{The same stretch in image space.}  The frequency change has a counterpart in the
 image, and stating it makes the absent flux factor intuitive:
@@ -311,7 +326,7 @@ divides their brightness by $|\det\Lambda|$ and multiplies their weights by the 
 so the two cancel: what reaches the image is the stretched pattern with its brightness values
 intact, and the image's total flux grows by $|\det\Lambda|$ instead of staying fixed.  That is
 harmless because the discarded factor is a constant and $\Delta V$
-\eqref{eq:deformation-normalisation} is normalised at the origin --- and it is the honest
+\eqref{eq:normalised-visibility} is normalised at the origin --- and it is the honest
 statement of the model's claim, which concerns shape and pattern rather than flux.
 
 Two orderings have to be kept apart, and getting either wrong produces an error that looks
@@ -339,6 +354,22 @@ frame and the observer frame alike; an $l = 1$ term would be a photocentre displ
 which a deformation with this reflection symmetry cannot generate.  (A projection loop that
 runs over $l = 1$ will still fill that slot, but with quadrature noise: it should shrink
 with the sample count, and anything that does not is a real asymmetry and a bug.)
+
+\paragraph{What a better shape would not fix.}  Expanding the level surface to the next order
+\eqref{eq:level-condition} to second order in the deformation instead of stopping at the
+ellipsoid, bringing $l = 4$ into the shape.  It would improve the outline at large amplitude,
+where the ellipsoid visibly disagrees with the level surface.  It would \emph{not} repair the
+stretch's error, because that error is first order and comes from the stretch, not from the
+shape's second-order terms: a better ellipsoid does not make a linear map able to reproduce a
+radial-nonlinear one.  Since the error is tolerable for the search the surrogate exists for, the second order
+stays documented rather than implemented.
+
+Should the surrogate itself need to improve, the productive direction is the basis rather than
+the order in $\epsilon$: a series inside the same stretch would turn a fixed first-order error
+into a truncation the user controls.
+
+\subsection{The first-order row}
+\label{sec:deformation-first-order}
 
 \paragraph{The coefficients in closed form.}  To first order the pattern is a constant plus
 two quadrupoles --- \eqref{eq:deformation-gravity-first-order} with $p = 1$ ---
@@ -369,33 +400,12 @@ of order the coefficients rather than the $10^{-5}$ that discretisation leaves -
 the certificate calls the same function the model does, it covers the code rather than a copy
 of it.
 
-\paragraph{The same coefficients in the body frame.}  The pattern is fixed by two axes and two
-amplitudes, all frame-independent objects, so the corollary \eqref{eq:zonal-l2} applies
-equally in the body frame:
-\begin{equation}
-  A_{00} = (1 - 4\epsilon_\text{spin})\sqrt{4\pi} , \qquad
-  A_{2m} = -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,
-      \overline{Y_{2m}\bigl(\hat e_\text{tide}^{(b)}\bigr)}
-    \;-\; \epsilon_\text{spin}\,
-      \overline{Y_{2m}\bigl(\hat e_\text{spin}^{(b)}\bigr)}\Bigr] ,
-  \label{eq:first-order-coefficients-body}
-\end{equation}
-where the axes are those the model carries, $\hat e_\text{spin}^{(b)} = \hat z$ and
-$\hat e_\text{tide}^{(b)} = (\cos\lambda\cos\varphi,\ \cos\lambda\sin\varphi,\ \sin\lambda)$,
-together with $A_{1m} = 0$.
-
-Equations \eqref{eq:first-order-coefficients} and \eqref{eq:first-order-coefficients-body}
-describe one map in two frames, so \eqref{eq:coefficient-rotation} must carry one into the
-other, with $A_{00} = a_{00}$ since $D^0 = 1$.  That makes them a certificate as well as a
-companion: \eqref{eq:first-order-coefficients} evaluates the formula with the axes already
-rotated into the observer frame, \eqref{eq:first-order-coefficients-body} evaluates it with the
-body axes and then rotates, and the two must agree.  Two independent routes to the same
-numbers is precisely the check that the observer-frame projection rests on --- the frame rule
-of \eqref{eq:observer-angles} is asserted rather than derived, and this is what would catch it
-being wrong.  The comparison is \textbf{certificate \vtag{24}}, and it is worth noting what
-it does and does not share with (83): both routes use the same $l = 2$ corollary, so a wrong
-constant in the formula would pass, but nothing else is common, so the frame rule itself is
-genuinely tested.
+\paragraph{One formula, and a certificate for the frame.}  The pattern is fixed by two axes and
+two amplitudes, all frame-independent objects, so \eqref{eq:first-order-coefficients} holds in
+any frame: the model carries the axes as the body has them and rotates the coefficients
+afterwards, while the row evaluates the same formula with the axes already rotated.  The two
+must agree, and comparing them is \textbf{certificate \vtag{24}} --- which is what tests the
+frame rule below rather than the formula itself, since both routes share the $l = 2$ corollary.
 
 One is tempted to linearise the radii as well, replacing the bisection by $\delta r = -\phi_1$
 and making the row analytic all the way through.  The temptation should be resisted.  First it
@@ -474,16 +484,52 @@ For locating the interesting part of parameter space that is still usable, provi
 search is confined to the small-amplitude region; for deciding between models it is nowhere
 near good enough, and the numerical model is what decides.
 
-\subsection{Rung 1 with fitted coefficients}
-\label{sec:deformation-fitted}
+Written out, the pattern is multiplied by the limb factor:
+\begin{equation}
+  I(\hat n) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
+  \Bigl[\,1 - 4\epsilon_\text{spin}
+  - 4\epsilon_\text{tide}\,P_2(\hat n\cdot\hat t)
+  + 4\epsilon_\text{spin}\,P_2(\hat n\cdot\hat s) \Bigr] ,
+  \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  \label{eq:limb-pattern}
+\end{equation}
+whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
+\begin{equation}
+  \begin{aligned}
+    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
+    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
+    a_{2m} = -\frac{16\pi}{5}\Bigl[\,\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
+    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\,\Bigr] .
+  \end{aligned}
+  \label{eq:limb-coefficients}
+\end{equation}
+None of these coefficients needs a Gaunt integral, and it is worth saying why, since the limb
+factor is a product.  The dipole is the whole of the limb term because $\mu$ \emph{is} a single
+harmonic: $Y_{10} = \sqrt{3/4\pi}\cos\theta$, so $\mu = \sqrt{4\pi/3}\,Y_{10}$, and its
+coefficient is its own amplitude.  The constant term is the other half of
+$1 - u_\text{limb} + u_\text{limb}\mu$, multiplied by the pattern's mean.  The quadrupoles are
+untouched, and come from the corollary of section~\ref{sec:rotation-law} --- the five-number
+table --- rather than from any coupling of harmonics.
 
-Section~\ref{sec:deformation-affine} takes $\Lambda$ from the ellipsoid and the coefficients from
-the pattern's projection onto the sphere.  That is not the best the class
-$\sum A_{lm}V_{lm}(\Lambda^{T}u)$ can do at \emph{fixed} $\Lambda$: the coefficients can be chosen
-instead of projected, by minimising the residual.  This subsection defines the quantities; the
-model's fitted rows compute them, at $l \le 4$ and $l \le 6$, with $\Lambda$ still taken from
-the level surface as in section~\ref{sec:deformation-affine}; comparing the two orders is what
-separates the truncation from the shape model's error.
+Coupling enters only through the terms that are dropped, and those are exactly the ones a Gaunt
+coefficient describes: multiplying the factor into the pattern couples
+$Y_{2m}\cdot Y_{10}$ into $l = 1$ and $l = 3$, with coefficients the $2\times1 \to 1$ and
+$2\times1 \to 3$ integrals.  Two further corrections of order $u_\text{limb}\epsilon$ go with
+them: the quadrupoles are not scaled by $(1-u_\text{limb})$.  What makes the omission defensible
+is that the row is a model chosen for algebra and not a truncation of a physical law, and that
+$a_{10}$ carries no deformation at all, so at zero tide and spin the row is exact --- which is
+what \code{test\_at\_zero\_deformation\_the\_rows\_agree\_with\_the\_limb\_on} checks.
+
+A quadratic law in $\rho^2$ was tried first and is too drastic: at half the disc radius it
+gives $1 - 0.75u_\text{limb}$ where the linear law gives $1 - 0.5u_\text{limb}$.  Since the numeric row's law is a
+placeholder for what a stellar-atmosphere model would supply, the linear form is the better
+default: it is the classical one, and the closed-form row can carry it exactly at leading
+order.  The factor multiplies the quadrupole pattern, so strictly the cross terms at
+$O(\epsilon c)$ add small $l = 3$ structure; those are dropped, and the row stays a constant,
+a dipole and two quadrupoles.
+
+\subsection{The fitted row}
+\label{sec:deformation-fitted}
 
 \paragraph{The model in image space.}  The visibility is the transform of an image, and writing
 that image explicitly is what makes the fit a projection.  By
@@ -554,6 +600,25 @@ $\mathrm{Re}\,\Phi_{lm}$, $\mathrm{Im}\,\Phi_{lm}$ for $m > 0$.  Odd $l$ is excl
 convenience: the parity argument of section~\ref{sec:deformation-brightness} forbids it, so fitting it
 would only absorb noise.
 
+\paragraph{What the row costs, and what it assumes.}  The projection is paid once per parameter
+set --- $O(N(l+1)^2)$ for $N$ samples --- and each frequency then costs a short Bessel sum over
+the $(l+1)^2$ coefficients, which is the resource that is cheap.  Nothing in the per-frequency
+path depends on the sampling.
+
+Two assumptions are worth stating, because they bound what the row can be trusted for.  The
+model image is $F(\Lambda^{-1}x)/|\det\Lambda|$ on the unit disc, so the \emph{model's}
+silhouette is exactly the stretched circle, while the data's is the true deformed silhouette,
+which is not an ellipse; the fit absorbs the difference into the coefficients rather than
+resolving it.  And $\Lambda$ comes from the three-point ellipsoid of
+section~\ref{sec:deformation-axes}, so a different but equally defensible $\Lambda$ changes the
+coefficients --- and because the fitted row's brightness is painted onto the surface, they are
+meaningful only at the orientation they were fitted for.
+
+The row is therefore already a disk series: $F(y) = \sum_{lm}A_{lm}\Phi_{lm}(y)$ with
+$\Phi_{lm}$ the projected harmonics, composed with the same stretch.  A basis whose transforms
+were cheaper --- a Zernike series, say --- would be a different choice of basis in the same
+construction, not a different construction.
+
 \paragraph{Checks built into the definition.}  The residual \eqref{eq:fitted-residual} is
 evaluated by two routes --- eliminating the normal equations, and expanding the quadratic directly
 --- and the two must agree: they differ only through the identity $A = G^{-1}b$, so a stray factor
@@ -568,32 +633,13 @@ agrees with a brute-force midpoint rule over the disk that shares nothing with t
 construction but the definition.
 
 \paragraph{What the numbers mean.}  The fitted $A_{lm}$ are \emph{not} the pattern's coefficients of
-section~\ref{sec:deformation-affine}: they are the coefficients of the unstretched image in the disk
+section~\ref{sec:deformation-stretch}: they are the coefficients of the unstretched image in the disk
 basis.  For a sphere the two coincide, which is exactly what the round trip tests.  With $\Lambda$
 fixed, the residual is the truncation floor \emph{given} the ellipsoidal shape, so comparing it with
 the affine row's error separates the two errors that row conflates --- the shape model's own and the
 truncation at $l \le 2$.  It is not the floor of the class: that would need $\Lambda$ fitted too, and
-$\Lambda$ is only weakly identifiable, its limit being independent of it
-(section~\ref{sec:disk-modes}).  Finally, the five condition numbers of $G$ are what to watch as the
+$\Lambda$ is only weakly identifiable, its limit being independent of it.  Finally, the five condition numbers of $G$ are what to watch as the
 mode count grows; they are properties of the basis alone, fixed once rather than per parameter set.
-
-\subsection{Rung 2, and what it would not fix}
-\label{sec:deformation-rung2}
-
-The second rung expands the level surface \eqref{eq:level-condition} to second order in the
-deformation instead of stopping at the ellipsoid.  That brings $l = 4$ into the shape, and
-it is the natural next order in the potential.
-
-It is worth being clear about what it would and would not buy.  It would improve the shape
-at large amplitude, where the ellipsoid's outlines visibly disagree with the level surface.
-It would \emph{not} repair the surrogate's error, because that error is first order and
-comes from the stretch, not from the shape's second-order terms: a better ellipsoid does not
-make a linear map able to reproduce a radial-nonlinear one.  Since rung 1's error is
-tolerable for the search it exists for, rung 2 stays documented rather than implemented.
-
-Should the surrogate itself need to improve, the productive direction is the basis rather
-than the order in $\epsilon$: section~\ref{sec:disk-modes} composes the stretch with a
-disk-mode series, which turns a fixed first-order error into a truncation the user controls.
 
 \subsection{Register}
 \label{sec:triaxial-register}

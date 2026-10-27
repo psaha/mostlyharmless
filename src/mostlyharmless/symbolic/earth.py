@@ -219,12 +219,18 @@ def emit_levels(path, l_max=DEFAULT_L_MAX, ratio=1.5, target=None):
     coefficients, fraction, (sea, land) = land_sea(path, l_max=l_max, ratio=ratio)
     tapered = taper(coefficients, l_max)
 
+    # D16: the coefficients are normalised so that a_00 = 1, which puts the sphere mean at
+    # 1/sqrt(4 pi) = 0.2821.  SEA and LAND stay the brightness levels --- 0.877 and 1.315 ---
+    # and the viewer multiplies by sqrt(4 pi) on the way to the screen.
+    scale = float(np.sqrt(4.0 * np.pi))
     lines = [
         '"""The Earth at two levels, emitted by ``make earth-levels``.',
         "",
-        "Do not edit: regenerate instead.  Sea and land are at fixed brightnesses chosen so",
-        "that the sphere mean is one, and the coefficients carry the Lanczos taper already.",
-        "Extracted from a Blue Marble image; NASA, public domain.",
+        "Do not edit: regenerate instead.  SEA and LAND are the brightness levels, chosen so",
+        "that the sphere mean is one; the coefficients below obey D16 (a_00 = 1), so they are",
+        "those levels divided by sqrt(4 pi), and a viewer must multiply by sqrt(4 pi) to show",
+        "them.  The Lanczos taper is already applied.  Extracted from a Blue Marble image;",
+        "NASA, public domain.",
         '"""',
         "",
         f"L_MAX = {int(l_max)}",
@@ -236,7 +242,8 @@ def emit_levels(path, l_max=DEFAULT_L_MAX, ratio=1.5, target=None):
         "LEVELS = (",
     ]
     for block in tapered.blocks:
-        values = ", ".join(f"complex({float(value.real):.6e}, {float(value.imag):.6e})"
+        values = ", ".join(f"complex({float((value / scale).real):.6e}, "
+                           f"{float((value / scale).imag):.6e})"
                            for value in block)
         lines.append(f"    ({values}),")
     lines.append(")")
@@ -248,18 +255,17 @@ def emit_levels(path, l_max=DEFAULT_L_MAX, ratio=1.5, target=None):
 def timing(l_values=(4, 8, 16, 32), pixels_values=(121, 241, 361)):  # pragma: no cover
     """Cost of the render path, per degree and per resolution.
 
-    The Earth needs six panels per redraw --- three colour channels by two faces --- so the
-    renderer's cost is six times one panel's.  This breaks the redraw into its parts, so that
-    a slow setting can be attributed rather than guessed at: the rotation is Wigner-D, the
-    panel is one ``sky_map`` over every mode, and the pair is what a channel costs.
+    A redraw is one rotation plus two panels.  This breaks it into those parts, so that a
+    slow setting can be attributed rather than guessed at: the rotation is Wigner-D, the panel
+    is one ``sky_map`` over every mode, and the pair is what the viewer costs.
     """
     import time
 
-    from mostlyharmless.symbolic import map_gui, maps
+    from mostlyharmless.symbolic import levels_gui, maps
     from mostlyharmless.visylm.wigner import rotate_coefficients
 
-    red = map_gui.earth_coefficients()[0]        # one channel is representative
-    print(f"{'l':>3} {'px':>4} {'rotate':>8} {'warm':>6} {'1 panel':>8} {'2 faces':>8} {'all 6':>8}")
+    red = levels_gui.levels_coefficients()
+    print(f"{'l':>3} {'px':>4} {'rotate':>8} {'warm':>6} {'1 panel':>8} {'2 faces':>8} {'redraw':>8}")
     for l_max in l_values:
         for pixels in pixels_values:
             channel = truncate(red, l_max)
@@ -283,8 +289,7 @@ def timing(l_values=(4, 8, 16, 32), pixels_values=(121, 241, 361)):  # pragma: n
             both_faces = time.perf_counter() - start
 
             start = time.perf_counter()
-            map_gui.compute_map(map_gui.MapParameters(l_max=l_max), pixels=pixels,
-                                model="Earth")
+            levels_gui.compute_map(levels_gui.Parameters(l_max=l_max), pixels=pixels)
             all_six = time.perf_counter() - start
 
             print(f"{l_max:>3} {pixels:>4} {rotate_time:>8.3f} {warm_time:>6.3f} "

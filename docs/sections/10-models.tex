@@ -27,6 +27,15 @@ are the two amplitudes, the inclination, the tide's body latitude and longitude,
 coefficient; the position angle of the spin is pinned to zero, being a gauge for a single
 observation.
 
+\paragraph{Why two sliders are missing.}  Two of the model's angles are gauges.  For a single
+observation the sky's orientation is a choice, so the spin's position angle can be pinned.
+And with a smooth deformation and no starspots, the spin phase $\alpha$ is degenerate with
+the tide's longitude $\varphi$, because only their difference is observable: a rotation of the
+star cannot be told from a rotation of the perturbation.  Both stop being gauges as soon as
+the surface carries structure of its own --- spots see $\alpha$, and a non-synchronous tide
+makes it independent.  That is why the map GUI of section~\ref{sec:model-map} has both
+sliders and this one has neither.
+
 The limb slider scales the brightness by $1 - u_\text{limb}(1-\mu)$, with
 $\mu = \sqrt{1-\rho^2}$ the cosine of the angle to the line of sight, so that the centre stays
 bright and the rim darkens.  One law is used by every row: the numeric row multiplies its
@@ -37,57 +46,18 @@ the shape and the brightness \emph{pattern}, which is what they are for, and not
 Only visible points are rendered, so $\mu > 0$ throughout and the law is monotone across the
 disc.
 
-Written out, the numeric row multiplies the sampled brightness by the factor, and the
-closed-form row applies the same factor to the pattern of \eqref{eq:first-order-pattern}:
-\begin{equation}
-  I(\hat n) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
-  \Bigl[\,1 - 4\epsilon_\text{spin}
-  - 4\epsilon_\text{tide}\,P_2(\hat n\cdot\hat t)
-  + 4\epsilon_\text{spin}\,P_2(\hat n\cdot\hat s) \Bigr] ,
-  \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
-  \label{eq:limb-pattern}
-\end{equation}
-whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
-\begin{equation}
-  \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
-    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
-    a_{2m} = -\frac{16\pi}{5}\Bigl[\,\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
-    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\,\Bigr] .
-  \end{aligned}
-  \label{eq:limb-coefficients}
-\end{equation}
-None of these coefficients needs a Gaunt integral, and it is worth saying why, since the limb
-factor is a product.  The dipole is the whole of the limb term because $\mu$ \emph{is} a single
-harmonic: $Y_{10} = \sqrt{3/4\pi}\cos\theta$, so $\mu = \sqrt{4\pi/3}\,Y_{10}$, and its
-coefficient is its own amplitude.  The constant term is the other half of
-$1 - u_\text{limb} + u_\text{limb}\mu$, multiplied by the pattern's mean.  The quadrupoles are
-untouched, and come from the corollary of section~\ref{sec:rotation-law} --- the five-number
-table --- rather than from any coupling of harmonics.
-
-Coupling enters only through the terms that are dropped, and those are exactly the ones a Gaunt
-coefficient describes: multiplying the factor into the pattern couples
-$Y_{2m}\cdot Y_{10}$ into $l = 1$ and $l = 3$, with coefficients the $2\times1 \to 1$ and
-$2\times1 \to 3$ integrals.  Two further corrections of order $u_\text{limb}\epsilon$ go with
-them: the quadrupoles are not scaled by $(1-u_\text{limb})$.  What makes the omission defensible
-is that the row is a model chosen for algebra and not a truncation of a physical law, and that
-$a_{10}$ carries no deformation at all, so at zero tide and spin the row is exact --- which is
-what \code{test\_at\_zero\_deformation\_the\_rows\_agree\_with\_the\_limb\_on} checks.
-
-A quadratic law in $\rho^2$ was tried first and is too drastic: at half the disc radius it
-gives $1 - 0.75u_\text{limb}$ where the linear law gives $1 - 0.5u_\text{limb}$.  Since the numeric row's law is a
-placeholder for what a stellar-atmosphere model would supply, the linear form is the better
-default: it is the classical one, and the closed-form row can carry it exactly at leading
-order.  The factor multiplies the quadrupole pattern, so strictly the cross terms at
-$O(\epsilon c)$ add small $l = 3$ structure; those are dropped, and the row stays a constant,
-a dipole and two quadrupoles.
+The closed form follows from \eqref{eq:first-order-pattern} multiplied by the limb factor, and
+it is derived in section~\ref{sec:deformation-first-order} together with the reason the
+coefficients need no Gaunt integral.  What matters here is that only the numeric row's
+brightness is sampled: the first-order row applies that algebra to the pattern, so the two
+differ in the pattern and not in the limb.
 
 One consequence should be stated rather than glossed: because the fit is made in the
 \emph{body} frame, a star darkened by the viewing geometry is fitted as though the darkening
 were painted onto the surface facing the observer.  The fitted coefficients are then
 meaningful only at the orientation they were fitted for.  That is a limitation of the
-surrogate's frame, not of the renderer, and it is one of the things
-section~\ref{sec:disk-modes} would fix.
+surrogate's frame, not of the renderer: a basis whose coefficients did not absorb the viewing
+angle would be needed to remove it.
 
 The row group is the part worth explaining, because the rows differ in kind:
 \begin{description}
@@ -127,38 +97,51 @@ section~\ref{sec:conventions} fixes.
 \subsection{The map model}
 \label{sec:model-map}
 
-\code{make mapgui} shows a starspot as spherical-harmonic coefficients: a polar cap carried in
-the body frame and rotated into the observer frame, in the manner of
+\code{make mapgui-levels} shows the Earth as spherical-harmonic coefficients: a brightness map
+carried in the body frame and rotated into the observer frame, in the manner of
 section~\ref{sec:rotation-law}.  There is no deformation and no solve --- the model is a
 \code{Coeffs} object --- so a redraw costs a coefficient sum, and the panels are the near and
-far hemispheres in units of the mean.
+far hemispheres in units of the mean.  This is the model to read first: one brightness, a
+fixed map, and three angles.
 
-The sliders are the spot's half-angle, its depth, its colatitude away from the spin axis, its
-longitude, the inclination of the spin to the line of sight, and the position angle of the
-sky.  The colatitude is what makes the longitude mean something: the cap is built about the
-pole, and an axisymmetric map is invariant under a rotation about its own axis, so with the
-spot at the pole the longitude slider does nothing at all.  The \code{l_max} radio is a
-truncation knob, and switching it shows the ringing of
-certificate~\vtag{28} directly.
+\paragraph{Two levels, and why the ratio is the knob.}  Land and sea are carried at two fixed
+brightnesses rather than as the colour image they were extracted from, because a two-level map
+can be stated and checked in one sentence.  The levels are not chosen: the \emph{ratio} $r$
+between land and sea is, and the condition that the sphere mean be one then fixes both,
+\begin{equation}
+  s = \frac{1}{1 + f(r-1)}, \qquad \text{land} = rs ,
+  \label{eq:levels}
+\end{equation}
+with $f$ the land fraction measured from the image.  A ratio of $1.5$ gives $0.877$ and
+$1.315$ at $f = 0.281$: a fifty per cent jump, which the eye resolves easily without making
+the sea dark.
 
-\paragraph{The presets, and what they test.}  Four scenes, each labelled by where the spot
-should appear.  With the spin pointing at the observer --- inclination $0$ --- and the spot at
-colatitude $60°$:
-\begin{description}
-\item[\code{spot left}] longitude $90°$: the spot must appear \emph{left} of centre,
-  vertically centred.
-\item[\code{spot right}] longitude $270°$: the mirror position, \emph{right} of centre.
-\item[\code{spot above}] longitude $0$: \emph{above} centre.
-\item[\code{spot behind}] inclination $90°$, longitude $0$: the spin axis now lies in the
-  plane of the sky, so the spot goes to the \emph{far} panel, and the near panel shows
-  nothing of it.
-\end{description}
-The first three together pin the page: East leftwards and North upwards cannot both be wrong
-and still put the spot where the label says.  The fourth exercises the far hemisphere and its
-mirror, which no residual can check.  The visibility view adds a fifth, arithmetic check that
-needs no preset --- for a real map $V(-u,-v) = \overline{V(u,v)}$, so the real part of
-$\Delta V$ is even under $(u,v) \to (-u,-v)$ and the imaginary part odd
-\eqref{eq:hermitian}.
+The ratio rather than the levels, because the step is what rings: the overshoot at a
+truncation is a fraction of the step, so a $3{:}1$ contrast would ripple where $1.5$ does not.
+The coefficients carry a Lanczos taper already, applied when they were written.  The
+extraction finds $f = 0.281$ against the accepted $0.292$ of the Earth's surface, from a mask
+that tests one colour against another --- close enough for a picture, and the levels adapt to
+whatever it finds.
+
+\paragraph{The sliders.}  The spin phase $\alpha$, the inclination $\beta$ and the sky's
+position angle $\gamma$, in degrees, plus a degree radio and a resolution radio.  The map is
+fixed, so these three are the whole of the interaction: the globe at rest, and then turned.
+They open at $\alpha = 155°$ and $\beta = 75°$, which puts Africa towards the observer and
+mostly Pacific on the far side.
+
+\paragraph{The visibility view} draws the real and imaginary parts of $\Delta V$ against the
+uniform disk.  Because the map is real, $V(-u,-v) = \overline{V(u,v)}$, so the real part is
+even under $(u,v) \to (-u,-v)$ and the imaginary part odd \eqref{eq:hermitian} --- a check the
+picture makes without a residual.  The values are small: the land--sea split is roughly
+balanced between the hemispheres, so the low degrees carry little, while the baselines at
+$q \sim 1$--$2$ are sensitive to exactly those degrees whose visibility the disk has already
+taken to zero.
+
+\paragraph{The retired starspot.}  An earlier model drew a polar cap on a uniform disk, with
+sliders for the cap's half-angle, depth, colatitude and longitude, and four presets labelled
+by where the spot should appear.  It went with the RGB version, kept at tag \code{rgb-mapgui};
+what remains of it is \code{maps.cap\_coefficients}, which the certificates use as the only
+closed-form coefficient set in the package.
 
 \paragraph{Reading the page.}  Both models draw the sky with North up and East to the left, so
 the screen carries the manual's $x$ and $y$ as its axes, and the third axis is the line of
@@ -172,17 +155,18 @@ sight.  Stated once, because every orientation question reduces to these:
     behind is what it shows, so its labels mean the mirrored directions and the sense of a
     rotation on that page is reversed.  Point 6 is the same statement.
   \item Increasing $\alpha$ turns the near-side picture \emph{anticlockwise}: a feature at the
-    top moves towards the left, which is what the \code{spot left} preset does at
-    $\alpha = 90°$.
+    top moves towards the left.
   \item Increasing $\beta$ sends the middle of the near side \emph{upwards}, because it tilts
     the body's $+z$ towards North.
-  \item PA acts like $\alpha$ --- the same anticlockwise sense --- but about the line of sight
-    and after $\beta$, since $R = R_z(\text{PA})R_y(\beta)R_z(\alpha)$.
+  \item $\gamma$ acts like $\alpha$ --- the same anticlockwise sense --- but about the line of
+    sight and after $\beta$, since $R = R_z(\gamma)R_y(\beta)R_z(\alpha)$.
   \item On the far side every rotation appears \emph{reversed}, as a consequence of the
     mirroring in point 2.
 \end{enumerate}
-Points 3 and 5 are worth keeping together: $\alpha$ rotates the body and PA rotates the sky,
-and both turn the near-side picture the same way.
+Points 3 and 5 are worth keeping together: $\alpha$ rotates the body and $\gamma$ rotates the
+sky, and both turn the near-side picture the same way.  The half-turn between them is worth
+knowing too: $\alpha$ and $\alpha + 180°$ show the same planet with the two faces exchanged,
+since the rotation is about the spin axis and the pole does not move.
 
 \subsection{What the checks are worth}
 \label{sec:models-worth}

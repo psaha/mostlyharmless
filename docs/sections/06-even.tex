@@ -150,6 +150,14 @@ tag & claim & rung \\
 \vtag{10} & the Hankel identity \eqref{eq:zernike-hankel}, by power series & exact, $n \le 6$, powers to $a^{18}$ \\
 \vtag{12} & \eqref{eq:even-coefficients} against coefficient matching & exact rational, $l \le 6$ \\
 \vtag{14} & \eqref{eq:even-radial} against the quadrature, $q = 0$ included & numerical, $l \le 6$ \\
+\vtag{22} & the Zernike transform identity, against the library's $R_n^m$ & numerical, $n \le 8$ \\
 \hline
 \end{tabular}
 \end{center}
+
+Certificate \vtag{22} came with the disk-mode proposal that has since been retired: the
+integrand of the Zernike transform is a polynomial times a
+Bessel function, so Gauss--Legendre quadrature evaluates it to machine precision, and any
+residual is the identity's own rather than the quadrature's.  It runs over every $(n,m)$ with
+$n \le 8$ and $n - m$ even, against the library's own $R_n^m$, so it certifies the convention
+as well as the formula.

@@ -1,6 +1,6 @@
 """Shared scaffolding for the two GUIs: coalescing, colour scale, layout, flips.
 
-Both ``gui`` and ``map_gui`` need the same five things around their own model code, and
+Both ``gui`` and ``levels_gui`` need the same five things around their own model code, and
 each was written once in each file.  That is the duplication T5 exists to remove: two
 copies of a debounce timer, a colour-scale rule and a column flip are exactly how the
 forward-reference and lost-widget bugs happened the first time.

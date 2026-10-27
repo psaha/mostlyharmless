@@ -2,7 +2,7 @@
 
 ``cap_coefficients`` turns a polar cap into zonal coefficients and ``sky_map`` renders one
 hemisphere of any coefficient set, in the real basis, in the frame the coefficients belong
-to.  Both are used by the map GUI (``symbolic.map_gui``) and by the truncation certificate
+to.  Both are used by the map GUI (``symbolic.levels_gui``) and by the truncation certificate
 V28; the manual's picture figures that used to live here are retired under T6, their content
 having moved to the GUI, which shows the same map live.
 

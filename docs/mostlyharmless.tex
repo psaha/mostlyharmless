@@ -9,7 +9,7 @@
 % House macros.  \code detokenises, so identifiers need no escaped underscores.
 % listed in the register at the end of the section that cites it (see section 1.5).
 \newcommand{\code}[1]{\texttt{\detokenize{#1}}}
-\newcommand{\PA}{\mathrm{PA}}
+\newcommand{\PA}{\gamma}   % the third Euler angle; the name is one decision, D23
 \newcommand{\vtag}[1]{\textnormal{[V#1]}}
 
 \title{Interferometric visibilities of\\ spherical-harmonic surface maps}
@@ -43,8 +43,12 @@ rung and the scope of every such claim are stated with it.
 \input{sections/06-even}
 \input{sections/07-full-map}
 \input{sections/08-triaxial}
-\input{sections/09-disk-modes}
 \input{sections/10-models}
+
+% The summary, formatted as an appendix so that the body's equation numbering does not
+% shift while it is drafted.  It becomes section 0, before section 1, when it moves: the
+% file is self-contained, so that is one \input line and the \appendix here.
+\input{sections/00-summary}
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

@@ -18,7 +18,7 @@ PDF := docs/mostlyharmless.pdf
 TEX := $(wildcard docs/sections/*.tex)
 GENERATED := docs/generated/coefficients.tex
 
-.PHONY: all check check-fast retest versions docs data earth earth-levels time-earth gui mapgui mapgui-levels clean distclean
+.PHONY: all check check-fast retest versions docs data earth earth-levels time-earth gui mapgui-levels clean distclean
 
 all: check docs
 
@@ -61,9 +61,6 @@ data:
 # The interactive front end (Stage 8, D25).  Needs a display; not part of `all`.
 gui:
 	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.gui
-
-mapgui:
-	PYTHONPATH=src $(PYTHON) -m mostlyharmless.symbolic.map_gui
 
 # The fork: the two-level Earth, one brightness channel, no spot and no colour.
 mapgui-levels:

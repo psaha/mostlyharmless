@@ -1,0 +1,218 @@
+% 00-summary.tex -- the results, stated without their derivations.
+% Formatted as an appendix for now so that the equation numbering of the body does not
+% shift while it is being drafted; it is intended to become section 0, before section 1.
+% Its displays carry labels from the start, so only the counter changes when it moves.
+
+\appendix
+% article's \appendix renumbers sections but not equations, so the counter is reset here and
+% given an A prefix.  When this becomes section 0 the two lines go and the numbers become
+% ordinary ones; the labels are unchanged either way.
+\setcounter{equation}{0}
+\renewcommand{\theequation}{A\arabic{equation}}
+\section{Not Really an Appendix}
+\label{sec:summary}
+
+This is the whole calculation, stated and not derived.  A reader who stops here has the
+essentials; the sections that follow are the derivations, and each part of this appendix
+corresponds to one of them.
+
+Conventions throughout: the sky axes are $x$ towards North and $y$ towards East, the third
+axis points at the observer, and a map is normalised so that its monopole is $a_{00} = 1$,
+which puts the sphere mean at $1/\sqrt{4\pi}$.  The star has unit angular radius, so the
+visible disk is the unit circle.
+
+\subsection{Visibility, and the expansion of a map}
+
+The complex visibility is the Fourier transform of the sky brightness with $2\pi$ inside the
+exponent and no prefactor,
+\begin{equation}
+  V(u,v) \;=\; \int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx .
+  \label{eq:summary-visibility}
+\end{equation}
+A real map is expanded in complex harmonics using non-negative orders only, the reality
+being carried by the expansion itself,
+\begin{equation}
+  I(\theta,\varphi) \;=\; \sum_{l}\Bigl[\, a_{l0}Y_{l0}
+  + \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl(a_{lm}Y_{lm}\bigr) \Bigr] .
+  \label{eq:summary-expansion}
+\end{equation}
+The same pairing works through the transform, and the parity of $m$ decides which part of a
+coefficient survives: the contribution of one stored $a_{lm}$ is twice the real part of
+$a_{lm}V_{lm}$ when $m$ is even and twice $i$ times its imaginary part when $m$ is odd.  That
+is the whole of the negative-order bookkeeping, and it is why half the coefficients suffice.
+Its one consequence worth stating early: at a negative order the visibility carries no extra
+sign, because the $(-1)^m$ of the basis is cancelled by the $(-1)^m$ that $e^{im\pi}$
+contributes when the baseline is reversed.
+
+\subsection{Rotation}
+
+A map carried in the body frame reaches the observer through a rotation of its coefficients,
+$b = D(R)a$, where $D$ is the Wigner matrix of the rotation $R$.  In the zyz convention
+$R = R_z(\gamma)R_y(\beta)R_z(\alpha)$, with $\alpha$ the spin phase, $\beta$ the inclination
+and $\gamma$ the sky position angle of the spin.  Two features of $D$ do the work.  It is
+block diagonal in $l$, so the degree is untouched and a truncated map stays truncated.  And
+each block is a finite matrix of $(2l+1)^2$ numbers that depends only on the three angles,
+so a rotation costs a matrix product rather than a resampling.
+
+For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity
+and five numbers.  With $\hat e$ the axis of the pattern,
+\begin{equation}
+  P_2(\hat n\cdot\hat e) \;=\; \frac{4\pi}{5}\Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
+  \;+\; 2\sum_{m=1}^{2}\mathrm{Re}\bigl(\overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n)\bigr)\Bigr] ,
+  \label{eq:summary-zonal}
+\end{equation}
+and the five numbers, for an axis at direction cosines $(a,b,c)$,
+\begin{equation}
+  \begin{aligned}
+    Y_{20}(\hat e) &= \sqrt{\tfrac{5}{16\pi}}\,\bigl(3c^2-1\bigr), \\
+    Y_{2,\pm1}(\hat e) &= \mp\sqrt{\tfrac{15}{8\pi}}\,c\,\bigl(a\pm ib\bigr), \\
+    Y_{2,\pm2}(\hat e) &= \sqrt{\tfrac{15}{32\pi}}\,\bigl(a\pm ib\bigr)^2 .
+  \end{aligned}
+  \label{eq:summary-five-numbers}
+\end{equation}
+No zonal pattern needs more than these, whatever frame its axis is quoted in.
+
+\subsection{The reduction to one radial integral}
+
+Because the disk is a circle, the angular part of \eqref{eq:summary-visibility} can be done
+once and for all: each harmonic contributes a complex constant times a radial integral that
+depends on the baseline length $q$ alone,
+\begin{equation}
+  V_{lm}(u,v) \;=\; 2\pi(-i)^m N_{lm}\, e^{im\psi}\, X_{lm}(q) ,
+  \label{eq:summary-mode}
+\end{equation}
+with $\psi$ the baseline's position angle, $N_{lm}$ the harmonic normalisation, and
+\begin{equation}
+  X_{lm}(q) \;=\; \int_0^1 P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)\, J_m(2\pi q\rho)\,
+  \rho\, d\rho .
+  \label{eq:summary-radial-integral}
+\end{equation}
+Everything about the geometry of a single mode is in $X_{lm}$; everything about its place on
+the sky is in $e^{im\psi}$.  The reduction is exact at every $q$, and it is the object the
+next two subsections evaluate in closed form.
+
+\subsection{The closed forms}
+
+The integral splits by the parity of $l+m$, and the two halves are different in kind.
+
+For $l+m$ odd, $P_{lm}(\sqrt{1-\rho^2})$ is $\rho^m$ times a polynomial in $\rho^2$ of degree
+$(l-m-1)/2$, and the Bessel integral collapses to a single term:
+\begin{equation}
+  X_{lm}(q) \;=\; (-1)^m\,\frac{(l+m)!!}{(l-m-1)!!}\,
+  \frac{j_l(2\pi q)}{2\pi q} , \qquad l+m \text{ odd} .
+  \label{eq:summary-odd}
+\end{equation}
+One spherical Bessel function, whatever the degree.
+
+For $l+m$ even there is an extra factor $\sqrt{1-\rho^2}$, and the same polynomial is instead
+expanded in Zernike radial polynomials of the same order,
+\begin{equation}
+  \rho^m A(\rho^2) \;=\; \sum_{k=0}^{(l-m)/2} c_k\, R_{m+2k}^{m}(\rho) ,
+  \qquad
+  c_k \;=\; \bigl(2(m+2k)+2\bigr)\int_0^1 \rho^m A(\rho^2)\,R_{m+2k}^{m}(\rho)\,
+  \rho\, d\rho .
+  \label{eq:summary-even-coefficients}
+\end{equation}
+The expansion is finite because both sides have the same degree and parity, and the Zernike
+transform turns it term by term into ordinary Bessel functions,
+\begin{equation}
+  X_{lm}(q) \;=\; \sum_{k=0}^{(l-m)/2} c_k\,(-1)^k\,
+  \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} .
+  \label{eq:summary-even}
+\end{equation}
+So every mode of every degree is a finite Bessel sum, and a visibility at a single baseline
+is a short sum over modes with no quadrature anywhere.
+
+\subsection{The deformed source}
+
+A star deformed by its own rotation and by a companion has a level surface given, to
+quadrupole order, by a potential of two amplitudes,
+\begin{equation}
+  \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
+  \;-\;\epsilon_\text{tide}\,r^2P_2(n\cdot\hat e_\text{tide})
+  \;+\;\epsilon_\text{spin}\,r^2P_2(n\cdot\hat e_\text{spin})
+  \;-\;\epsilon_\text{spin}\,r^2 ,
+  \label{eq:summary-potential}
+\end{equation}
+whose surface is the level set $\Phi = -1$.  Writing the depth of the perturbation along a
+direction as $E(n) = \epsilon_\text{tide}P_2(n\cdot\hat e_\text{tide})
+- \epsilon_\text{spin}[P_2(n\cdot\hat e_\text{spin})-1]$, that surface is the solution of
+$1/r + E(n)r^2 = 1$, which is exact and costs one root per sampled direction.
+
+The brightness follows the gravity, $I \propto g^p$ with $g = |\nabla\Phi|$ on the surface and
+$p = 1$ the bolometric von Zeipel law, multiplied by a linear limb factor
+\begin{equation}
+  1 - u_\text{limb}(1-\mu) , \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  \label{eq:summary-limb-law}
+\end{equation}
+which is linear in $\mu$ because $\mu$ is a single harmonic, and therefore costs one
+coefficient at $m = 0$ rather than a product of expansions.
+
+The shape and the brightness together make the map a function of position that no closed form
+covers, so the scale of the calculation is set by how the surface is approximated.  Two
+approximations are used.  The first replaces the sky map by its linear part: the shape is
+captured by a single $2\times2$ positive-definite matrix, the stretch
+\begin{equation}
+  \Lambda \;=\; \sqrt{A A^{T}} , \qquad A = P\,(\text{frame}\cdot\text{radii}) ,
+  \label{eq:summary-stretch}
+\end{equation}
+where $P$ projects onto $(\text{East},\text{North})$ and the radii are taken along the
+principal directions.  Those directions are the eigenvectors of the quadratic form of
+$E(n)$, and the radii along them are the exact level radii, so $\Lambda$ is computed from the
+level surface rather than fitted.  The stretch acts on the visibility as a change of
+frequency,
+\begin{equation}
+  V_\text{affine}(u,v) \;=\; V_\text{sph}\bigl(\Lambda^{T}(u,v)\bigr) ,
+  \label{eq:summary-affine}
+\end{equation}
+with no flux factor: the determinant that stretching puts on the brightness cancels the one
+it puts on the measure.  $\Lambda$ is best read as a preconditioner, since a different but
+equally defensible stretch changes the coefficients of any series built on it without
+changing the exact answer.
+
+To first order in both amplitudes the pattern is a constant plus two quadrupoles, and with
+the limb factor carried through it becomes
+\begin{equation}
+  I(\hat n) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 4\epsilon_\text{spin}
+  - 4\epsilon_\text{tide}P_2(\hat n\cdot\hat t)
+  + 4\epsilon_\text{spin}P_2(\hat n\cdot\hat s)\Bigr] ,
+  \label{eq:summary-first-order}
+\end{equation}
+whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
+\begin{equation}
+  \begin{aligned}
+    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
+    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
+    a_{2m} = -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
+    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\Bigr] .
+  \end{aligned}
+  \label{eq:summary-first-order-coefficients}
+\end{equation}
+A constant, a dipole from the limb, and two quadrupoles from the deformation, with no Gaunt
+integral anywhere: the limb is a dipole because $\mu$ is a single harmonic, and the
+quadrupoles come from \eqref{eq:summary-zonal} and \eqref{eq:summary-five-numbers}.
+
+The second approximation does not assume the coefficients at all.  The surface is rendered,
+sampled on the level surface with the limb factor applied, and coefficients fitted by least
+squares in the image plane, which is the norm the data live in.  The fit solves a normal
+equation whose matrix is a Gram matrix of the basis alone, and whose right-hand side is a sum
+over the samples,
+\begin{equation}
+  b_{lm} \;=\; \sum_s w_s\, I_s\, \overline{\Phi_{lm}\bigl(\Lambda^{-1}x_s\bigr)} ,
+  \label{eq:summary-fitted-rhs}
+\end{equation}
+with $\Phi_{lm}$ the projected harmonics and $w_s$ the projected area each sample carries.
+This row has no assumption beyond the stretch, so its error is a truncation at the chosen
+degree, which the user controls; the first-order row's error is instead the linearisation of
+the brightness.  Comparing the two is what the interactive models are for.
+
+\subsection{What is new here}
+
+Sections 1--3 are standard spherical-harmonic material, and the reduction of
+\eqref{eq:summary-mode}--\eqref{eq:summary-radial-integral} follows published work.  The
+closed forms of \eqref{eq:summary-odd} and \eqref{eq:summary-even} use the same parity split
+as Dholakia \& Pope (2025), but give each mode as an explicit Bessel sum rather than as a
+basis-change matrix.  The deformation of
+\eqref{eq:summary-potential}--\eqref{eq:summary-first-order-coefficients}, with the limb
+carried in the coefficients, and the fitted row of \eqref{eq:summary-fitted-rhs}, are the new
+material, and the two interactive models that compare them are the second.
