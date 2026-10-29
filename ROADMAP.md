@@ -860,6 +860,26 @@ against the projection. The affine model's error is **second order in
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
 
+* **The two appendices are one, and it is a brief rather than a summary.** Appendix A (the
+  results) and Appendix B (the same displays with the certificates beside them) had 16 displays
+  each, verified identical in order and content --- so B was a strict superset and A duplicated
+  it. They are now a single appendix, keeping B's checkmark items and A's opening, its
+  conventions sentence and its title. Four pages lighter, and the drift hazard of editing two
+  copies is gone.
+
+  The merge follows a change of destination rather than a change of mind about the content.
+  Appendix A was meant to become section 0, but a good section 0 has to say something about the
+  certificates, and that is not knowable until the certificates have been looked at; and the
+  human-written document in `expos/` is an *exposition of the manual*, not a second source. So
+  the appendix is now the **brief**: the results in the order a paper would present them, each
+  beside the certificate that backs it, terse and complete. `expos/` may reorder and reword
+  freely; where the two disagree, the appendix is right.
+
+  What the merge added, beyond deleting a copy, is the paragraph the appendix never had: what a
+  certificate *is* --- a differential test, two independent computations, a stated tolerance,
+  a residual returned --- the three classes, and the two limits, that independence is only as
+  good as the routes and that the trusted base is numpy rather than a kernel.
+
 * **The polar cap is retired, and V28 with it.** The cap survived T10 only because the
   certificates used it, and the argument for keeping it was that V28 needed a discontinuous map.
   That argument fails on inspection: the power-law decay of a truncated discontinuous map is
@@ -873,7 +893,7 @@ against the projection. The affine model's error is **second order in
   V15 stays, because its claim is about *our* code --- one rotation and both parity families
   against a direct transform --- and it is the only check that would catch an error common to
   both families. It now runs on a truncation of the Earth's own coefficients, which keeps it on
-  an artefact the package renders rather than a synthetic profile. Appendix B loses its
+  an artefact the package renders rather than a synthetic profile. The appendix loses its
   truncation-rate subsection, and V24 is left as the only *independent* certificate.
 
 * **T12 closed: the harmonic normalisation is now `Y_00 = 1`.** The orthonormal convention,

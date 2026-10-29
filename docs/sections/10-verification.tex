@@ -1,66 +1,93 @@
-% 10-verification.tex -- the appendix that goes beside the summary: the same displays, each
-% with the certificate that checks it.  The displays are duplicated from 00-summary.tex on
-% purpose; a change to one must be made to the other.
+% The brief: the results, in the order a paper would present them, each with the
+% certificate that backs it.  This is the source the human-written exposition in expos/ draws
+% on; that document may reorder and reword freely, but where the two disagree about a number
+% or a claim, this one is right.
+%
+% It is formatted as an appendix so that the body's equation numbering does not shift.  The
+% labels are stable and nothing in the body cites them.
 
-% The long function names in \code{} cannot be broken, and with them in the prose the
-% paragraph has too few break points.  \sloppy relaxes the spacing for this appendix only;
-% the proper fix is to move the names into a table, which is worth doing when it is next
-% edited.
-\sloppy
+\appendix
+% article's \appendix renumbers sections but not equations, so the counter is reset here and
+% given an A prefix.
 \setcounter{equation}{0}
-\renewcommand{\theequation}{B\arabic{equation}}
-\section{Verification}
-\label{sec:verification}
+\renewcommand{\theequation}{A\arabic{equation}}
+\section{Not Really an Appendix}
+\label{sec:summary}
 
-This appendix repeats the displays of Appendix~\ref{sec:summary} in the same order, and says
-beside each which certificate checks it and where the check lives.  The certificates are
-functions in \code{mostlyharmless.symbolic.derivations}; each is called by a one-line assertion
-in the test suite, which is what \code{make check} runs.
+This is the whole calculation, stated and not derived: the results, in the order a paper
+would present them, each beside the certificate that backs it.  The sections before this one
+are the derivations.
 
-Each certificate is a \emph{differential} test: two independent computations of the same
-number, compared to a stated tolerance.  They fall into three classes.
+Conventions throughout: the sky axes are $x$ towards North and $y$ towards East, the third
+axis points at the observer, and a map is normalised so that its monopole is
+$a_{00} = 1$, which is the sphere mean itself.  The star has unit angular radius, so the
+visible disk is the unit circle.
+
+\paragraph{What the certificates are.}  Each is a function in
+\code{mostlyharmless.symbolic.derivations}, called by a one-line assertion in
+\code{make check}.  Each is a \emph{differential} test: two independent computations of the
+same number, compared to a stated tolerance, with the residual returned so that degradation is
+visible.  They fall into three classes.
 
 \begin{description}
 \item[Theorem-like] the check states a result the reader may want, and its reference is the
   definition or a route no other check shares.  These are worth reading.
 \item[Lemma-like] a subsidiary identity the derivation uses.  Short to state, and where a
   convention error hides.
-\item[\emph{Scaffolding}] a check that a later result makes redundant.  Useful while the
+\item[Scaffolding] a check that a later result makes redundant.  Useful while the
   derivation was being found; skippable once the terminal check has passed.
 \end{description}
 
-\subsection{Visibility, and the expansion of a map}
+Two limits are worth stating plainly.  A certificate is only as good as its independence: where
+both routes share a step, a wrong step passes, and V24 says so of itself.  And the trusted base
+is numpy, scipy and sympy, not a proof kernel --- so a reader who wants to check the checking
+must read the script, which is why each is ten to thirty lines.
+
+\subsection{The visibility}
 
 The complex visibility is the Fourier transform of the sky brightness with $2\pi$ inside the
 exponent and no prefactor,
 \begin{equation}
   V(u,v) \;=\; \int I(x,y)\, e^{-2\pi i (u x + v y)}\, dx\, dy .
-  \label{eq:verif-visibility}
+  \label{eq:brief-visibility}
 \end{equation}
-A real map is expanded in complex harmonics using non-negative orders only, the reality
-being carried by the expansion itself,
-\begin{equation}
-  I(\theta,\varphi) = \sum_{l} \sum_{m=-l}^{l} a_{lm}Y_{lm}
-  \label{eq:verif-expansion}
-\end{equation}
-The same pairing works through the transform, and the parity of $m$ decides which part of a
-coefficient survives: the contribution of one stored $a_{lm}$ is twice the real part of
-$a_{lm}V_{lm}$ when $m$ is even and twice $i$ times its imaginary part when $m$ is odd.  That
-is the whole of the negative-order bookkeeping, and it is why half the coefficients suffice.
-Its one consequence worth stating early: at a negative order the visibility carries no extra
-sign, because the $(-1)^m$ of the basis is cancelled by the $(-1)^m$ that $e^{im\pi}$
-contributes when the baseline is reversed.
-
+It is left unnormalised, so $V(0,0)$ is the total flux; the normalisation lives in the
+$\Delta V$ the models plot.
 
 \begin{itemize}
-  \item[$\checkmark$] \code{check_full_map_fft} compares the paired mode sum of
-    \eqref{eq:verif-expansion} against a two-dimensional FFT of the same map, in the
-    low-frequency band.
-    \\[1pt] \vtag{15}\quad \emph{Numerical to $5\times10^{-2}$}
   \item[$\checkmark$] \code{check_uniform_disk_visibility} checks the uniform disk against
-    $2J_1(x)/x$, with flux $\pi$, the disk's area.
+    $2J_1(x)/x$, with flux $\pi$, the disk's area --- the anchor that fixes the harmonic
+    normalisation, the placement of $2\pi$ and the planar measure jointly.
     \\[1pt] \vtag{16}\quad \emph{Numerical, $l = 0$}
 \end{itemize}
+
+\subsection{Spherical harmonics}
+
+The map is carried in complex harmonics,
+\begin{equation}
+  Y_{lm}(\theta,\varphi) = N_{lm}\, P_{lm}(\cos\theta)\, e^{im\varphi},
+  \qquad
+  N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
+  \label{eq:brief-ylm}
+\end{equation}
+with the Condon--Shortley phase carried inside $P_{lm}$.  Only $m \ge 0$ is ever needed:
+reality is a property of the expansion rather than of a separate set of coefficients, so half
+the orders suffice and the signed order is never formed.
+
+The normalisation is $Y_{00} = 1$, so the average of $|Y_{lm}|^2$ over the sphere is unity and
+its integral is $4\pi$; the orthonormal convention scales every $Y_{lm}$ by $1/\sqrt{4\pi}$
+relative to this one.
+
+At $l = 2$ the definition gives three stored values in closed form, and they are what the
+deformation uses: \eqref{eq:brief-zonal} combines them into a single zonal pattern,
+\begin{equation}
+  \begin{aligned}
+    Y_{20} &= \sqrt{\tfrac54}\,\bigl(3\cos^2\theta - 1\bigr), \\
+    Y_{21} &= -\sqrt{\tfrac{15}{2}}\,\cos\theta\,\sin\theta\; e^{i\varphi}, \\
+    Y_{22} &= \sqrt{\tfrac{15}{8}}\,\sin^2\theta\; e^{2i\varphi} .
+  \end{aligned}
+  \label{eq:brief-y2m}
+\end{equation}
 
 \begin{itemize}
   \item[$\checkmark$] \code{check_legendre_orthogonality_exact} integrates $P_lP_{l'}$ in rational
@@ -84,28 +111,22 @@ block diagonal in $l$, so the degree is untouched and a truncated map stays trun
 each block is a finite matrix of $(2l+1)^2$ numbers that depends only on the three angles,
 so a rotation costs a matrix product rather than a resampling.
 
-For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity
-and five numbers.  With $\hat e$ the axis of the pattern,
+For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity.
+With $\hat e$ the axis of the pattern,
 \begin{equation}
   P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}\Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
   \;+\; 2\sum_{m=1}^{2}\mathrm{Re}\bigl(\overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n)\bigr)\Bigr] ,
-  \label{eq:verif-zonal}
+  \label{eq:brief-zonal}
 \end{equation}
-and the five numbers, for an axis at direction cosines $(a,b,c)$,
-\begin{equation}
-  \begin{aligned}
-    Y_{20}(\hat e) &= \sqrt{\tfrac54}\,\bigl(3c^2-1\bigr), \\
-    Y_{2,\pm1}(\hat e) &= \mp\sqrt{\tfrac{15}{2}}\,c\,\bigl(a\pm ib\bigr), \\
-    Y_{2,\pm2}(\hat e) &= \sqrt{\tfrac{15}{8}}\,\bigl(a\pm ib\bigr)^2 .
-  \end{aligned}
-  \label{eq:verif-five-numbers}
-\end{equation}
-No zonal pattern needs more than these, whatever frame its axis is quoted in.
+which needs only the stored orders,\footnote{For an axis at direction cosines $(a,b,c)$ the
+same values are $\sqrt{5/4}(3c^2-1)$, $-\sqrt{15/2}\,c(a+ib)$ and $\sqrt{15/8}(a+ib)^2$, the
+form in which the deformation's coefficients are quoted in section~\ref{sec:triaxial}.}
+so a zonal pattern costs three numbers in any frame.
 
 
 \begin{itemize}
   \item[$\checkmark$] \code{check_addition_theorem_numeric} checks the addition theorem that
-    \eqref{eq:verif-zonal} rests on, in its complex and its real form.
+    \eqref{eq:brief-zonal} rests on, in its complex and its real form.
     \\[1pt] \vtag{3}\quad \emph{Numerical to $40$ digits, $l \le 6$}
   \item[$\checkmark$] \code{check_wigner_d_against_exponential} compares the $d$-matrix with
     $\exp(-i\beta J_y)$.
@@ -122,20 +143,43 @@ No zonal pattern needs more than these, whatever frame its axis is quoted in.
     \\[1pt] \vtag{7}\quad \emph{Numerical, $l \le 3$}
 \end{itemize}
 
-\subsection{The reduction to one radial integral}
+\subsection{Combining the map with the transform}
 
-Because the disk is a circle, the angular part of \eqref{eq:verif-visibility} can be done
+A real map is expanded in complex harmonics using non-negative orders only, the reality
+being carried by the expansion itself,
+\begin{equation}
+  I(\theta,\varphi) \;=\; \sum_{l}\Bigl[\, a_{l0}Y_{l0}
+  + \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl(a_{lm}Y_{lm}\bigr) \Bigr] .
+  \label{eq:brief-expansion}
+\end{equation}
+The same pairing works through the transform, and the parity of $m$ decides which part of a
+coefficient survives: the contribution of one stored $a_{lm}$ is twice the real part of
+$a_{lm}V_{lm}$ when $m$ is even and twice $i$ times its imaginary part when $m$ is odd.  That
+is the whole of the negative-order bookkeeping, and it is why half the coefficients suffice.
+Its one consequence worth stating early: at a negative order the visibility carries no extra
+sign, because the $(-1)^m$ of the basis is cancelled by the $(-1)^m$ that $e^{im\pi}$
+contributes when the baseline is reversed.
+
+
+\begin{itemize}
+  \item[$\checkmark$] \code{check_full_map_fft} compares the paired mode sum of
+    \eqref{eq:brief-expansion} against a two-dimensional FFT of the same map, in the
+    low-frequency band.
+    \\[1pt] \vtag{15}\quad \emph{Numerical to $5\times10^{-2}$}
+\end{itemize}
+
+Because the disk is a circle, the angular part of \eqref{eq:brief-visibility} can be done
 once and for all: each harmonic contributes a complex constant times a radial integral that
 depends on the baseline length $q$ alone,
 \begin{equation}
   V_{lm}(u,v) \;=\; 2\pi(-i)^m N_{lm}\, e^{im\psi}\, X_{lm}(q) ,
-  \label{eq:verif-mode}
+  \label{eq:brief-mode}
 \end{equation}
 with $\psi$ the baseline's position angle, $N_{lm}$ the harmonic normalisation, and
 \begin{equation}
   X_{lm}(q) \;=\; \int_0^1 P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)\, J_m(2\pi q\rho)\,
   \rho\, d\rho .
-  \label{eq:verif-radial-integral}
+  \label{eq:brief-radial-integral}
 \end{equation}
 Everything about the geometry of a single mode is in $X_{lm}$; everything about its place on
 the sky is in $e^{im\psi}$.  The reduction is exact at every $q$, and it is the object the
@@ -160,7 +204,7 @@ $(l-m-1)/2$, and the Bessel integral collapses to a single term:
 \begin{equation}
   X_{lm}(q) \;=\; (-1)^m\,\frac{(l+m)!!}{(l-m-1)!!}\,
   \frac{j_l(2\pi q)}{2\pi q} , \qquad l+m \text{ odd} .
-  \label{eq:verif-odd}
+  \label{eq:brief-odd}
 \end{equation}
 One spherical Bessel function, whatever the degree.
 
@@ -171,27 +215,27 @@ expanded in Zernike radial polynomials of the same order,
   \qquad
   c_k \;=\; \bigl(2(m+2k)+2\bigr)\int_0^1 \rho^m A(\rho^2)\,R_{m+2k}^{m}(\rho)\,
   \rho\, d\rho .
-  \label{eq:verif-even-coefficients}
+  \label{eq:brief-even-coefficients}
 \end{equation}
 The expansion is finite because both sides have the same degree and parity, and the Zernike
 transform turns it term by term into ordinary Bessel functions,
 \begin{equation}
   X_{lm}(q) \;=\; \sum_{k=0}^{(l-m)/2} c_k\,(-1)^k\,
   \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} .
-  \label{eq:verif-even}
+  \label{eq:brief-even}
 \end{equation}
 So every mode of every degree is a finite Bessel sum, and a visibility at a single baseline
 is a short sum over modes with no quadrature anywhere.
 
-The expressions \eqref{eq:verif-odd} and \eqref{eq:verif-even}
+The expressions \eqref{eq:brief-odd} and \eqref{eq:brief-even}
 were derived by \cite{dholakia2025} but the
-expression \eqref{eq:verif-even-coefficients} giving the
+expression \eqref{eq:brief-even-coefficients} giving the
 coefficients $c_k$ as rational numbers is a refinement.
 
 
 \begin{itemize}
-  \item[$\checkmark$] \code{check_odd_closed_form} compares \eqref{eq:verif-odd} against the
-    quadrature \eqref{eq:verif-radial-integral}, which is the definition.  This is the terminal
+  \item[$\checkmark$] \code{check_odd_closed_form} compares \eqref{eq:brief-odd} against the
+    quadrature \eqref{eq:brief-radial-integral}, which is the definition.  This is the terminal
     check of the whole reduction, and it is the one to read.
     \\[1pt] \vtag{13}\quad \emph{Numerical to $10^{-9}$, $l \le 5$}
   \item[$\checkmark$] \code{check_odd_collapse_exact} obtains the same collapse coefficients a
@@ -217,7 +261,7 @@ coefficients $c_k$ as rational numbers is a refinement.
   \item[$\checkmark$] \code{check_zernike_bessel_identity} checks the Zernike transform against
     the library's own $R_n^m$, by quadrature.
     \\[1pt] \vtag{22}\quad \emph{Numerical, $n \le 8$}
-  \item[$\checkmark$] \code{check_even_closed_form} compares \eqref{eq:verif-even} against the
+  \item[$\checkmark$] \code{check_even_closed_form} compares \eqref{eq:brief-even} against the
     same quadrature as V13.  This is the even family's terminal check: if it passes, the five
     lemmas above have been validated with it.
     \\[1pt] \vtag{14}\quad \emph{Numerical to $10^{-9}$, $l \le 6$}
@@ -232,7 +276,7 @@ surface given, to quadrupole order, by a potential of two amplitudes,
   \;-\;\epsilon_\text{tide}\,r^2P_2(n\cdot\hat e_\text{tide})
   \;+\;\epsilon_\text{spin}\,r^2P_2(n\cdot\hat e_\text{spin})
   \;-\;\epsilon_\text{spin}\,r^2 ,
-  \label{eq:verif-potential}
+  \label{eq:brief-potential}
 \end{equation}
 whose surface is the level set $\Phi = -1$.  Writing the depth of the perturbation along a
 direction as $E(n) = \epsilon_\text{tide}P_2(n\cdot\hat e_\text{tide})
@@ -243,7 +287,7 @@ The brightness follows the gravity, $I \propto g^p$ with $g = |\nabla\Phi|$ on t
 $p = 1$ the bolometric von Zeipel law, multiplied by a linear limb factor
 \begin{equation}
   1 - u_\text{limb}(1-\mu) , \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
-  \label{eq:verif-limb-law}
+  \label{eq:brief-limb-law}
 \end{equation}
 which is linear in $\mu$ because $\mu$ is a single harmonic, and therefore costs one
 coefficient at $m = 0$ rather than a product of expansions.
@@ -254,7 +298,7 @@ approximations are used.  The first replaces the sky map by its linear part: the
 captured by a single $2\times2$ positive-definite matrix, the stretch
 \begin{equation}
   \Lambda \;=\; \sqrt{A A^{T}} , \qquad A = P\,(\text{frame}\cdot\text{radii}) ,
-  \label{eq:verif-stretch}
+  \label{eq:brief-stretch}
 \end{equation}
 where $P$ projects onto $(\text{East},\text{North})$ and the radii are taken along the
 principal directions.  Those directions are the eigenvectors of the quadratic form of
@@ -263,7 +307,7 @@ level surface rather than fitted.  The stretch acts on the visibility as a chang
 frequency,
 \begin{equation}
   V_\text{affine}(u,v) \;=\; V_\text{sph}\bigl(\Lambda^{T}(u,v)\bigr) ,
-  \label{eq:verif-affine}
+  \label{eq:brief-affine}
 \end{equation}
 with no flux factor: the determinant that stretching puts on the brightness cancels the one
 it puts on the measure.  $\Lambda$ is best read as a preconditioner, since a different but
@@ -276,7 +320,7 @@ the limb factor carried through it becomes
   I(\hat n) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 4\epsilon_\text{spin}
   - 4\epsilon_\text{tide}P_2(\hat n\cdot\hat t)
   + 4\epsilon_\text{spin}P_2(\hat n\cdot\hat s)\Bigr] ,
-  \label{eq:verif-first-order}
+  \label{eq:brief-first-order}
 \end{equation}
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
 \begin{equation}
@@ -286,11 +330,11 @@ whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
     a_{2m} = -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
     - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\Bigr] .
   \end{aligned}
-  \label{eq:verif-first-order-coefficients}
+  \label{eq:brief-first-order-coefficients}
 \end{equation}
 A constant, a dipole from the limb, and two quadrupoles from the deformation, with no Gaunt
 integral anywhere: the limb is a dipole because $\mu$ is a single harmonic, and the
-quadrupoles come from \eqref{eq:verif-zonal} and \eqref{eq:verif-five-numbers}.
+quadrupoles come from \eqref{eq:brief-zonal} and \eqref{eq:brief-y2m}.
 
 The second approximation does not assume the coefficients at all.  The surface is rendered,
 sampled on the level surface with the limb factor applied, and coefficients fitted by least
@@ -299,7 +343,7 @@ equation whose matrix is a Gram matrix of the basis alone, and whose right-hand 
 over the samples,
 \begin{equation}
   b_{lm} \;=\; \sum_s w_s\, I_s\, \overline{\Phi_{lm}\bigl(\Lambda^{-1}x_s\bigr)} ,
-  \label{eq:verif-fitted-rhs}
+  \label{eq:brief-fitted-rhs}
 \end{equation}
 with $\Phi_{lm}$ the projected harmonics and $w_s$ the projected area each sample carries.
 This row has no assumption beyond the stretch, so its error is a truncation at the chosen
@@ -321,7 +365,7 @@ the brightness.  Comparing the two is what the interactive models are for.
 
 \begin{itemize}
   \item[$\checkmark$] \code{check_first_order_coefficients} compares the closed-form coefficients
-    \eqref{eq:verif-first-order-coefficients} against the quadrature that projects the same
+    \eqref{eq:brief-first-order-coefficients} against the quadrature that projects the same
     pattern.  It covers the limb factor as well, which is why both displays share it.
     \\[1pt] \vtag{21}\quad \emph{Numerical}
   \item[$\checkmark$] \code{check_first_order_frame} compares the coefficients computed with
@@ -342,11 +386,11 @@ the brightness.  Comparing the two is what the interactive models are for.
 \subsection{What is new here}
 
 Sections 1--3 are standard spherical-harmonic material, and the reduction of
-\eqref{eq:verif-mode}--\eqref{eq:verif-radial-integral} follows published work.  The
-closed forms of \eqref{eq:verif-odd} and \eqref{eq:verif-even} use the same parity split
+\eqref{eq:brief-mode}--\eqref{eq:brief-radial-integral} follows published work.  The
+closed forms of \eqref{eq:brief-odd} and \eqref{eq:brief-even} use the same parity split
 as Dholakia \& Pope (2025), but give each mode as an explicit Bessel sum rather than as a
 basis-change matrix.  The deformation of
-\eqref{eq:verif-potential}--\eqref{eq:verif-first-order-coefficients}, with the limb
-carried in the coefficients, and the fitted row of \eqref{eq:verif-fitted-rhs}, are the new
+\eqref{eq:brief-potential}--\eqref{eq:brief-first-order-coefficients}, with the limb
+carried in the coefficients, and the fitted row of \eqref{eq:brief-fitted-rhs}, are the new
 material, and the two interactive models that compare them are the second.
 
