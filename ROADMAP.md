@@ -860,6 +860,34 @@ against the projection. The affine model's error is **second order in
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
 
+* **The Condon--Shortley phase is dropped, and T12 was found to have a mistake in it.** The
+  phase put a `(-1)^m` into the real basis, into the Zernike polynomial and into both closed
+  forms; dropping it removes three of those from the page and costs one factor in the code,
+  where `rotate_coefficients` now sandwiches the standard (phase-carrying) `d` matrices with
+  `diag((-1)^m)`. The trade is the same one T12 made, in the same direction: a simpler
+  equation, a more complicated implementation.
+
+  What did *not* change, contrary to the proposal: the extension relation keeps its `(-1)^m`,
+  because both `Y_lm` and `Y_{l,-m}` pick up the same factor. And the real basis is now the
+  negative of what it was at odd `m`, since it is `sqrt(2) Re Y_lm`.
+
+  Found on the way, and more important than the change itself: **T12 had broken the mode
+  formula**. Section 4 was given a prefactor of `sqrt(pi)` in place of `2 pi`, on the reasoning
+  that the `sqrt(4 pi)` had to go somewhere. It did not: `2 pi` comes from the angular integral
+  alone and does not move with the normalisation. The code was never changed, so every test
+  still passed; the only disagreement was between section 4 and the appendix, which had kept
+  an untouched copy of the same display. Two copies of one formula caught what 157 tests could
+  not, which is the argument for the duplication the summary appendix used to provide --- and
+  a warning about the merge that removed it.
+
+  Two follow-ups the green suite did not catch on its own. `earth_levels.py` had been emitted
+  under the phase-carrying basis, so the Earth rendered at a different peak (1.263 instead of
+  1.351) while every test passed; `make earth-levels` fixed it, and the lesson is that any
+  committed artefact holding *coefficients* is a cache of the convention and has to be
+  regenerated with it. And section 3's rotation law is the one equation the change made longer,
+  which is where the trade is visible: three `(-1)^m` off the basis and the closed forms, one
+  equation and one code factor on.
+
 * **The two appendices are one, and it is a brief rather than a summary.** Appendix A (the
   results) and Appendix B (the same displays with the certificates beside them) had 16 displays
   each, verified identical in order and content --- so B was a strict superset and A duplicated

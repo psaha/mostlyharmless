@@ -70,7 +70,8 @@ The map is carried in complex harmonics,
   N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
   \label{eq:brief-ylm}
 \end{equation}
-with the Condon--Shortley phase carried inside $P_{lm}$.  Only $m \ge 0$ is ever needed:
+with no Condon--Shortley phase, so no $(-1)^m$ appears in the closed forms.  Only $m \ge 0$
+is ever needed:
 reality is a property of the expansion rather than of a separate set of coefficients, so half
 the orders suffice and the signed order is never formed.
 
@@ -83,7 +84,7 @@ deformation uses: \eqref{eq:brief-zonal} combines them into a single zonal patte
 \begin{equation}
   \begin{aligned}
     Y_{20} &= \sqrt{\tfrac54}\,\bigl(3\cos^2\theta - 1\bigr), \\
-    Y_{21} &= -\sqrt{\tfrac{15}{2}}\,\cos\theta\,\sin\theta\; e^{i\varphi}, \\
+    Y_{21} &= \sqrt{\tfrac{15}{2}}\,\cos\theta\,\sin\theta\; e^{i\varphi}, \\
     Y_{22} &= \sqrt{\tfrac{15}{8}}\,\sin^2\theta\; e^{2i\varphi} .
   \end{aligned}
   \label{eq:brief-y2m}
@@ -202,7 +203,7 @@ The integral splits by the parity of $l+m$, and the two halves are different in 
 For $l+m$ odd, $P_{lm}(\sqrt{1-\rho^2})$ is $\rho^m$ times a polynomial in $\rho^2$ of degree
 $(l-m-1)/2$, and the Bessel integral collapses to a single term:
 \begin{equation}
-  X_{lm}(q) \;=\; (-1)^m\,\frac{(l+m)!!}{(l-m-1)!!}\,
+  X_{lm}(q) \;=\; \frac{(l+m)!!}{(l-m-1)!!}\,
   \frac{j_l(2\pi q)}{2\pi q} , \qquad l+m \text{ odd} .
   \label{eq:brief-odd}
 \end{equation}

@@ -140,7 +140,10 @@ def rotate_coefficients(coeffs, alpha, beta, pa):
     rotated_blocks = []
     for l, block in enumerate(unfolded):
         m = np.arange(-l, l + 1)
-        shifted = np.exp(-1j * inner * m) * block
+        # the standard d matrix is quoted in the Condon-Shortley basis; with the phase
+        # dropped the coefficients carry (-1)^m, so the rotation is sandwiched by it
+        sign = np.where(m % 2 == 0, 1.0, -1.0)
+        shifted = np.exp(-1j * inner * m) * sign * block
         rotated = matrices[l] @ shifted
-        rotated_blocks.append(np.exp(-1j * gamma * m) * rotated)
+        rotated_blocks.append(np.exp(-1j * gamma * m) * sign * rotated)
     return Coeffs.from_unfolded(rotated_blocks)

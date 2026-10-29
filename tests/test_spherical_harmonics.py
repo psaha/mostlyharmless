@@ -79,10 +79,11 @@ def test_matches_scipy_sph_harm_y():
         for m in range(-l, l + 1):
             for theta in (0.3, 1.1, 2.4):
                 for phi in (0.0, 1.7, -2.2):
-                    # scipy is orthonormal; ours carries sqrt(4 pi) relative to it
+                    # scipy is orthonormal and carries the Condon-Shortley phase;
+                    # ours is neither, so both factors appear
                     assert sph_harm(l, m, theta, phi) == pytest.approx(
-                        math.sqrt(4 * math.pi) * sph_harm_y(l, m, theta, phi),
-                        abs=1e-12)
+                        math.sqrt(4 * math.pi) * (-1) ** m
+                        * sph_harm_y(l, m, theta, phi), abs=1e-12)
 
 
 def test_negative_order_relation_for_legendre():

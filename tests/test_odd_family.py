@@ -58,8 +58,7 @@ def test_the_lowest_odd_mode_at_zero_carries_one_third():
 def test_the_odd_modes_match_their_closed_expression():
     """The manual's closed form, evaluated independently of the dispatch."""
     for l, m in odd_modes(5):
-        coefficient = ((-1) ** m
-                       * math.prod(range(l + m, 0, -2))
+        coefficient = (math.prod(range(l + m, 0, -2))
                        / math.prod(range(l - m - 1, 0, -2) or [1]))
         for q in (0.0, 0.7, 3.0):
             a = 2.0 * math.pi * q

@@ -56,7 +56,7 @@ so that
 
 For $l+m$ odd, \citet{neves2006} give
 \begin{equation}
-  K_{lm}(a) = (-1)^m \, 2 \, \frac{(l+m-1)!!}{(l-m)!!} \, j_l(a) .
+  K_{lm}(a) = 2 \, \frac{(l+m-1)!!}{(l-m)!!} \, j_l(a) .
   \label{eq:K-identity}
 \end{equation}
 This is the one step we cite rather than derive, and the overall sign is the one thing the
@@ -97,18 +97,19 @@ statement, not evidence for it.
 
 One term survives,
 \begin{equation}
-  X_{lm}(q) = (-1)^m \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
+  X_{lm}(q) = \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
   \qquad l+m \text{ odd} ,
   \label{eq:odd-radial}
 \end{equation}
 and with \eqref{eq:mode-visibility} the mode visibility is
 \begin{equation}
-  V_{lm}(u,v) = i^m e^{im\psi} \, N_{lm} \,
+  V_{lm}(u,v) = (-i)^m e^{im\psi} \, N_{lm} \,
   \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{q} ,
   \qquad l+m \text{ odd} ,
   \label{eq:odd-mode}
 \end{equation}
-the $(-i)^m$ and the $(-1)^m$ having combined into $i^m$.
+the $2\pi$ of \eqref{eq:mode-visibility} having cancelled against the $2\pi q$ of the closed
+form.
 
 At $q = 0$ the ratio in \eqref{eq:odd-radial} is indeterminate and takes its limit,
 \begin{equation}
@@ -124,10 +125,10 @@ implementation detail, and certificate \vtag{13} covers it by putting $q = 0$ in
 its grid.
 
 As an independent check, \eqref{eq:odd-radial} agrees with equation (35) of
-\citet{dholakia2025} once two conventions are accounted for: they use associated
-Legendre functions without the Condon--Shortley phase, which contributes
-$(-1)^m$, and they drop the harmonic normalisation, which \eqref{eq:odd-mode}
-restores.
+\citet{dholakia2025} once one convention is accounted for: they drop the harmonic
+normalisation, which \eqref{eq:odd-mode} restores.  They also use associated Legendre
+functions without the Condon--Shortley phase, as this work does, so no sign has to be
+translated.
 
 \subsection{What was checked}
 \label{sec:odd-register}

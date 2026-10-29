@@ -2,10 +2,11 @@
 
     Y_{lm}(theta, phi) = N_lm P_{lm}(cos theta) exp(i m phi)
 
-    N_lm = sqrt((2l+1)/(4 pi) * (l-m)! / (l+m)!)      <- the SIGNED m
+    N_lm = sqrt((2l+1) * (l-m)! / (l+m)!)             <- the SIGNED m
 
-with the Condon-Shortley phase carried inside P_{lm}, theta the polar angle and
-phi the azimuthal angle.
+with NO Condon-Shortley phase inside P_{lm}, theta the polar angle and phi the
+azimuthal angle.  Both choices --- Y_00 = 1 and no phase --- are made for the
+manual's equations and cost the code a factor each; each is commented where it bites.
 
 Two details are easy to get wrong, so they are done explicitly here rather than
 left to a library's convention:
@@ -70,7 +71,11 @@ def normalisation(l, m):
 
 
 def associated_legendre(l, m, x):
-    """P_{lm}(x) with the Condon-Shortley phase, for -l <= m <= l.
+    """P_{lm}(x) *without* the Condon-Shortley phase, for -l <= m <= l.
+
+    The phase is dropped deliberately: it puts a (-1)^m into the real basis, into both
+    closed-form radial integrals and into the Zernike polynomial, and saving those is
+    worth the one factor here.  Every Y_lm is (-1)^m times the standard one.
 
     The negative-order branch uses the standard relation, written for m >= 0,
 
@@ -83,7 +88,7 @@ def associated_legendre(l, m, x):
     if abs(m) > l:
         raise ValueError(f"need -l <= m <= l, got m={m}, l={l}")
     order = abs(int(m))
-    p = lpmv(order, l, x)
+    p = (-1) ** order * lpmv(order, l, x)      # lpmv carries the Condon-Shortley phase
     if m < 0:
         p = (-1) ** order * factorial_ratio(l, order) * p
     return p

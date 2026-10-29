@@ -46,7 +46,7 @@ def _pyplot():
 def legendre_rows(order, l_max, x):
     """``P_l^order(x)`` for ``l = order .. l_max``, in one pass up the recurrence.
 
-    With the Condon-Shortley phase, so these are the functions
+    Without the Condon-Shortley phase, so these are the functions
     ``spherical_harmonics.associated_legendre`` returns, evaluated as a whole column of the
     table rather than one entry at a time.  That distinction is the whole point: calling
     ``lpmv`` per ``(l, m)`` re-walks the recurrence from ``m`` to ``l`` every time, so a
@@ -58,7 +58,7 @@ def legendre_rows(order, l_max, x):
 
     value = np.ones_like(x)                       # P_0^0, then up to P_order^order
     for k in range(order):
-        value = -(2 * k + 1) * root * value        # the phase lives here
+        value = (2 * k + 1) * root * value         # no Condon-Shortley phase here
 
     rows = [value]
     if l_max > order:

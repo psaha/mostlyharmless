@@ -94,9 +94,16 @@ Complex harmonics are used in the derivations, and only for non-negative orders:
 sphere is unity and the integral is $4\pi$.  The quantum-mechanics convention, and with it
 most of the literature, takes the \emph{integral} to be unity instead, which scales every
 $Y_{lm}$ by $1/\sqrt{4\pi}$ relative to these.  The two differ by that constant everywhere and
-nowhere else, so a conversion is always the same factor applied uniformly.}
-for $l \ge 0$ and $0 \le m \le l$, with the Condon--Shortley phase carried inside
-$P_{lm}$.  Negative orders are never formed --- not in the derivations, not for
+nowhere else, so a conversion is always the same factor applied uniformly.
+
+The phase is dropped for the same reason.  Carrying $(-1)^m$ inside $P_{lm}$ puts one into
+the real basis of section~\ref{sec:other-conventions}, into the Zernike polynomial, and into
+both closed forms of sections~\ref{sec:odd} and~\ref{sec:even}, where it is visible to every
+reader and useful to none.  Dropping it costs exactly one factor, and in the code rather than
+on the page: the standard rotation matrices are quoted in the phase-carrying basis, so
+\code{rotate\_coefficients} sandwiches them with $\mathrm{diag}\bigl((-1)^m\bigr)$.  Both
+choices, here and above, trade a complication in the implementation for a simpler equation.}
+for $l \ge 0$ and $0 \le m \le l$, with no Condon--Shortley phase inside $P_{lm}$.  Negative orders are never formed --- not in the derivations, not for
 maps, not anywhere --- so the magnitude $|m|$ is never needed either.  The order is
 non-negative wherever it appears, and there is consequently no signed-order
 convention to get wrong.

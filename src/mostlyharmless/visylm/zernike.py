@@ -86,8 +86,7 @@ def zernike_polynomial(n, m):
 def mode_polynomial(l, m):
     """P_{lm}(sqrt(1-rho^2)) as rho^m A(rho^2), exactly, for l + m even.
 
-    Uses P_{lm}(x) = (-1)^m (1-x^2)^{m/2} d^m P_l / dx^m with the Condon-Shortley
-    phase of section 1.  For l + m even the m-th derivative is an even function of
+    Uses P_{lm}(x) = (1-x^2)^{m/2} d^m P_l / dx^m, without the Condon-Shortley phase.  For l + m even the m-th derivative is an even function of
     x, so after x^2 -> 1 - rho^2 it is a polynomial in rho^2.
     """
     l, m = int(l), int(m)
@@ -98,7 +97,7 @@ def mode_polynomial(l, m):
         if power % 2 == 1:
             raise ValueError("the derivative should be even when l + m is even")
         inside = inside + coefficient * (1 - _RHO ** 2) ** (power // 2)
-    return sp.expand(sp.Integer((-1) ** m) * _RHO ** m * inside)
+    return sp.expand(_RHO ** m * inside)
 
 
 @lru_cache(maxsize=None)

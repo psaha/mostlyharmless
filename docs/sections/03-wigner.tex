@@ -37,14 +37,17 @@ determined.  Splitting the sum in \eqref{eq:coefficient-rotation} by sign, and s
 the conjugate for each $m < 0$, gives an expression in which every coefficient carries a
 non-negative order:
 \begin{equation}
-  a_{lm'} = D^l_{m'0} \, A_{l0}
-  + \sum_{m=1}^{l} \Big[ \, D^l_{m'm} \, A_{lm}
-  + (-1)^m \, D^l_{m',-m} \, \overline{A_{lm}} \, \Big] ,
+  (-1)^{m'} a_{lm'} = D^l_{m'0} \, A_{l0}
+  + \sum_{m=1}^{l} \Big[ \, (-1)^m D^l_{m'm} \, A_{lm}
+  + D^l_{m',-m} \, \overline{A_{lm}} \, \Big] ,
   \qquad m' \ge 0 .
   \label{eq:rotation-nonnegative}
 \end{equation}
 The $m = 0$ term appears once and not twice, because $A_{l0}$ is real: written as a pair it
-would be doubled.  Every negative order in \eqref{eq:rotation-nonnegative} is an index of
+would be doubled.  The phases sit differently from the standard form because the harmonics
+carry none of their own (section~\ref{sec:conventions}): the $(-1)^m$ that used to accompany
+the conjugate has moved onto the direct term and onto the left side, which is the one place
+dropping the Condon--Shortley phase makes an equation longer rather than shorter.  Every negative order in \eqref{eq:rotation-nonnegative} is an index of
 $D$; none is a coefficient.  This is the one place the negative orders are needed as
 \emph{indices}, and section~\ref{sec:parity} shows that the visibility needs no more than
 their consequence.

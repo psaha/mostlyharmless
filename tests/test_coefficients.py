@@ -83,7 +83,7 @@ def test_the_worked_example_from_the_discussion():
     """A pure cos(phi) pattern at l = 1.
 
     Real coefficients p_1 = 1, q_-1 = 0 must give a_1 = +1/sqrt(2) and
-    a_-1 = -1/sqrt(2), and describe the real map -sqrt(3/4pi) sin(theta) cos(phi).
+    a_-1 = -1/sqrt(2), and describe the real map +sqrt(3) sin(theta) cos(phi).
     """
     real = [np.zeros(1), np.array([0.0, 0.0, 1.0])]  # index m + l
     c = Coeffs.from_real(real)
@@ -92,7 +92,7 @@ def test_the_worked_example_from_the_discussion():
     assert c[1, -1] == pytest.approx(-1 / math.sqrt(2))
 
     for theta, phi in ANGLES:
-        expected = -math.sqrt(3.0) * math.sin(theta) * math.cos(phi)
+        expected = math.sqrt(3.0) * math.sin(theta) * math.cos(phi)
         got = (c[1, 1] * sph_harm(1, 1, theta, phi)
                + c[1, -1] * sph_harm(1, -1, theta, phi))
         assert got.imag == pytest.approx(0.0, abs=1e-14)

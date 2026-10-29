@@ -82,15 +82,14 @@ def _spherical_bessel_over_argument(l, a):
 def _radial_integral_odd(l, m, q):
     """The odd-family closed form, for l + m odd.
 
-        R_lm(q) = (-1)^m (l+m)!!/(l-m-1)!! j_l(2 pi q)/(2 pi q)
+        R_lm(q) = (l+m)!!/(l-m-1)!! j_l(2 pi q)/(2 pi q)
 
     Kept private, and reached through :func:`visibility_mode`.  The quadrature in
     :func:`radial_integral` is the reference this is checked against, so that
     function must never dispatch here.
     """
     a = 2.0 * math.pi * np.asarray(q, dtype=float)
-    coefficient = ((-1) ** m * _double_factorial(l + m)
-                   / _double_factorial(l - m - 1))
+    coefficient = _double_factorial(l + m) / _double_factorial(l - m - 1)
     return coefficient * _spherical_bessel_over_argument(l, a)
 
 

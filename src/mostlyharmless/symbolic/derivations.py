@@ -113,11 +113,12 @@ def _coefficient(l, m, theta=THETA):
     """
     # an independent implementation of N_lm: Y_00 = 1 here, as everywhere in this package
     n = sp.sqrt((2 * l + 1) * sp.factorial(l - m) / sp.factorial(l + m))
+    # assoc_legendre carries the Condon-Shortley phase; this package does not
     if m >= 0:
-        return n * sp.assoc_legendre(l, m, sp.cos(theta))
+        return n * (-1) ** m * sp.assoc_legendre(l, m, sp.cos(theta))
     p = (sp.factorial(l + m) / sp.factorial(l - m)
          * sp.assoc_legendre(l, -m, sp.cos(theta)))
-    return n * (-1) ** (-m) * p
+    return n * (-1) ** (-m) * (-1) ** (-m) * p
 
 
 def Y(l, m, theta=THETA, phi=PHI):
@@ -204,7 +205,8 @@ def check_ylm_matches_sympy_ynm(l_max=3, digits=30):
         for m in range(-l, l + 1):
             for th, ph in _ANGLE_PAIRS:
                 ours = sp.N(Y(l, m, th, ph), digits)
-                theirs = sp.N(scale * sp.Ynm(l, m, th, ph), digits)
+                # SymPy's Ynm is orthonormal and carries the Condon-Shortley phase
+                theirs = sp.N(scale * (-1) ** m * sp.Ynm(l, m, th, ph), digits)
                 worst = max(worst, abs(complex(ours - theirs)))
     return worst
 
@@ -551,10 +553,12 @@ def check_rotation_nonnegative_form(l_max=4, seed=20261012):
         for mp in range(l + 1):
             total = D[mp + l, l] * coeffs[l, 0].real
             for m in range(1, l + 1):
-                total += (D[mp + l, m + l] * coeffs[l, m]
-                          + (-1) ** m * D[mp + l, l - m]
-                          * np.conjugate(coeffs[l, m]))
-            worst = max(worst, abs(total - rotated[l, mp]))
+                # the sandwich puts (-1)^m on the a_m term and, with the (-1)^m of the
+                # extension, removes it from the conjugate: the two cancel
+                total += ((-1) ** m * D[mp + l, m + l] * coeffs[l, m]
+                          + D[mp + l, l - m] * np.conjugate(coeffs[l, m]))
+            # the code sandwiches the standard D with diag((-1)^m); the same sandwich here
+            worst = max(worst, abs((-1) ** mp * total - rotated[l, mp]))
     return worst
 
 
@@ -658,9 +662,9 @@ def check_k_identity(l_max=6, n_theta=200):
     """V18, numerical rung -- the K identity that the odd derivation cites.
 
         int_{-1}^{1} P_{lm}(z) J_m(a sqrt(1-z^2)) dz
-            = (-1)^m 2 (l+m-1)!!/(l-m)!! j_l(a) ,     l + m even,
+            = 2 (l+m-1)!!/(l-m)!! j_l(a) ,     l + m even,
 
-    in our Condon-Shortley convention.  The sign is the one thing the citation
+    in our convention, which carries no Condon-Shortley phase.  The sign is the one thing the citation
     does not settle for us, so it is checked rather than assumed.  Gauss-Legendre
     in theta, where the integrand is analytic.
     """
@@ -677,7 +681,7 @@ def check_k_identity(l_max=6, n_theta=200):
                 integrand = (associated_legendre(l, m, np.cos(theta))
                              * jv(m, a * sine))
                 value = float(np.sum(weight * integrand * sine))
-                expected = float((-1) ** m * 2 * _factorial2(l + m - 1)
+                expected = float(2 * _factorial2(l + m - 1)
                                  / _factorial2(l - m)) * float(spherical_jn(l, a))
                 worst = max(worst, abs(value - expected))
     return worst
