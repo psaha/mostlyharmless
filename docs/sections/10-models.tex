@@ -29,7 +29,7 @@ observation.
 
 \paragraph{Why two sliders are missing.}  Two of the model's angles are gauges.  For a single
 observation the sky's orientation is a choice, so the spin's position angle can be pinned.
-And with a smooth deformation and no starspots, the spin phase $\alpha$ is degenerate with
+And with a smooth deformation, the spin phase $\alpha$ is degenerate with
 the tide's longitude $\varphi$, because only their difference is observable: a rotation of the
 star cannot be told from a rotation of the perturbation.  Both stop being gauges as soon as
 the surface carries structure of its own --- spots see $\alpha$, and a non-synchronous tide
@@ -142,10 +142,13 @@ $q \sim 1$--$2$ are sensitive to exactly those degrees whose visibility the disk
 taken to zero.
 
 \paragraph{The retired starspot.}  An earlier model drew a polar cap on a uniform disk, with
-sliders for the cap's half-angle, depth, colatitude and longitude, and four presets labelled
-by where the spot should appear.  It went with the RGB version, kept at tag \code{rgb-mapgui};
-what remains of it is \code{maps.cap\_coefficients}, which the certificates use as the only
-closed-form coefficient set in the package.
+sliders for its half-angle, depth, colatitude and longitude.  It went with the RGB version,
+kept at tag \code{rgb-mapgui}, and the two-level Earth replaced it: the Earth is real data
+with the same kind of sharp edge, it carries structure at every degree rather than one
+analytic profile, and the taper gives a way to answer the ringing that the cap's discontinuity
+provokes.  Nothing else in the package depended on the cap, and the certificate that measured
+how its truncation converged measured a textbook property of a synthetic map rather than a
+claim of this work, so both went.
 
 \paragraph{Reading the page.}  Both models draw the sky with North up and East to the left, so
 the screen carries the manual's $x$ and $y$ as its axes, and the third axis is the line of

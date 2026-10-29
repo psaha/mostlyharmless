@@ -13,17 +13,10 @@ from mostlyharmless.visylm.coefficients import Coeffs
 from mostlyharmless.visylm.wigner import rotate_coefficients
 
 
-def test_a_cap_carries_nothing_above_its_degree():
-    """The coefficients are band-limited by construction, at every degree."""
-    for l_max in (4, 8, 16, 32):
-        coeffs = maps.cap_coefficients(l_max=l_max)
-        assert len(coeffs.blocks) == l_max + 1
-        assert np.max(np.abs(coeffs.blocks[l_max])) >= 0.0
-
-
 def test_both_hemispheres_render_and_differ():
-    """Near and far are different pictures once the cap is off the spin axis."""
-    coeffs = maps.cap_coefficients(l_max=16)
+    """Near and far are different pictures once the map is off the spin axis."""
+    from mostlyharmless.symbolic import earth, earth_levels
+    coeffs = earth.truncate(Coeffs(earth_levels.LEVELS), 16)
     tilted = rotate_coefficients(coeffs, 0.0, 1.0, 0.0)
     near = maps.sky_map(tilted, n=61)
     far = maps.sky_map(tilted, back=True, n=61)

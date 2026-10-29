@@ -102,7 +102,7 @@ class Parameters:
 
     The GUI shows degrees and converts at the widget boundary; this class and everything
     outside the GUI stay in radians.  The spin phase is deliberately absent: this front
-    end is for a spin and tide alone, and with no starspots the phase is degenerate with
+    end is for a spin and tide alone, and on a smooth map the phase is degenerate with
     the tide's longitude --- only their difference is observable.
     """
 

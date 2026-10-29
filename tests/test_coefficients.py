@@ -155,9 +155,9 @@ def test_the_flat_vector_puts_a_l0_at_l_squared_plus_l():
     """A degree's row has length 2l+1 with (l, 0) in the middle, so the flat index
     of a_l0 is l*l + l, not l*l.
 
-    Writing a zonal map at l*l puts its coefficients in the sin(l*phi) slots and
-    draws a banana rather than a polar cap, which is how this was noticed.  The
-    certificates do not go through the flat vector --- it is the fitting interface
+    Writing a zonal map at l*l puts its coefficients in the sin(l*phi) slots, which
+    drew a banana where a zonal pattern was meant, and that is how this was noticed.
+    The certificates do not go through the flat vector --- it is the fitting interface
     --- so nothing had pinned it.
     """
     vector = np.arange(1.0, 10.0)          # (lmax + 1)^2 = 9, so lmax = 2

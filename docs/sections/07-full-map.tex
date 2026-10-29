@@ -44,8 +44,8 @@ tag & claim & rung \\
 \end{tabular}
 \end{center}
 
-Certificate \vtag{15} renders a rotated starspot, transforms the image with a 2-D
-FFT using the same planar measure, and compares.  It is the end-to-end anchor: the
+Certificate \vtag{15} renders a rotated truncation of the Earth's own coefficients,
+transforms the image with a 2-D FFT using the same planar measure, and compares.  It is the end-to-end anchor: the
 coefficients, both parity families, the rotation and the measure all enter, and it
 is the only check that would catch an error common to both families.  The comparison
 is restricted to low frequencies, because the rim of the disk is a discontinuity and
@@ -53,25 +53,19 @@ its Gibbs ringing contaminates high frequencies at any resolution.  Hermitian
 symmetry \eqref{eq:hermitian} is checked separately and much more tightly, being a
 statement about the transform rather than about a resolution.
 
-That ringing is the practical cost of the whole scheme, and it is worth stating as a rate
-rather than as a picture.  A map whose brightness jumps --- a sharp-edged spot, a polar cap
---- has coefficients falling as a power of $l$, so it converges \emph{algebraically} and not
-exponentially.  The error is then set by the Gibbs ring rather than by the smooth part: the
-overshoot at the edge is a fixed fraction of the jump, only its width shrinks, so the mean
-square falls as $l_{\max}^{-1}$ and the root mean square as $l_{\max}^{-1/2}$ --- to
-roughly two thirds when the order doubles, which is what certificate \vtag{28} measures.  A
-smooth map converges far faster, which is why the limb darkening of section~\ref{sec:models}
-buys accuracy
-as well as realism.  That rate is what an expansion in spherical harmonics costs, and it is
-the reason the mode count is a knob rather than a formality.
+That ringing is the practical cost of the scheme, and it is the known behaviour of an
+expansion in a smooth basis of something that is not smooth.  A map whose brightness jumps --- a
+coastline, the edge of a dark patch --- has coefficients falling as a power of $l$, so it
+converges algebraically and not exponentially, and the error is set by the Gibbs ring rather
+than by the smooth part: the overshoot at the edge is a fixed fraction of the jump and only
+its width shrinks.  For a map of this kind the mean square falls as $l_{\max}^{-1}$ and the
+root mean square as $l_{\max}^{-1/2}$.  The answer here is not to refine the expansion but to
+taper it: \code{earth.taper} damps the top degrees with Lanczos $\sigma$-factors, which trades
+the ripples for a soft coast, and the levels panels are the argument that the trade is worth
+taking.  A smooth map converges far faster, which is why the limb darkening of
+section~\ref{sec:models} buys accuracy as well as realism.
 
-\begin{itemize}
-  \item[$\checkmark$] \code{check_convergence_rate} compares each truncation with $l = 64$
-    on the rendered disc and reports the worst ratio between successive errors.  It is
-    measured on the \emph{map} rather than on the visibility for a reason worth recording:
-    every even-family mode of a visibility costs a Zernike expansion in exact rationals, so
-    the cost grows as roughly the fourth power of the order, and a reference at high $l$ is
-    unaffordable.  Both sides are in the same units, so the normalisation cancels in the
-    ratio and only the rate survives --- which is the claim.
-    \\[1pt] \vtag{28}\quad \emph{Numerical}, $l \le 32$
-\end{itemize}
+There is no certificate for the rate itself.  The power-law decay of a discontinuous map is
+textbook, nothing in this work turns on the exact exponent, and the certificate that was written
+for it measured a property of a synthetic map rather than a claim of the method.
+

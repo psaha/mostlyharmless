@@ -350,15 +350,3 @@ basis-change matrix.  The deformation of
 carried in the coefficients, and the fitted row of \eqref{eq:verif-fitted-rhs}, are the new
 material, and the two interactive models that compare them are the second.
 
-\subsection{The truncation rate}
-
-One certificate has no display to sit beside, because it is not a formula.  \textbf{\vtag{28}}
-takes a map, renders it at a sequence of degrees, and checks that the error against a
-high-degree reference falls at the rate the truncation of a discontinuous map predicts
-(\code{check_convergence_rate}).  It is \emph{independent}: no other check would fail if the
-convergence rate were wrong, since every other one compares two evaluations of the same
-formula and a formula that is right at one degree is right at all of them.
-
-That is why it is worth keeping, and why it is cited here rather than left to the body.  The
-claim is not that the closed forms are correct but that a truncated map is a controllable
-approximation, and the panel titles of the fitted rows print exactly the quantity V28 measures.

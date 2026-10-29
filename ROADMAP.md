@@ -102,7 +102,7 @@ src/mostlyharmless/
     ├── affine.py                 # rung 1, and the closed-form first-order row
     ├── fitted.py                 # rung 1 with fitted coefficients: disk harmonics, the fit
     ├── emit.py                   # the LaTeX fragment; run as a module
-    ├── maps.py                   # the map builders: cap_coefficients, sky_map
+    ├── maps.py                   # the renderer: sky_map, sky_map_batch
     └── gui.py                    # the interactive model of D25; imports only the library
 ```
 
@@ -196,7 +196,7 @@ check_*                                     -> residual  # thirty functions; tag
 
 # --- emit.py, run as a module -------------------------------------------
 coefficients_table(l_max=...) / write(directory=None)
-cap_coefficients / sky_map   # the maps the figures and tests build
+sky_map / sky_map_batch       # the renderer the panels use
 
 # --- gui.py, D25 --------------------------------------------------------
 Parameters [field]                          # the five sliders
@@ -263,7 +263,6 @@ left outside every tag. The table below lists tags, not functions.
 | V25 | the real basis is orthonormal, and matches the complex one up to the phase | numerical, `l <= 4` |
 | V26 | the fit returns a synthetic image's own coefficients | algebraic, `1e-12` |
 | V27 | the Gram matrix: analytic entry `1/4`, block structure, midpoint rule | numerical, `5e-3` |
-| V28 | the truncation error of a discontinuous map falls as `l^(-1/2)`, to about two thirds per doubling | numerical, `l <= 32`, reference `l = 64` |
 
 Two habits, from D10: prefer exact expansion and coefficient comparison to `simplify`; and
 state the rung and the scope next to every claim, in the register and in the text.
@@ -351,9 +350,9 @@ passes its staleness test, and the manual compiles with it.
 disk's rim is a discontinuity and its Gibbs ringing contaminates high frequencies at any
 resolution; Hermitian symmetry is checked separately and tightly.
 *Gate:* FFT agreement on a rendered map. This is also where truncation ringing shows up: a map
-that is discontinuous *on the sphere* — a sharp-edged spot or a polar cap — has a slowly
+that is discontinuous *on the sphere* — a coastline, the edge of a dark patch — has a slowly
 converging expansion, and the reference image and the harmonic sum will differ near the edge at
-any finite `l_max`. Worth a stated convergence check in `l_max`, since it is the one place the
+any finite `l_max`. The answer taken here is the taper rather than a convergence study, since the
 truncation error is visible.
 
 **Stage 6 — triaxial deformation.** Section 8's method, in this order:
@@ -537,13 +536,12 @@ code instead of part of a conversation.
 
 **T6 — retired the manual's figures.** *Done.* With T5 in place the three figures and their machinery can go:
 the `figure_*` functions, `write()`, the `FIGURES` list, the figure half of the `data` target, the
-three rendering tests, and the `\includegraphics` calls. Two things first. The convergence figure is
-the only *quantitative* statement of the `l_max` rate --- the algebraic decay at a limb discontinuity
---- so that number is now certificate V28, in section 7, before the picture goes. And
-`cap_coefficients` survives, because T5 needs it; it is also the duplicate of
-`derivations._zonal_starspot`, which is the moment to unify them. The consequence to accept
-deliberately: the manual becomes figure-free, and section 1's "North up, East to the left" becomes a
-statement about the display rather than about a picture.
+three rendering tests, and the `\includegraphics` calls. Two things were carried out first and both
+have since been settled in their turn: the convergence figure's number became a certificate, which
+has now been retired because its claim is textbook, and `cap_coefficients` survived the deletion
+because certificates used it, which they no longer do. The consequence to accept deliberately: the
+manual becomes figure-free, and section 1's "North up, East to the left" becomes a statement about
+the display rather than about a picture.
 
 **T7 — convert the certificates to the in-place format.** Done for two subsections, 6.2 and 6.3,
 which are the model; the other twenty-two are not, and they are in at least three styles. Some are
@@ -593,8 +591,9 @@ with published ones (section 5 in particular) say which form we use.
 
 **T9 — Tikhonov regularisation for the fitted rows.** The fitted rows ring at the rim, where
 the brightness falls to zero, and near the cusp at the equator; with the grayscale rendering the
-ripples are the most conspicuous thing in the panel. The truncation is real (V28 measures its
-rate), so this is about presentation, not about the model being wrong.
+ripples are the most conspicuous thing in the panel. The truncation is real --- the textbook
+power-law decay of section 7, and `earth.taper` is the same remedy already applied to real data ---
+so this is about presentation, not about the model being wrong.
 
 The classical remedy is tapering the coefficients with Lanczos σ-factors,
 `sin(pi l/L)/(pi l/L)`, which Arfken and Weber introduce for exactly this in Fourier series,
@@ -635,12 +634,11 @@ a point low, from a mask that tests "warmer than blue, or bright enough to be ic
 sea 0.877 and land 1.315, a 50 per cent jump.  The ratio is the knob: a 3:1 step rings badly
 because the overshoot at a truncation is a fraction of the step.
 
-The *function* cannot, or not yet. `cap_coefficients` is the one model with a closed-form
-coefficient set --- `a_l0` from the Legendre moments of the cap, no quadrature --- so it is what
-V28 and the fitted rows' tests use; the Earth's coefficients come from an extraction and are a
-committed table, not a formula. Retiring the spot entirely means moving those tests onto the
-Earth's coefficients, which is worth doing only if the analytic case stops being needed for
-something else.
+The *function* cannot, or not yet. `cap_coefficients` used to be the one model with a closed-form
+coefficient set --- `a_l0` from the Legendre moments of a cap, no quadrature --- and it was what V28
+and the fitted rows' tests used. Both have since gone: the tests moved onto the Earth's committed
+coefficients, which is the trade this passage anticipated, and the analytic case turned out not to
+be needed for anything.
 
 **T11 — make the five parts the document's structure.** The manual has five parts, and they are
 not its section structure:
@@ -750,9 +748,8 @@ carry coefficients and they do not agree on scale:
 
 | object | `a_00` | where the scale comes from |
 | --- | --- | --- |
-| `cap_coefficients` (a supplied map) | 1 | D16, a unit choice |
-| `earth_levels` (a map from an image) | 1, viewer multiplying by `sqrt(4 pi)` | the same, plus a display factor |
-| `affine`, `fitted` (forward models) | `(1-u)(1-4 eps) sqrt(4 pi)` | the physics |
+| `earth_levels` (a map from an image) | 1 | the same: `a_00 = 1` is mean one |splay factor |
+| `affine`, `fitted` (forward models) | `(1-u)(1-4 eps)` | the physics |
 
 The manual says both things and flags neither as a convention: D16 normalises supplied maps to
 `a_00 = 1`, while eq. (106) gives the affine model its physical value. Neither is wrong --- a
@@ -863,6 +860,22 @@ against the projection. The affine model's error is **second order in
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
 
+* **The polar cap is retired, and V28 with it.** The cap survived T10 only because the
+  certificates used it, and the argument for keeping it was that V28 needed a discontinuous map.
+  That argument fails on inspection: the power-law decay of a truncated discontinuous map is
+  textbook, nothing in this work turns on the exponent, and V28 measured a property of a
+  synthetic map rather than a claim of the method. The two-level Earth had already replaced the
+  cap in the GUI, being real data with the same kind of sharp edge plus a taper that answers the
+  ringing. So `cap_coefficients`, its constants, `_zonal_starspot` and `check_convergence_rate`
+  are gone, and section 7 now cites the known result and describes the taper as the answer
+  instead of certifying a rate.
+
+  V15 stays, because its claim is about *our* code --- one rotation and both parity families
+  against a direct transform --- and it is the only check that would catch an error common to
+  both families. It now runs on a truncation of the Earth's own coefficients, which keeps it on
+  an artefact the package renders rather than a synthetic profile. Appendix B loses its
+  truncation-rate subsection, and V24 is left as the only *independent* certificate.
+
 * **T12 closed: the harmonic normalisation is now `Y_00 = 1`.** The orthonormal convention,
   `int |Y|^2 dOmega = 1`, was replaced by the un-normalised one, so the *average* of `|Y_lm|^2`
   over the sphere is unity and the integral is `4 pi`. The motive was readability: the `sqrt(4 pi)`
@@ -899,9 +912,10 @@ against the projection. The affine model's error is **second order in
   affine error is **second order** in `eps` (0.0016 at `E = 0.033`, ratio 0.23 on halving), which is
   what linearising a stretch should give --- the "first order" reading was the reflected frame.
   (iii) Section 7 said limb darkening would buy accuracy "when it comes"; it has come, in section 10.
-  (iv) `derivations._zonal_starspot` now delegates to `maps.cap_coefficients` instead of being a
-  second implementation, the original reason for the duplication having expired with the plotting
-  code; the two were verified identical to 0.0 before the merge. (v) D21 is closed as a decision:
+  (iv) `derivations._zonal_starspot` was made to delegate to `maps.cap_coefficients` instead of
+  being a second implementation, the original reason for the duplication having expired with the
+  plotting code; the two were verified identical to 0.0 before the merge. Both have since been
+  retired with the cap itself. (v) D21 is closed as a decision:
   the brightness exponent stays unexposed, trivial in two rows and too approximate in the third.
 
 * **The GUI scaffolding is shared, and the map GUI exists.** `gui_core.py` holds the coalescing
@@ -923,14 +937,14 @@ against the projection. The affine model's error is **second order in
   accounts for phase and normalisation rather than for the placement of the index.
 
 * **The manual is figure-free, and the figures' machinery is gone.** `figures.py` became `maps.py`,
-  keeping only `cap_coefficients` and `sky_map`, which the map GUI and certificate V28 use;
+  keeping only `sky_map` and its batch form after the cap and V28 were retired;
   `figure_map`, `figure_uv`, `figure_convergence` and `write()` are deleted, with
   `tests/test_figures.py`, the `FIGURES` list, the figure half of the `data` target, and the three
   committed PDFs. The two figure environments in sections 1 and 4 became sentences: the display
   convention they carried (North up, East to the left, D23) and the reading of the uv panels (real
   even, imaginary odd) now stand in the text, pointing at `make mapgui` for the live version. The
-  manual is 32 pages, down from 34. The convergence rate they plotted is certificate V28, in
-  section 7.
+  manual is 32 pages, down from 34. The convergence rate they plotted became certificate V28, in
+  section 7, and has since been retired along with the cap.
 
 * **The fitted rung was implemented (was T3).** `symbolic/fitted.py` carries the disk harmonics
   `Phi_lm = Y_lm(n)`, the design plan and its Gram matrix, `fit_image` with both residual routes,
@@ -964,7 +978,8 @@ against the projection. The affine model's error is **second order in
 * **The Jupiter caricature was a relic.** `figure_jupiter`, `jupiter_coefficients`, the
   `JUPITER_*` constants, the `_banded_moments` helper and the rendering test are gone; it was in
   `__all__` and in the Makefile's figure list but written by nothing and included nowhere, and it
-  never earned its place. `eval_legendre` stays, since `cap_coefficients` uses it. Was cleanup C12.
+  never earned its place. `eval_legendre` stayed for `cap_coefficients`, which has itself now
+  gone; it survives because `maps` and `derivations` still import it. Was cleanup C12.
 * **Two more figures were tested but written nowhere.** `figure_triaxial` and
   `figure_delta_visibility` are gone, with `triaxial_field`, the `TRIAXIAL_*` constants and the
   `DELTA_*` defaults that only they used, and with their rendering tests. Superseded by the GUI in
