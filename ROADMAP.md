@@ -698,6 +698,36 @@ changed the `a_00` convention, added the limb factor, retired the spot model and
 section, and a survey chapter would have needed touching for most of them.  So it is worth
 writing once the structure settles, not before.
 
+**T12 --- change the harmonic normalisation to `Y_00 = 1`.** The proposal is to drop the
+orthonormal convention, `int |Y_lm|^2 dOmega = 1`, in favour of the un-normalised one,
+`Y_00 = 1`, which means `int |Y_lm|^2 dOmega = 4 pi`: every `Y_lm` is scaled up by
+`sqrt(4 pi)`.
+
+The motive is readability: the `sqrt(4 pi)` appears in every `Y_lm`, in `N_lm`, in the zonal
+identity's `4 pi / 5` and in every coefficient. Removing it from the basis moves it to a few
+places rather than nine:
+
+| formula | now | after |
+| --- | --- | --- |
+| `N_lm` | `sqrt((2l+1)/4pi * (l-m)!/(l+m)!)` | `sqrt((2l+1)(l-m)!/(l+m)!)` |
+| the mode formula | `2 pi (-i)^m N_lm` | `sqrt(pi) (-i)^m N_lm` |
+| the zonal identity | `4 pi / 5` | `1/5` |
+| the five numbers | `sqrt(5/16 pi)` etc. | `sqrt(5/4)` etc. |
+| coefficients | `int I conj(Y)` | `(1/4 pi) int I conj(Y)` |
+| uniform `I = 1` | `a_00 = sqrt(4 pi)` | `a_00 = 1` |
+
+What does *not* change: `X_lm` is built from `P_lm` and Bessel functions, so the closed forms,
+the radial integrals and every radial certificate are untouched. That removes most of the risk.
+
+What does change: `sph_harm`, `normalisation`, `real_sph_harm`; the quadratures that produce
+coefficients, which gain a `1/4 pi`; V1, V2 and V25, whose statements change rather than their
+tolerances; and every conversion with a published source, since Dholakia & Pope are
+orthonormal and our section 5--6 comparison with them would need the factor stated once.
+
+The danger is confusion, not effort. The orthonormal convention is the majority, so a reader
+will default to it. If this is done, the note has to be unmissable: at the top of section 2, in
+the symbol table, and once in the summary appendix.
+
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
 evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by

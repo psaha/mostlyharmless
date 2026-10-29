@@ -1,3 +1,5 @@
+% AI drafted, human edited.
+
 % 00-summary.tex -- the results, stated without their derivations.
 % Formatted as an appendix for now so that the equation numbering of the body does not
 % shift while it is being drafted; it is intended to become section 0, before section 1.
@@ -32,8 +34,7 @@ exponent and no prefactor,
 A real map is expanded in complex harmonics using non-negative orders only, the reality
 being carried by the expansion itself,
 \begin{equation}
-  I(\theta,\varphi) \;=\; \sum_{l}\Bigl[\, a_{l0}Y_{l0}
-  + \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl(a_{lm}Y_{lm}\bigr) \Bigr] .
+  I(\theta,\varphi) = \sum_{l} \sum_{m=-l}^{l} a_{lm}Y_{lm}
   \label{eq:summary-expansion}
 \end{equation}
 The same pairing works through the transform, and the parity of $m$ decides which part of a
@@ -123,10 +124,15 @@ transform turns it term by term into ordinary Bessel functions,
 So every mode of every degree is a finite Bessel sum, and a visibility at a single baseline
 is a short sum over modes with no quadrature anywhere.
 
+The expressions \eqref{eq:summary-odd} and \eqref{eq:summary-even}
+were derived by \cite{dholakia2025} but the
+expression \eqref{eq:summary-even-coefficients} giving the
+coefficients $c_k$ as rational numbers is a refinement.
+
 \subsection{The deformed source}
 
-A star deformed by its own rotation and by a companion has a level surface given, to
-quadrupole order, by a potential of two amplitudes,
+A star deformed by its own rotation and by a companion has a level
+surface given, to quadrupole order, by a potential of two amplitudes,
 \begin{equation}
   \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
   \;-\;\epsilon_\text{tide}\,r^2P_2(n\cdot\hat e_\text{tide})
@@ -205,6 +211,8 @@ with $\Phi_{lm}$ the projected harmonics and $w_s$ the projected area each sampl
 This row has no assumption beyond the stretch, so its error is a truncation at the chosen
 degree, which the user controls; the first-order row's error is instead the linearisation of
 the brightness.  Comparing the two is what the interactive models are for.
+
+
 
 \subsection{What is new here}
 

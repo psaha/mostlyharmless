@@ -101,12 +101,16 @@ section~\ref{sec:conventions} fixes.
 carried in the body frame and rotated into the observer frame, in the manner of
 section~\ref{sec:rotation-law}.  There is no deformation and no solve --- the model is a
 \code{Coeffs} object --- so a redraw costs a coefficient sum, and the panels are the near and
-far hemispheres in units of the mean.  This is the model to read first: one brightness, a
+far hemispheres in units of the sphere mean.  This is the model to read first: one brightness, a
 fixed map, and three angles.
 
 \paragraph{Two levels, and why the ratio is the knob.}  Land and sea are carried at two fixed
 brightnesses rather than as the colour image they were extracted from, because a two-level map
-can be stated and checked in one sentence.  The levels are not chosen: the \emph{ratio} $r$
+can be stated and checked in one sentence.  A map with no deformation is normalised to $a_{00} = 1$, which is what makes the two-level
+Earth's coefficients comparable with the spherical cases; a deformed star carries its own
+scale, as \eqref{eq:limb-coefficients} shows, and is not normalised at all.
+
+The levels are not chosen: the \emph{ratio} $r$
 between land and sea is, and the condition that the sphere mean be one then fixes both,
 \begin{equation}
   s = \frac{1}{1 + f(r-1)}, \qquad \text{land} = rs ,

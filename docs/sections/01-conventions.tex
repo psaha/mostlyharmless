@@ -54,15 +54,18 @@ $\PA$ and sits $\cos\beta$ above the sky plane.
 The complex visibility is the Fourier transform of the sky brightness, with the
 factor $2\pi$ inside the exponent and no prefactor,
 \begin{equation}
-  V(u,v) = \int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx ,
+  V(u,v) = \int I(x,y)\, e^{-2\pi i (u x + v y)}\, dx\, dy ,
   \label{eq:visibility-definition}
 \end{equation}
-with $u$ and $v$ in \emph{wavelengths} and $y, x$ dimensionless direction
+with $u$ and $v$ in \emph{wavelengths} and $x, y$ dimensionless direction
 cosines.  Here $u$ is the \emph{North} component of the baseline and $v$ the
 \emph{East} component: the reverse of the radio-interferometry convention, adopted
 deliberately (D24) so that the coordinates on the sky and on the ground share an
 orientation, and so that $\psi$ below is the position angle directly.  Thus
-$V(0,0)$ is the total flux.  The transform is written in plane polar coordinates
+$V(0,0)$ is the total flux.  $V$ is left \emph{unnormalised} throughout: the normalisation
+lives in $\Delta V$, defined in section~\ref{sec:visibility}, and in the plotting, since the
+panels are shown in units of the mean.  A reader who wants a unit at the origin will find it
+there and not here.  The transform is written in plane polar coordinates
 through
 \begin{equation}
   q = \sqrt{u^2 + v^2}, \qquad \psi = \arctan(v,u), \qquad a = 2\pi q .
