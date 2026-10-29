@@ -85,7 +85,8 @@ def channel(values, l_max=DEFAULT_L_MAX):
     for l in range(l_max + 1):
         for m in range(-l, l + 1):
             plan[l][m + l] = np.sum(weighted * real_sph_harm(l, m, theta_grid, phi_grid))
-    return Coeffs.from_real(plan)
+    # the projection is (1/4 pi) * int I conj(Y): the average of |Y|^2 over the sphere is 1
+    return Coeffs.from_real([block / (4.0 * np.pi) for block in plan])
 
 
 def channels(path, l_max=DEFAULT_L_MAX, n_lat=180, n_lon=360):
@@ -219,17 +220,16 @@ def emit_levels(path, l_max=DEFAULT_L_MAX, ratio=1.5, target=None):
     coefficients, fraction, (sea, land) = land_sea(path, l_max=l_max, ratio=ratio)
     tapered = taper(coefficients, l_max)
 
-    # D16: the coefficients are normalised so that a_00 = 1, which puts the sphere mean at
-    # 1/sqrt(4 pi) = 0.2821.  SEA and LAND stay the brightness levels --- 0.877 and 1.315 ---
-    # and the viewer multiplies by sqrt(4 pi) on the way to the screen.
-    scale = float(np.sqrt(4.0 * np.pi))
+    # with Y_00 = 1, a_00 = 1 is a map whose sphere mean is exactly one, so the coefficients
+    # are the brightness levels themselves and the viewer applies no factor
+    scale = 1.0
     lines = [
         '"""The Earth at two levels, emitted by ``make earth-levels``.',
         "",
         "Do not edit: regenerate instead.  SEA and LAND are the brightness levels, chosen so",
         "that the sphere mean is one; the coefficients below obey D16 (a_00 = 1), so they are",
-        "those levels divided by sqrt(4 pi), and a viewer must multiply by sqrt(4 pi) to show",
-        "them.  The Lanczos taper is already applied.  Extracted from a Blue Marble image;",
+        "the levels themselves, since a_00 = 1 is a map of mean one in this convention.",
+        "The Lanczos taper is already applied.  Extracted from a Blue Marble image;",
         "NASA, public domain.",
         '"""',
         "",

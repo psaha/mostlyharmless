@@ -63,13 +63,13 @@ def test_v3_addition_theorem_real_form():
 
 # ------------------------------------------------------------------ anchors
 def test_y00_is_the_constant():
-    assert sph_harm(0, 0, 0.7, 1.3) == pytest.approx(1 / math.sqrt(4 * math.pi) + 0j)
+    assert sph_harm(0, 0, 0.7, 1.3) == pytest.approx(1 + 0j)   # Y_00 = 1 in this convention
 
 
 def test_y10_is_the_z_harmonic():
     theta = 0.9
     assert sph_harm(1, 0, theta, 2.0) == pytest.approx(
-        math.sqrt(3 / (4 * math.pi)) * math.cos(theta) + 0j)
+        math.sqrt(3.0) * math.cos(theta) + 0j)
 
 
 def test_matches_scipy_sph_harm_y():
@@ -79,8 +79,10 @@ def test_matches_scipy_sph_harm_y():
         for m in range(-l, l + 1):
             for theta in (0.3, 1.1, 2.4):
                 for phi in (0.0, 1.7, -2.2):
+                    # scipy is orthonormal; ours carries sqrt(4 pi) relative to it
                     assert sph_harm(l, m, theta, phi) == pytest.approx(
-                        sph_harm_y(l, m, theta, phi), abs=1e-12)
+                        math.sqrt(4 * math.pi) * sph_harm_y(l, m, theta, phi),
+                        abs=1e-12)
 
 
 def test_negative_order_relation_for_legendre():

@@ -2,8 +2,8 @@
 
 Do not edit: regenerate instead.  SEA and LAND are the brightness levels, chosen so
 that the sphere mean is one; the coefficients below obey D16 (a_00 = 1), so they are
-those levels divided by sqrt(4 pi), and a viewer must multiply by sqrt(4 pi) to show
-them.  The Lanczos taper is already applied.  Extracted from a Blue Marble image;
+the levels themselves, since a_00 = 1 is a map of mean one in this convention.
+The Lanczos taper is already applied.  Extracted from a Blue Marble image;
 NASA, public domain.
 """
 

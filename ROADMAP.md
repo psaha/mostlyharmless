@@ -698,36 +698,6 @@ changed the `a_00` convention, added the limb factor, retired the spot model and
 section, and a survey chapter would have needed touching for most of them.  So it is worth
 writing once the structure settles, not before.
 
-**T12 --- change the harmonic normalisation to `Y_00 = 1`.** The proposal is to drop the
-orthonormal convention, `int |Y_lm|^2 dOmega = 1`, in favour of the un-normalised one,
-`Y_00 = 1`, which means `int |Y_lm|^2 dOmega = 4 pi`: every `Y_lm` is scaled up by
-`sqrt(4 pi)`.
-
-The motive is readability: the `sqrt(4 pi)` appears in every `Y_lm`, in `N_lm`, in the zonal
-identity's `4 pi / 5` and in every coefficient. Removing it from the basis moves it to a few
-places rather than nine:
-
-| formula | now | after |
-| --- | --- | --- |
-| `N_lm` | `sqrt((2l+1)/4pi * (l-m)!/(l+m)!)` | `sqrt((2l+1)(l-m)!/(l+m)!)` |
-| the mode formula | `2 pi (-i)^m N_lm` | `sqrt(pi) (-i)^m N_lm` |
-| the zonal identity | `4 pi / 5` | `1/5` |
-| the five numbers | `sqrt(5/16 pi)` etc. | `sqrt(5/4)` etc. |
-| coefficients | `int I conj(Y)` | `(1/4 pi) int I conj(Y)` |
-| uniform `I = 1` | `a_00 = sqrt(4 pi)` | `a_00 = 1` |
-
-What does *not* change: `X_lm` is built from `P_lm` and Bessel functions, so the closed forms,
-the radial integrals and every radial certificate are untouched. That removes most of the risk.
-
-What does change: `sph_harm`, `normalisation`, `real_sph_harm`; the quadratures that produce
-coefficients, which gain a `1/4 pi`; V1, V2 and V25, whose statements change rather than their
-tolerances; and every conversion with a published source, since Dholakia & Pope are
-orthonormal and our section 5--6 comparison with them would need the factor stated once.
-
-The danger is confusion, not effort. The orthonormal convention is the majority, so a reader
-will default to it. If this is done, the note has to be unmissable: at the top of section 2, in
-the symbol table, and once in the summary appendix.
-
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
 evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by
@@ -892,6 +862,35 @@ against the projection. The affine model's error is **second order in
    against the first-order expectation, with a network reserved for the case where the target
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **T12 closed: the harmonic normalisation is now `Y_00 = 1`.** The orthonormal convention,
+  `int |Y|^2 dOmega = 1`, was replaced by the un-normalised one, so the *average* of `|Y_lm|^2`
+  over the sphere is unity and the integral is `4 pi`. The motive was readability: the `sqrt(4 pi)`
+  was written nine times over and is now written once, as `sqrt(pi)` in the mode formula, plus
+  `1/4 pi` in the projection. Two things came out better than expected. In `sphere_coefficients`
+  the `1/4 pi` of the projection and the `4 pi/N` of the golden-angle samples **cancel**, leaving a
+  plain average over samples; and `a_00 = 1` is now the statement that a map has mean one, so
+  `MEAN_FACTOR` is 1 and the display chain is trivial. `a_00 = 1` for an undeformed map follows
+  from the convention rather than being imposed on it.
+
+  What did not change: `X_lm` is built from `P_lm` and Bessel functions, so the closed forms, the
+  radial integrals and every radial certificate were untouched --- which is most of the risk, and
+  it did not materialise.
+
+  What did change: `N_lm`, the mode formula's prefactor (`2 pi` to `sqrt(pi)`), the addition
+  theorem (`4 pi/(2l+1)` to `1/(2l+1)`, `4 pi/5` to `1/5`), the five numbers, the analytic
+  first-order coefficients, the two projections, the display chain, three test expectations that
+  were arithmetic, and four certificates whose *statements* changed rather than their tolerances:
+  V1 (`int |Y|^2 = 4 pi`), V3 (the theorem without its `4 pi`), V16 (flux `pi`), V25 (mean square
+  one). V1's comparison against SymPy's `Ynm` now writes the `sqrt(4 pi)` out, which makes it the
+  one place where the convention difference is asserted numerically rather than described.
+
+  Two lessons, both about the sequence rather than the mathematics. First, the change was done in
+  four stages with `make check` between them, and the failure list was the checklist; doing it in
+  one pass would have produced twenty failures with no way to tell a stale expectation from a real
+  slip. Second, three of the six defects found were **no-op edits**: `str.replace` calls whose
+  pattern no longer matched, which silently did nothing and were reported as failures by the user
+  rather than by me. Every edit that carried an `assert` either worked or stopped.
 
 * **Five loose threads closed in one pass.** (i) Section 1 said negative orders are "wanted in
   exactly one place"; it now says they are *formed* in one place (the rotation law) and elsewhere

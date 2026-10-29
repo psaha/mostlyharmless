@@ -31,20 +31,20 @@ def _fit(field, eye=EYE, samples=20000, l_max=4):
 
 
 def test_the_disk_harmonic_of_a_uniform_star_is_constant():
-    """``Phi_00`` is constant on the disk and vanishes outside it: the uniform disk."""
+    """``Phi_00`` is 1 on the disk and vanishes outside it: the uniform disk."""
     east_coordinate = np.array([0.0, 0.3, -0.7, 0.99])
     north_coordinate = np.array([0.0, -0.3, 0.5, 0.0])
     values = fitted.disk_harmonic(0, 0, east_coordinate, north_coordinate)
-    assert np.allclose(values, 1.0 / np.sqrt(4.0 * np.pi))
+    assert np.allclose(values, 1.0)
 
     outside = fitted.disk_harmonic(0, 0, np.array([1.2]), np.array([0.0]))
     assert np.allclose(outside, 0.0)
 
 
 def test_the_gram_matrix_is_anchored_and_block_diagonal():
-    """The ``(0, 0)`` entry is ``1/4`` exactly, and orders do not mix."""
+    """The ``(0, 0)`` entry is the disk's area, and orders do not mix."""
     matrix = fitted.gram(4)
-    assert abs(matrix[0, 0] - 0.25) < 1e-12
+    assert abs(matrix[0, 0] - np.pi) < 1e-12   # int over the disk of Phi_00^2 = 1
 
     orders = np.array([m for _, m, _ in fitted.design(4)])
     between = matrix[np.ix_(orders != 0, orders == 0)]
@@ -56,7 +56,7 @@ def test_the_gram_matrix_is_anchored_and_block_diagonal():
 
 
 def test_the_fitted_row_recovers_a_uniform_disk():
-    """With no deformation the fit must give ``a_00 = sqrt(4 pi)`` and nothing else.
+    """With no deformation the fit must give ``a_00 = 1`` and nothing else.
 
     That is the same statement as the uniform-disk anchor: the fitted visibility must be
     the classical ``2 J_1(x)/x`` with flux ``pi``.
@@ -65,7 +65,7 @@ def test_the_fitted_row_recovers_a_uniform_disk():
     assert np.allclose(stretch, np.eye(2), atol=1e-12)
 
     coefficients = fit.coefficients
-    assert abs(coefficients.blocks[0][0] - np.sqrt(4.0 * np.pi)) < 2e-3
+    assert abs(coefficients.blocks[0][0] - 1.0) < 2e-3
     for l in range(0, 5, 2):
         for m in range(l + 1):
             if (l, m) != (0, 0):

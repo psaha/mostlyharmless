@@ -92,7 +92,7 @@ def test_the_worked_example_from_the_discussion():
     assert c[1, -1] == pytest.approx(-1 / math.sqrt(2))
 
     for theta, phi in ANGLES:
-        expected = -math.sqrt(3 / (4 * math.pi)) * math.sin(theta) * math.cos(phi)
+        expected = -math.sqrt(3.0) * math.sin(theta) * math.cos(phi)
         got = (c[1, 1] * sph_harm(1, 1, theta, phi)
                + c[1, -1] * sph_harm(1, -1, theta, phi))
         assert got.imag == pytest.approx(0.0, abs=1e-14)

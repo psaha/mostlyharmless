@@ -122,6 +122,6 @@ def test_negative_orders_are_rejected():
 
 
 def test_the_uniform_map_flux_is_the_analytic_value():
-    # a_00 = 1 gives mean intensity 1/sqrt(4 pi) and flux sqrt(pi)/2
+    # a_00 = 1 gives mean intensity 1 and flux pi, the disk's area
     assert float(np.real(visibility(uniform_coeffs(0), 0.0, 0.0))) == pytest.approx(
-        math.sqrt(math.pi) / 2.0)
+        math.pi)

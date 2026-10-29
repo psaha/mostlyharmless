@@ -124,16 +124,16 @@ def first_order_coefficients(field, eye, limb=0.0):
 
     tide_axis, spin_axis = field.axes()
     blocks = [np.zeros(l + 1, dtype=complex) for l in range(3)]
-    blocks[0][0] = (1.0 - 4.0 * field.centrifugal) * np.sqrt(4.0 * np.pi)
+    blocks[0][0] = 1.0 - 4.0 * field.centrifugal
     if limb:
         # I = (1 - limb) + limb mu, and mu = sqrt(4 pi / 3) Y_10 about the observer's axis, so
         # the limb is a constant plus a dipole and nothing else to leading order.
         blocks[0][0] *= 1.0 - limb
-        blocks[1][0] += limb * np.sqrt(4.0 * np.pi / 3.0)
+        blocks[1][0] += limb * np.sqrt(1.0 / 3.0)
     for m in range(3):
         tide_term = sph_harm(2, m, *angles(tide_axis))
         spin_term = sph_harm(2, m, *angles(spin_axis))
-        blocks[2][m] = -(16.0 * np.pi / 5.0) * (
+        blocks[2][m] = -(4.0 / 5.0) * (
             field.tide * np.conjugate(tide_term)
             - field.centrifugal * np.conjugate(spin_term))
     return Coeffs(tuple(blocks))
@@ -143,8 +143,9 @@ def sphere_coefficients(field, l_max=16, power=1.0, n_samples=20000, eye=None,
                         linear=False):
     """The brightness field on the unit sphere, projected onto the harmonics.
 
-    With ``a_lm = (4 pi / N) sum_i I(n_i) conj(Y_lm(n_i))`` and the golden-angle
-    points carrying equal solid angles, this is an ordinary quadrature.  The result is
+    With ``a_lm = (1 / N) sum_i I(n_i) conj(Y_lm(n_i))`` and the golden-angle points
+    carrying equal solid angles, this is an ordinary quadrature --- the two 4 pi, from the
+    projection and from the solid angle, cancel in this convention.  The result is
     stored half-complex (D13): ``a_l0`` real, ``a_lm`` complex for ``m > 0``.
 
     The projection is done in the **observer** frame when ``eye`` is given, so the
@@ -178,7 +179,10 @@ def sphere_coefficients(field, l_max=16, power=1.0, n_samples=20000, eye=None,
         polar = polar / np.linalg.norm(polar)
     theta = np.arccos(np.clip(directions @ polar, -1.0, 1.0))
     phi = np.arctan2(directions @ east, directions @ north)
-    solid = 4.0 * np.pi / n_samples
+    # with the average of |Y|^2 over the sphere equal to one, the projection is
+    # a_lm = (1/4 pi) int I conj(Y), and the golden-angle samples carry 4 pi / N each, so
+    # the two 4 pi cancel and this is a plain average over the samples
+    solid = 1.0 / n_samples
     blocks = []
     for l in range(l_max + 1):
         block = np.zeros(l + 1, dtype=complex)

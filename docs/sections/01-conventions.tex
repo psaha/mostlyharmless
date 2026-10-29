@@ -74,7 +74,7 @@ through
 Public functions take $(u,v)$; $q$, $\psi$ and $a$ are internal.
 
 The measure in \eqref{eq:visibility-definition} is the planar measure over the
-projected disk, $dy\,dx = \rho\,d\rho\,d\varphi$.  The exact solid-angle
+projected disk, $dx\,dy = \rho\,d\rho\,d\varphi$.  The exact solid-angle
 measure differs by a factor $1/n$ with $n = \sqrt{1-\rho^2}$, and is not used
 here, because the planar measure is the one in which the classical uniform-disk
 and limb-darkening results are expressed.  The difference is not cosmetic: the
@@ -87,9 +87,14 @@ Complex harmonics are used in the derivations, and only for non-negative orders:
 \begin{equation}
   Y_{lm}(\theta,\varphi) = N_{lm}\, P_{lm}(\cos\theta)\, e^{im\varphi},
   \qquad
-  N_{lm} = \sqrt{\frac{2l+1}{4\pi}\,\frac{(l-m)!}{(l+m)!}} ,
+  N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
   \label{eq:ylm}
 \end{equation}
+\footnote{This normalisation puts $Y_{00} = 1$, so the \emph{average} of $|Y_{lm}|^2$ over the
+sphere is unity and the integral is $4\pi$.  The quantum-mechanics convention, and with it
+most of the literature, takes the \emph{integral} to be unity instead, which scales every
+$Y_{lm}$ by $1/\sqrt{4\pi}$ relative to these.  The two differ by that constant everywhere and
+nowhere else, so a conversion is always the same factor applied uniformly.}
 for $l \ge 0$ and $0 \le m \le l$, with the Condon--Shortley phase carried inside
 $P_{lm}$.  Negative orders are never formed --- not in the derivations, not for
 maps, not anywhere --- so the magnitude $|m|$ is never needed either.  The order is
@@ -179,10 +184,10 @@ functional form of $V_{lm}$, which is what the rest of sections~\ref{sec:visibil
 and~\ref{sec:odd} supplies; the derivation is completed in
 section~\ref{sec:visibility}, where the mode's contribution is evaluated.
 
-The constant term is $a_{00}Y_{00} = a_{00}/\sqrt{4\pi}$, so $a_{00}$ is $\sqrt{4\pi}$ times
+The constant term is $a_{00}Y_{00} = a_{00}$, since $Y_{00} = 1$ here, so $a_{00}$ \emph{is}
 the mean intensity over the sphere,
 \begin{equation}
-  \frac{1}{4\pi}\int_{S^2} I \, d\Omega = \frac{a_{00}}{\sqrt{4\pi}} .
+  \frac{1}{4\pi}\int_{S^2} I \, d\Omega = a_{00} .
   \label{eq:mean-intensity}
 \end{equation}
 It is neither the mean over the visible disk nor the flux.  Those integrals lack
@@ -197,8 +202,8 @@ Maps in this work are normalised so that
   \label{eq:a00-normalisation}
 \end{equation}
 so the uniform component is the reference and every other coefficient is a mode
-amplitude relative to uniform brightness.  The sphere mean is then
-$1/\sqrt{4\pi}$.  This is an assumption of the same kind as the unit radius: both
+amplitude relative to uniform brightness.  The sphere mean is then $1$, which is what makes
+the normalised maps of section~\ref{sec:models} read directly.  This is an assumption of the same kind as the unit radius: both
 fix a scale that would otherwise be a free parameter, and both are stated once
 rather than carried around.  Rotation preserves \eqref{eq:a00-normalisation},
 because the $l = 0$ block is untouched by it --- the $d$ matrix at $l = 0$ is the

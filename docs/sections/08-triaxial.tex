@@ -383,8 +383,8 @@ and each $P_2(n\cdot\hat e)$ is a zonal $l = 2$ pattern about its own axis, whos
 coefficients are read off from \eqref{eq:zonal-l2} and \eqref{eq:harmonic-at-axis-l2}
 directly, in the observer frame:
 \begin{equation}
-  a_{00} \;=\; (1 - 4\epsilon_\text{spin})\sqrt{4\pi} , \qquad
-  a_{2m} \;=\; -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,
+  a_{00} \;=\; 1 - 4\epsilon_\text{spin} , \qquad
+  a_{2m} \;=\; -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,
       \overline{Y_{2m}(\hat e_\text{tide})}
     \;-\; \epsilon_\text{spin}\,\overline{Y_{2m}(\hat e_\text{spin})}\Bigr] ,
   \label{eq:first-order-coefficients}
@@ -453,7 +453,7 @@ for each sampled direction $\mathbf{x}_i$,
   \varphi_i = \operatorname{atan2}(\mathbf{x}_i\cdot\text{east},\, \mathbf{x}_i\cdot\text{north}) ,
   \label{eq:observer-angles}
 \end{equation}
-and $a_{lm} = \frac{4\pi}{N}\sum_i I_i \overline{Y_{lm}(\theta_i,\varphi_i)}$ is a plain
+and $a_{lm} = \frac{1}{N}\sum_i I_i \overline{Y_{lm}(\theta_i,\varphi_i)}$ is a plain
 quadrature, exactly as in section~\ref{sec:mode-visibility}.
 
 Projecting in the body frame and rotating the coefficients afterwards does not do instead.
@@ -496,16 +496,16 @@ Written out, the pattern is multiplied by the limb factor:
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
 \begin{equation}
   \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
-    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
-    a_{2m} = -\frac{16\pi}{5}\Bigl[\,\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
+    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin}) , \\
+    a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
+    a_{2m} = -\frac{4}{5}\Bigl[\,\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
     - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\,\Bigr] .
   \end{aligned}
   \label{eq:limb-coefficients}
 \end{equation}
 None of these coefficients needs a Gaunt integral, and it is worth saying why, since the limb
 factor is a product.  The dipole is the whole of the limb term because $\mu$ \emph{is} a single
-harmonic: $Y_{10} = \sqrt{3/4\pi}\cos\theta$, so $\mu = \sqrt{4\pi/3}\,Y_{10}$, and its
+harmonic: $Y_{10} = \sqrt3\cos\theta$, so $\mu = Y_{10}/\sqrt3$, and its
 coefficient is its own amplitude.  The constant term is the other half of
 $1 - u_\text{limb} + u_\text{limb}\mu$, multiplied by the pattern's mean.  The quadrupoles are
 untouched, and come from the corollary of section~\ref{sec:rotation-law} --- the five-number
@@ -627,7 +627,8 @@ Certificate \vtag{26} removes the approximation altogether: the samples are manu
 known coefficient set using the disk's own quadrature weights, so every step is an identity and the
 fitted coefficients must come back at roundoff.  That pins the unstretching, the real pairing and
 the normalisation at once, with no renderer and no sampling noise to hide behind.  Certificate
-\vtag{27} pins the basis instead: $G_{00,00} = \pi(1/\sqrt{4\pi})^{2} = 1/4$ exactly, entries
+\vtag{27} pins the basis instead: $G_{00,00} = \pi$ exactly, the disk's area, since
+$\Phi_{00} = 1$, entries
 between different orders vanish by the orthogonality of the angular factors, and the whole matrix
 agrees with a brute-force midpoint rule over the disk that shares nothing with the Gauss--Legendre
 construction but the definition.

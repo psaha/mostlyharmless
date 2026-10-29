@@ -34,7 +34,7 @@ number, compared to a stated tolerance.  They fall into three classes.
 The complex visibility is the Fourier transform of the sky brightness with $2\pi$ inside the
 exponent and no prefactor,
 \begin{equation}
-  V(u,v) \;=\; int I(y,x)\, e^{-2\pi i (u x + v y)}\, dy\, dx .
+  V(u,v) \;=\; \int I(x,y)\, e^{-2\pi i (u x + v y)}\, dx\, dy .
   \label{eq:verif-visibility}
 \end{equation}
 A real map is expanded in complex harmonics using non-negative orders only, the reality
@@ -58,7 +58,7 @@ contributes when the baseline is reversed.
     low-frequency band.
     \\[1pt] \vtag{15}\quad \emph{Numerical to $5\times10^{-2}$}
   \item[$\checkmark$] \code{check_uniform_disk_visibility} checks the uniform disk against
-    $2J_1(x)/x$, with flux $\sqrt{\pi}/2$.
+    $2J_1(x)/x$, with flux $\pi$, the disk's area.
     \\[1pt] \vtag{16}\quad \emph{Numerical, $l = 0$}
 \end{itemize}
 
@@ -87,16 +87,16 @@ so a rotation costs a matrix product rather than a resampling.
 For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity
 and five numbers.  With $\hat e$ the axis of the pattern,
 \begin{equation}
-  P_2(\hat n\cdot\hat e) \;=\; \frac{4\pi}{5}\Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
+  P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}\Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
   \;+\; 2\sum_{m=1}^{2}\mathrm{Re}\bigl(\overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n)\bigr)\Bigr] ,
   \label{eq:verif-zonal}
 \end{equation}
 and the five numbers, for an axis at direction cosines $(a,b,c)$,
 \begin{equation}
   \begin{aligned}
-    Y_{20}(\hat e) &= \sqrt{\tfrac{5}{16\pi}}\,\bigl(3c^2-1\bigr), \\
-    Y_{2,\pm1}(\hat e) &= \mp\sqrt{\tfrac{15}{8\pi}}\,c\,\bigl(a\pm ib\bigr), \\
-    Y_{2,\pm2}(\hat e) &= \sqrt{\tfrac{15}{32\pi}}\,\bigl(a\pm ib\bigr)^2 .
+    Y_{20}(\hat e) &= \sqrt{\tfrac54}\,\bigl(3c^2-1\bigr), \\
+    Y_{2,\pm1}(\hat e) &= \mp\sqrt{\tfrac{15}{2}}\,c\,\bigl(a\pm ib\bigr), \\
+    Y_{2,\pm2}(\hat e) &= \sqrt{\tfrac{15}{8}}\,\bigl(a\pm ib\bigr)^2 .
   \end{aligned}
   \label{eq:verif-five-numbers}
 \end{equation}
@@ -281,9 +281,9 @@ the limb factor carried through it becomes
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
 \begin{equation}
   \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin})\,\sqrt{4\pi} , \\
-    a_{10} &= u_\text{limb}\,\sqrt{\tfrac{4\pi}{3}} , \qquad
-    a_{2m} = -\frac{16\pi}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
+    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin}) , \\
+    a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
+    a_{2m} = -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
     - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\Bigr] .
   \end{aligned}
   \label{eq:verif-first-order-coefficients}

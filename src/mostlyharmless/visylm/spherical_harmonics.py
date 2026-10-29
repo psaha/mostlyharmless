@@ -55,8 +55,18 @@ def factorial_ratio(l, m):
 
 
 def normalisation(l, m):
-    """N_lm of equation (ylm) in section 01.  Note the signed m."""
-    return math.sqrt((2 * l + 1) / (4 * math.pi) * factorial_ratio(l, m))
+    """N_lm of equation (ylm) in section 01.  Note the signed m.
+
+    The convention here is Y_00 = 1, so the *average* of |Y_lm|^2 over the sphere is unity
+    and the integral over the sphere is 4 pi.  Quantum mechanics and most of the literature
+    use the orthonormal convention, in which the integral is unity; every Y_lm there is
+    1/sqrt(4 pi) times the one here.
+
+    Stage 1 of the conversion (T12): this function only.  Everything downstream still assumes
+    the orthonormal convention, so the tests are expected to fail until the projections and
+    the display chain are converted too.
+    """
+    return math.sqrt((2 * l + 1) * factorial_ratio(l, m))
 
 
 def associated_legendre(l, m, x):

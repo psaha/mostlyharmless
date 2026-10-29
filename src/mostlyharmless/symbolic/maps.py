@@ -44,7 +44,7 @@ CONVERGENCE_DEPTH = 0.9
 # The a_00 = 1 convention fixes the sphere mean at 1/sqrt(4 pi), so the map figures
 # plot I / <I> = I sqrt(4 pi).  This is a display choice; sky_map still returns model
 # units, which the bound test needs.
-MEAN_FACTOR = float(np.sqrt(4.0 * np.pi))
+MEAN_FACTOR = 1.0        # with Y_00 = 1 the panels are already in mean units
 
 
 def _pyplot():

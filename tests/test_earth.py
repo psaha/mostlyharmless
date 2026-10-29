@@ -29,7 +29,7 @@ def test_a_known_colour_plane_comes_back_with_its_own_coefficients():
     real = earth.channel(plane, l_max=l_max).to_real()
 
     print(f"\na00 {real[0][0]:+.4f}, a20 {real[2][2]:+.4f}")
-    assert real[0][0] == pytest.approx(np.sqrt(4.0 * np.pi), abs=5e-2)
+    assert real[0][0] == pytest.approx(1.0, abs=5e-2)
     assert real[2][2] == pytest.approx(0.5, abs=5e-2)
     # a plane with no azimuthal structure must not produce the sine branch
     assert np.max(np.abs(real[2][:2])) < 1e-12

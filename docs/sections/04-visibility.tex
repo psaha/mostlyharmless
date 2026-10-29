@@ -80,7 +80,7 @@ times a radial integral that depends on $q$ alone.  That integral is the only ob
 evaluate, so it is given a letter of its own, $X_{lm}(q)$, deliberately not $R$: $R_n^m$ is the
 Zernike radial polynomial and is needed in the same sections, and one letter cannot mean both.
 \begin{equation}
-  V_{lm}(u,v) = 2\pi(-i)^m N_{lm}\, e^{im\psi}\, X_{lm}(q) ,
+  V_{lm}(u,v) = \sqrt{\pi}(-i)^m N_{lm}\, e^{im\psi}\, X_{lm}(q) ,
   \label{eq:mode-visibility}
 \end{equation}
 \begin{equation}
@@ -108,7 +108,7 @@ summand of \eqref{eq:pairing-visibility-parity} at order $m$ and put in the mode
 \eqref{eq:mode-visibility}, which reduces both branches to a common form,
 \[
   a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
-  \;=\; 4\pi(-i)^m N_{lm} X_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
+  \;=\; 2\sqrt{\pi}(-i)^m N_{lm} X_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
   \qquad m > 0 ,
 \]
 because $(-i)^m$ is real for even $m$ and imaginary for odd $m$.  At $m = 0$ the contribution is
@@ -199,7 +199,7 @@ visibility must be the classical Airy visibility of a uniform disk,
   \frac{V(u,v)}{V(0,0)} = \frac{2J_1(x)}{x} , \qquad x = 2\pi q ,
   \label{eq:uniform-disk}
 \end{equation}
-for the unit disk of section 1.1.  The flux is $V(0,0) = \sqrt{\pi}/2$, since
+for the unit disk of section 1.1.  The flux is $V(0,0) = \pi$, the disk's area, since
 $a_{00} = 1$ means unit mean intensity in the sense of
 \eqref{eq:a00-normalisation}.
 
@@ -218,7 +218,7 @@ only error is the quadrature.
 \hline
 tag & claim & rung \\
 \hline
-\vtag{16} & uniform disk against $2J_1(x)/x$, and flux $\sqrt{\pi}/2$ & numerical, $l = 0$ \\
+\vtag{16} & uniform disk against $2J_1(x)/x$, and flux $\pi$ & numerical, $l = 0$ \\
 \vtag{17} & Jacobi--Anger factors \eqref{eq:jacobi-anger} & numerical, roundoff level \\
 \hline
 \end{tabular}

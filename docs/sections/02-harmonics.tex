@@ -126,11 +126,11 @@ function.
 tag & claim & rung \\
 \hline
 \vtag{1} & Legendre orthogonality & exact, $l \le 5$ \\
-         & implementation orthonormality & numerical, $l \le 4$ \\
-         & convention against SymPy \code{Ynm} & numerical, $30$ digits \\
+         & $\int_{S^2}|Y_{lm}|^2\,d\Omega = 4\pi$ for the implementation & numerical, $l \le 4$ \\
+         & the $\sqrt{4\pi}$ against SymPy's orthonormal \code{Ynm} & numerical, $30$ digits \\
 \vtag{2} & the extension \eqref{eq:ylm-extension}, and the implementation reproduces it & exact \\
 \vtag{3} & the $l = 2$ zonal corollary \eqref{eq:zonal-l2}, against the general \code{sph_harm_addition} & numerical, $40$ digits, $l \le 6$ \\
-\vtag{25} & the real basis \eqref{eq:real-basis}: orthonormal on the grid, and equal to the complex one & numerical, $l \le 4$ \\
+\vtag{25} & the real basis \eqref{eq:real-basis}: mean square one on the grid, and equal to the complex one & numerical, $l \le 4$ \\
 \hline
 \end{tabular}
 \end{center}

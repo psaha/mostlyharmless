@@ -112,8 +112,8 @@ def _coefficient(l, m, theta=THETA):
     the implementation, with the negative-order relation applied explicitly.
     The order -m is written out where it is needed, and no magnitude appears.
     """
-    n = sp.sqrt((2 * l + 1) / (4 * sp.pi)
-                * sp.factorial(l - m) / sp.factorial(l + m))
+    # an independent implementation of N_lm: Y_00 = 1 here, as everywhere in this package
+    n = sp.sqrt((2 * l + 1) * sp.factorial(l - m) / sp.factorial(l + m))
     if m >= 0:
         return n * sp.assoc_legendre(l, m, sp.cos(theta))
     p = (sp.factorial(l + m) / sp.factorial(l - m)
@@ -191,16 +191,21 @@ def check_legendre_orthogonality_exact(l_max=5):
 def check_ylm_matches_sympy_ynm(l_max=3, digits=30):
     """V1, numerical rung -- our conventions against SymPy's own Ynm.
 
-    Compared at 30 digits rather than symbolically: the two are algebraically
-    equal but not identically written (nested square roots), so a symbolic zero
-    would test the simplifier more than the claim.
+    SymPy's ``Ynm`` is orthonormal, so ours is ``sqrt(4 pi)`` times it; that factor is the
+    whole content of the check now, and it is the one place where the convention difference
+    is stated numerically rather than in prose.
+
+    Compared at 30 digits rather than symbolically: the two are algebraically equal but not
+    identically written (nested square roots), so a symbolic zero would test the simplifier
+    more than the claim.
     """
     worst = 0.0
+    scale = sp.sqrt(4 * sp.pi)
     for l in range(l_max + 1):
         for m in range(-l, l + 1):
             for th, ph in _ANGLE_PAIRS:
                 ours = sp.N(Y(l, m, th, ph), digits)
-                theirs = sp.N(sp.Ynm(l, m, th, ph), digits)
+                theirs = sp.N(scale * sp.Ynm(l, m, th, ph), digits)
                 worst = max(worst, abs(complex(ours - theirs)))
     return worst
 
@@ -227,7 +232,8 @@ def check_orthonormality_numeric(l_max=4, n_theta=None, n_phi=None):
                     b = sph_harm(lp, mp, theta[:, None], phi[None, :])
                     value = np.sum(weights[:, None] * np.conjugate(b) * a)
                     value = float(np.real(value)) * (2 * np.pi / n_phi)
-                    expected = 1.0 if (l == lp and m == mp) else 0.0
+                    # the average of |Y|^2 over the sphere is one, so the integral is 4 pi
+                    expected = 4.0 * np.pi if (l == lp and m == mp) else 0.0
                     worst = max(worst, abs(value - expected))
     return worst
 
@@ -259,7 +265,10 @@ def check_reality_exact(l_max=4):
 def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
     """V3, numerical rung -- the `l = 2` zonal corollary, checked generally.
 
-        sum_m Y_{lm}(1) conj(Y_{lm}(2)) = (2l+1)/(4 pi) P_l(cos gamma)
+        sum_m Y_{lm}(1) conj(Y_{lm}(2)) = (2l+1) P_l(cos gamma)
+
+    (the `4 pi` of the usual statement is absent because Y_00 = 1 here, so the left side
+    carries 4 pi relative to the orthonormal convention)
 
     The theorem itself is classical and cited as such.  What this checks is our
     implementation of it, in two ways.  First, SymPy's evaluation of our own
@@ -286,7 +295,7 @@ def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
                       for m in range(-l, l + 1))
             cos_gamma = (sp.cos(a1) * sp.cos(a2)
                          + sp.sin(a1) * sp.sin(a2) * sp.cos(b1 - b2))
-            rhs = (2 * l + 1) / (4 * sp.pi) * sp.legendre(l, cos_gamma)
+            rhs = (2 * l + 1) * sp.legendre(l, cos_gamma)
             worst = max(worst, abs(complex(sp.N(lhs - rhs, digits))))
 
         # (b) the implementation itself, in floating point.
@@ -297,7 +306,7 @@ def check_addition_theorem_numeric(l_max=6, digits=40, seed=20261012):
             p2 = rng.uniform(-np.pi, np.pi)
             cos_gamma = (math.cos(t1) * math.cos(t2)
                          + math.sin(t1) * math.sin(t2) * math.cos(p1 - p2))
-            rhs = (2 * l + 1) / (4 * math.pi) * float(
+            rhs = (2 * l + 1) * float(
                 sp.legendre(l, sp.Float(cos_gamma, 30)))
             lhs = float(np.real(sph_harm_addition(l, t1, p1, t2, p2)))
             worst = max(worst, abs(lhs - rhs))
@@ -313,7 +322,7 @@ def check_addition_theorem_real_numeric(l_max=6, seed=20261012):
 
         R_{l,0}(1) R_{l,0}(2)
           + sum_{m>0} [ R_{l,m,c}(1) R_{l,m,c}(2) + R_{l,m,s}(1) R_{l,m,s}(2) ]
-        = (2l+1)/(4 pi) P_l(cos gamma)
+        = (2l+1) P_l(cos gamma)
 
     This is the form the manual states, and every index in it is non-negative.
     In the implementation's calling convention the cosine branch of order m is
@@ -336,7 +345,7 @@ def check_addition_theorem_real_numeric(l_max=6, seed=20261012):
                 total += (real_sph_harm(l, m, t1, p1) * real_sph_harm(l, m, t2, p2)
                           + real_sph_harm(l, -m, t1, p1)
                           * real_sph_harm(l, -m, t2, p2))
-            expected = (2 * l + 1) / (4 * math.pi) * float(
+            expected = (2 * l + 1) * float(
                 sp.legendre(l, sp.Float(cos_gamma, 30)))
             worst = max(worst, abs(total - expected))
     return worst
@@ -362,7 +371,8 @@ def check_real_basis_orthonormality_numeric(l_max=4, n_theta=None, n_phi=None):
                     f = (real_sph_harm(l, m, theta[:, None], phi[None, :])
                          * real_sph_harm(lp, mp, theta[:, None], phi[None, :]))
                     value = float(np.sum(weights[:, None] * f)) * (2 * np.pi / n_phi)
-                    expected = 1.0 if (l == lp and m == mp) else 0.0
+                    # the average of |Y|^2 over the sphere is one, so the integral is 4 pi
+                    expected = 4.0 * np.pi if (l == lp and m == mp) else 0.0
                     worst = max(worst, abs(value - expected))
     return worst
 
@@ -584,7 +594,7 @@ def check_uniform_disk_visibility(q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0), l_max
 
     A map with a_00 = 1 and every other coefficient zero is the uniform
     brightness case, whose normalised visibility is 2 J_1(x)/x.  Two things are
-    checked: the flux at the origin, which must be sqrt(pi)/2, and the normalised
+    checked: the flux at the origin, which must be pi, and the normalised
     visibilities at a range of baselines.
 
     This is the end-to-end anchor for the whole convention stack: the harmonic
@@ -596,7 +606,8 @@ def check_uniform_disk_visibility(q_values=(0.0, 0.3, 1.0, 2.5, 5.0, 9.0), l_max
     coeffs = Coeffs.from_vector(vector)
 
     flux = float(np.real(visibility(coeffs, 0.0, 0.0)))
-    worst = abs(flux - math.sqrt(math.pi) / 2.0)
+    # with Y_00 = 1 the flux of a uniform map with a_00 = 1 is the disk's area, pi
+    worst = abs(flux - math.pi)
 
     for q in q_values:
         value = np.real(visibility(coeffs, q, 0.0)) / flux
@@ -1106,14 +1117,14 @@ def check_first_order_frame(tide=0.03, centrifugal=0.01, inclination=0.9):
     # body frame: the harmonics are the ordinary ones about the body axes
     tide_axis, spin_axis = field.axes()
     body = [np.zeros(l + 1, dtype=complex) for l in range(3)]
-    body[0][0] = (1.0 - 4.0 * centrifugal) * np.sqrt(4.0 * np.pi)
+    body[0][0] = 1.0 - 4.0 * centrifugal
     for m in range(3):
         terms = []
         for axis in (tide_axis, spin_axis):
             theta = float(np.arccos(np.clip(axis[2], -1.0, 1.0)))
             phi = float(np.arctan2(axis[1], axis[0]))
             terms.append(sph_harm(2, m, theta, phi))
-        body[2][m] = -(16.0 * np.pi / 5.0) * (
+        body[2][m] = -(4.0 / 5.0) * (
             tide * np.conjugate(terms[0]) - centrifugal * np.conjugate(terms[1]))
     body = Coeffs(tuple(body))
 
@@ -1191,7 +1202,8 @@ def check_disk_gram(l_max=4, n_side=400):
     from mostlyharmless.symbolic import fitted
 
     matrix = fitted.gram(l_max)
-    anchor = abs(float(matrix[0, 0]) - 0.25)
+    # (0, 0) is int over the disk of Phi_00^2 with Phi_00 = 1, i.e. the disk's area
+    anchor = abs(float(matrix[0, 0]) - np.pi)
 
     plan = fitted.design(l_max)
     orders = np.array([m for _, m, _ in plan])

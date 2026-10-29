@@ -36,9 +36,10 @@ def test_both_hemispheres_render_and_differ():
 def test_a_uniform_map_comes_out_at_one():
     """The map is in units of the sphere mean, so a uniform map is flat at 1.
 
-    The coefficient is sqrt(4 pi), not 1: a_00 multiplies Y_00, which is 1/sqrt(4 pi), so
-    a_00 = 1 would give a flat map at 1/sqrt(4 pi) = 0.282 instead of at one.  That is the
-    same convention trap as a_00 not being the flux, and it caught this test.
+    In this convention Y_00 = 1, so a_00 = 1 is a map of mean one and the viewer applies no
+    factor.  The coefficient is *not* sqrt(4 pi): that was the orthonormal convention, where
+    a_00 multiplies 1/sqrt(4 pi) and 1 is not the mean.  The trap this guards is the reverse
+    of the one it used to, which is why it is worth keeping the comment.
     """
     def disc_mean(monopole):
         blocks = tuple(np.zeros(l + 1, dtype=complex) for l in range(17))
@@ -48,15 +49,13 @@ def test_a_uniform_map_comes_out_at_one():
         assert np.ptp(inside) < 1e-12, "a uniform map must be uniform"
         return float(inside.mean())
 
-    # D16: the normalisation is a_00 = 1, which puts the sphere mean at 1/sqrt(4 pi)
+    # D16: the normalisation is a_00 = 1, which is the sphere mean in this convention
     normalised = disc_mean(1.0)
-    print(f"\na_00 = 1 gives {normalised:.4f} = 1/sqrt(4 pi) = "
-          f"{1 / np.sqrt(4 * np.pi):.4f}")
-    assert normalised == pytest.approx(1.0 / np.sqrt(4.0 * np.pi), rel=1e-9)
+    print(f"\na_00 = 1 gives {normalised:.4f}")
+    assert normalised == pytest.approx(1.0, rel=1e-9)
 
-    # a_00 = sqrt(4 pi) is the same map rescaled to mean one, which is what the viewer
-    # multiplies by before display
-    assert disc_mean(np.sqrt(4.0 * np.pi)) == pytest.approx(1.0, rel=1e-9)
+    # the map scales with a_00, so the check is not vacuous: sqrt(4 pi) must scale it too
+    assert disc_mean(np.sqrt(4.0 * np.pi)) == pytest.approx(np.sqrt(4.0 * np.pi), rel=1e-9)
 
 
 def test_the_fast_renderer_matches_the_slow_reference():
