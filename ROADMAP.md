@@ -860,6 +860,34 @@ against the projection. The affine model's error is **second order in
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
 
+* **The negative order is plain conjugation, and the convention now lives in one function.**
+  The extension is `Y_{l,-m} = conj(Y_lm)`, with no phase, and the `(-1)^m` has moved to the
+  visibility, `V_{l,-m} = (-1)^m conj(V_lm)`. The two arguments for it are the ones that should
+  have decided it the first time: `m -> -m` is `phi -> -phi`, so conjugation is what one expects
+  and nothing else; and the parity asymmetry belongs on the visibility, whose pairing equation
+  already splits odd from even `m`, rather than on the map, whose expansion does not.
+
+  (9) and (13) are unchanged, the real-branch relations (30) are unchanged, and the rotation law
+  (24) is unchanged in form --- the sign is conserved, not destroyed, and it lands where the
+  pairing needs it. What changed is the definitions (7), (8), the Legendre negative-order
+  relation (now `P_{l,-m} = (l-m)!/(l+m)! P_lm`, with no phase), section 4's list of where the
+  angular parity appears, and the code.
+
+  The interesting part is not the convention but the **five copies**. `unfolded`,
+  `from_unfolded`, `Coeffs.__getitem__`, the visibility sum and V6's check each computed the
+  extension independently, and two changes of convention in two days produced failures from the
+  copies rather than from the mathematics --- one silent (`__getitem__` was missed entirely, and
+  a map came out complex), one caught by a docstring that had gone stale. All five now call
+  `coefficients.negative_order`, so the next change is one edit. The audit that confirms it is
+  `grep -rn 'conjugate(block\|conjugate(row\|conjugate(self.blocks' src/`, which should find only
+  the helper itself; a bare `grep np.conjugate` does not work, because conjugating a *harmonic* is
+  a genuine operation in the addition theorem and the zonal identity and is not the extension.
+
+  Also worth recording: `make data` and `make earth-levels` are independent, and both write
+  *coefficients*. Either one forgotten after a convention change leaves a stale cache that no
+  test notices --- `earth_levels.py` did exactly that for twenty minutes, rendering the Earth at
+  the wrong peak while the suite was green.
+
 * **The Condon--Shortley phase is dropped, and T12 was found to have a mistake in it.** The
   phase put a `(-1)^m` into the real basis, into the Zernike polynomial and into both closed
   forms; dropping it removes three of those from the page and costs one factor in the code,
