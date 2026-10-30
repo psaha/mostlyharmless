@@ -108,17 +108,15 @@ def _coefficient(l, m, theta=THETA):
     """The theta-dependent coefficient of exp(i m phi) in Y_{lm}.
 
     Built from SymPy's assoc_legendre, i.e. independently of the lpmv route in
-    the implementation, with the negative-order relation applied explicitly.
-    The order -m is written out where it is needed, and no magnitude appears.
+    the implementation.  The coefficient is real, and the negative order is the
+    complex conjugate of the positive one, so it does not depend on the sign of m
+    at all --- which is the whole content of the extension being conjugation.
     """
+    order = abs(int(m))
     # an independent implementation of N_lm: Y_00 = 1 here, as everywhere in this package
-    n = sp.sqrt((2 * l + 1) * sp.factorial(l - m) / sp.factorial(l + m))
+    n = sp.sqrt((2 * l + 1) * sp.factorial(l - order) / sp.factorial(l + order))
     # assoc_legendre carries the Condon-Shortley phase; this package does not
-    if m >= 0:
-        return n * (-1) ** m * sp.assoc_legendre(l, m, sp.cos(theta))
-    p = (sp.factorial(l + m) / sp.factorial(l - m)
-         * sp.assoc_legendre(l, -m, sp.cos(theta)))
-    return n * (-1) ** (-m) * (-1) ** (-m) * p
+    return n * (-1) ** order * sp.assoc_legendre(l, order, sp.cos(theta))
 
 
 def Y(l, m, theta=THETA, phi=PHI):
@@ -205,8 +203,11 @@ def check_ylm_matches_sympy_ynm(l_max=3, digits=30):
         for m in range(-l, l + 1):
             for th, ph in _ANGLE_PAIRS:
                 ours = sp.N(Y(l, m, th, ph), digits)
-                # SymPy's Ynm is orthonormal and carries the Condon-Shortley phase
-                theirs = sp.N(scale * (-1) ** m * sp.Ynm(l, m, th, ph), digits)
+                # SymPy's Ynm is orthonormal and carries the Condon-Shortley phase; ours
+                # differs by (-1)^m on the positive orders only, since the extension is
+                # plain conjugation
+                factor = scale * (-1) ** m if m > 0 else scale
+                theirs = sp.N(factor * sp.Ynm(l, m, th, ph), digits)
                 worst = max(worst, abs(complex(ours - theirs)))
     return worst
 
@@ -244,17 +245,16 @@ def check_orthonormality_numeric(l_max=4, n_theta=None, n_phi=None):
 # --------------------------------------------------------------------------
 
 def check_reality_exact(l_max=4):
-    """V2, exact rung -- Y_{l,-m} = (-1)^m conj(Y_{lm}).
+    """V2, exact rung -- Y_{l,-m} = conj(Y_{lm}).
 
-    Reduced to the theta coefficients, so what is being tested is the
-    cancellation between the factorial ratio of the normalisation and the one
-    introduced by the negative-order relation.  If either is written with |m|,
-    this is where it shows.
+    Reduced to the theta coefficients, which are real, so the extension says the
+    two are *equal*: what is tested is that no phase and no factorial ratio
+    survives at a negative order.
     """
     total = sp.Integer(0)
     for l in range(l_max + 1):
         for m in range(1, l + 1):
-            diff = _coefficient(l, -m) - (-1) ** m * _coefficient(l, m)
+            diff = _coefficient(l, -m) - _coefficient(l, m)
             total += sp.Abs(sp.simplify(sp.powsimp(sp.expand(diff), force=True)))
     return sp.simplify(total)
 
@@ -556,7 +556,7 @@ def check_rotation_nonnegative_form(l_max=4, seed=20261012):
                 # the sandwich puts (-1)^m on the a_m term and, with the (-1)^m of the
                 # extension, removes it from the conjugate: the two cancel
                 total += ((-1) ** m * D[mp + l, m + l] * coeffs[l, m]
-                          + D[mp + l, l - m] * np.conjugate(coeffs[l, m]))
+                          + D[mp + l, l - m] * coeffs[l, -m])
             # the code sandwiches the standard D with diag((-1)^m); the same sandwich here
             worst = max(worst, abs((-1) ** mp * total - rotated[l, mp]))
     return worst

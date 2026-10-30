@@ -7,7 +7,7 @@ A real map is expanded as
 but only the non-negative orders are stored.  The negative orders are derived from
 the reality condition
 
-    a_{l,-m} = (-1)^m conj(a_lm) ,
+    a_{l,-m} = conj(a_lm) ,
 
 so the map is real *by construction*.  There is no stored negative order that can
 disagree with its positive partner, no roundoff defect to police, and no
@@ -62,12 +62,23 @@ from dataclasses import dataclass
 
 import numpy as np
 
-__all__ = ["Coeffs"]
+__all__ = ["Coeffs", "negative_order"]
 
 #: Relative tolerance for accepting an a_l0 that ought to be real, and for the
 #: reality check that ``from_unfolded`` performs.  A correct rotation leaves a
 #: defect at the roundoff level, some 1e-15, so this has room without being slack.
 _TOL = 1e-12
+
+
+def negative_order(block, m):
+    """``a_{l,-m}`` for ``m > 0``, from the stored ``block[m]``.
+
+    This is the whole of the negative-order convention, in one place: the map is real,
+    so the order $-m$ is the conjugate of $+m$ and carries no phase.  Everything that
+    needs a negative order --- the accessor, the unfold and the fold --- calls this, so
+    a change of convention is one edit rather than five.
+    """
+    return np.conjugate(block[m])
 
 
 @dataclass(frozen=True, eq=False)
@@ -118,7 +129,7 @@ class Coeffs:
             raise ValueError(f"need -l <= m <= l, got l={l}, m={m}")
         if m >= 0:
             return complex(self.blocks[l][m])
-        return (-1) ** (-m) * np.conjugate(self.blocks[l][-m])
+        return complex(negative_order(self.blocks[l], -m))
 
     def __eq__(self, other):
         if not isinstance(other, Coeffs):
@@ -198,7 +209,7 @@ class Coeffs:
             row = np.zeros(2 * l + 1, dtype=complex)
             row[l:] = block
             for m in range(1, l + 1):
-                row[l - m] = (-1) ** m * np.conjugate(block[m])
+                row[l - m] = negative_order(block, m)
             out.append(row)
         return tuple(out)
 
@@ -219,7 +230,7 @@ class Coeffs:
                     f"block {l} has {row.size} entries, expected {2 * l + 1}")
             scale = max(1.0, float(np.max(np.abs(row))))
             for m in range(1, l + 1):
-                want = (-1) ** m * np.conjugate(row[l + m])
+                want = negative_order(row, l + m)
                 defect = abs(row[l - m] - want)
                 if defect > tol * scale:
                     raise ValueError(

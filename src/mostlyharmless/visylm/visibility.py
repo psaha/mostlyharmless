@@ -38,6 +38,7 @@ from mostlyharmless.visylm.spherical_harmonics import (
     associated_legendre,
     normalisation,
 )
+from mostlyharmless.visylm.coefficients import negative_order
 from mostlyharmless.visylm.zernike import zernike_coefficients
 
 __all__ = [
@@ -225,8 +226,11 @@ def visibility(coeffs, u, v):
         total = total + block[0] * visibility_mode(l, 0, u, v)
         for m in range(1, l + 1):
             mode = visibility_mode(l, m, u, v)
+            # the partner is a_{l,-m} V_{l,-m}: the coefficient's negative order is the
+            # conjugate (coefficients.negative_order), and the (-1)^m belongs to the
+            # visibility, whose order -m mirrors the baseline
             total = total + (block[m] * mode
-                             + (-1) ** m * np.conjugate(block[m])
+                             + (-1) ** m * negative_order(block, m)
                              * np.conjugate(mode))
     return total
 

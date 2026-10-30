@@ -77,20 +77,22 @@ def associated_legendre(l, m, x):
     closed-form radial integrals and into the Zernike polynomial, and saving those is
     worth the one factor here.  Every Y_lm is (-1)^m times the standard one.
 
-    The negative-order branch uses the standard relation, written for m >= 0,
+    The negative-order branch is written for m >= 0,
 
-        P_{l,-m} = (-1)^m (l-m)!/(l+m)! P_{lm},
+        P_{l,-m} = (l-m)!/(l+m)! P_{lm},
 
-    applied explicitly rather than trusting scipy's convention for a negative
-    order.  This is the one place in the package where a magnitude is needed at
-    all, because lpmv takes only a non-negative order.
+    which is the relation that makes Y_{l,-m} the complex conjugate of Y_{lm}: the
+    factorial ratio absorbs the normalisation's order dependence and no phase is
+    carried.  It is applied explicitly rather than trusting scipy's convention for
+    a negative order.  This is the one place in the package where a magnitude is
+    needed at all, because lpmv takes only a non-negative order.
     """
     if abs(m) > l:
         raise ValueError(f"need -l <= m <= l, got m={m}, l={l}")
     order = abs(int(m))
     p = (-1) ** order * lpmv(order, l, x)      # lpmv carries the Condon-Shortley phase
     if m < 0:
-        p = (-1) ** order * factorial_ratio(l, order) * p
+        p = factorial_ratio(l, order) * p
     return p
 
 

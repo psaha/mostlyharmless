@@ -101,7 +101,9 @@ the real basis of section~\ref{sec:other-conventions}, into the Zernike polynomi
 both closed forms of sections~\ref{sec:odd} and~\ref{sec:even}, where it is visible to every
 reader and useful to none.  Dropping it costs exactly one factor, and in the code rather than
 on the page: the standard rotation matrices are quoted in the phase-carrying basis, so
-\code{rotate\_coefficients} sandwiches them with $\mathrm{diag}\bigl((-1)^m\bigr)$.  Both
+\code{rotate\_coefficients} sandwiches them with a diagonal of signs --- $(-1)^m$ on the
+positive orders and one elsewhere, one-sided rather than symmetric because the extension is
+conjugation.  Both
 choices, here and above, trade a complication in the implementation for a simpler equation.}
 for $l \ge 0$ and $0 \le m \le l$, with no Condon--Shortley phase inside $P_{lm}$.  Negative orders are never formed --- not in the derivations, not for
 maps, not anywhere --- so the magnitude $|m|$ is never needed either.  The order is
@@ -110,13 +112,15 @@ convention to get wrong.
 
 The harmonics are extended to negative orders by
 \begin{equation}
-  Y_{l,-m} := (-1)^m \, \overline{Y_{lm}} , \qquad m > 0 ,
+  Y_{l,-m} := \overline{Y_{lm}} , \qquad m > 0 ,
   \label{eq:ylm-extension}
 \end{equation}
-which is a definition, and which coincides with the standard convention built
-from the associated Legendre function of negative order.  Both halves of that sentence are
-checked: that the identity holds for the associated Legendre functions we use, and that the
-implementation reproduces it, are the content of \textbf{certificate \vtag{2}}.  Negative
+which is a definition, and the natural one: the sign of $m$ is the sense of
+$\varphi$, so reversing it conjugates and does nothing else.  It is \emph{not} the convention
+that the associated Legendre functions of negative order carry, which differs from it by
+$(-1)^m$; the phase has been dropped deliberately, and this is where the difference shows.
+\textbf{Certificate \vtag{2}} checks that the implementation's negative order is this
+conjugate and no more.  Negative
 orders are \emph{formed} in one place only, the rotation machinery of
 section~\ref{sec:wigner}, where the order indexes the representation rather than a map.
 Elsewhere they appear only through the definition \eqref{eq:ylm-extension}: as the
@@ -125,12 +129,12 @@ branches to the complex coefficients in section~\ref{sec:visibility}.  No coeffi
 stored at a negative order.
 
 Coefficients, by contrast, are never formed at a negative order.  For a real map
-the term accompanying $a_{lm} Y_{lm}$ is $(-1)^m \overline{a_{lm}} \, Y_{l,-m}$,
+the term accompanying $a_{lm} Y_{lm}$ is $\overline{a_{lm}} \, Y_{l,-m}$,
 which is to say $2\,\mathrm{Re}(a_{lm} Y_{lm})$; wherever the rotation would call
 for a negative-order coefficient, its value is substituted in that form.  The pairing is
 therefore also a statement about the coefficients,
 \begin{equation}
-  a_{l,-m} \;=\; (-1)^m\,\overline{a_{lm}} ,
+  a_{l,-m} \;=\; \overline{a_{lm}} ,
   \label{eq:pairing-reality}
 \end{equation}
 and carrying only $m \ge 0$ costs nothing: each stored coefficient is one real number's worth
@@ -174,7 +178,9 @@ and, composing the two,
   \label{eq:pairing-v-negative}
 \end{equation}
 The stored half of \eqref{eq:map-from-half-complex} therefore transforms to a sum in which each
-coefficient brings its conjugate partner, weighted by $(-1)^m$:
+coefficient brings its conjugate partner.  The partner of $a_{lm}V_{lm}$ is
+$a_{l,-m}V_{l,-m} = (-1)^m\overline{a_{lm}V_{lm}}$, the phase coming now from the visibility
+rather than from the coefficient:
 \begin{equation}
   V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)
     \;+\; \sum_{m=1}^{l}

@@ -48,10 +48,11 @@ def test_blocks_have_the_stored_half_length():
 
 
 def test_accessor_derives_the_negative_orders():
+    """The accessor's negative order is the conjugate: the extension carries no phase."""
     c = random_coeffs()
     for l in range(c.lmax + 1):
         for m in range(1, l + 1):
-            assert c[l, -m] == pytest.approx((-1) ** m * np.conjugate(c[l, m]))
+            assert c[l, -m] == pytest.approx(np.conjugate(c[l, m]))
 
 
 def test_accessor_rejects_orders_beyond_l():
@@ -83,13 +84,14 @@ def test_the_worked_example_from_the_discussion():
     """A pure cos(phi) pattern at l = 1.
 
     Real coefficients p_1 = 1, q_-1 = 0 must give a_1 = +1/sqrt(2) and
-    a_-1 = -1/sqrt(2), and describe the real map +sqrt(3) sin(theta) cos(phi).
+    a_-1 = +1/sqrt(2) as its conjugate, and describe the real map
+    +sqrt(3) sin(theta) cos(phi).
     """
     real = [np.zeros(1), np.array([0.0, 0.0, 1.0])]  # index m + l
     c = Coeffs.from_real(real)
 
     assert c[1, 1] == pytest.approx(1 / math.sqrt(2))
-    assert c[1, -1] == pytest.approx(-1 / math.sqrt(2))
+    assert c[1, -1] == pytest.approx(1 / math.sqrt(2))
 
     for theta, phi in ANGLES:
         expected = math.sqrt(3.0) * math.sin(theta) * math.cos(phi)

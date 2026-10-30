@@ -47,7 +47,7 @@ def test_v2_reality_of_the_implementation():
         for m in range(1, l + 1):
             for theta, phi in ((0.4, 0.2), (1.9, -1.1), (2.8, 3.0)):
                 lhs = sph_harm(l, -m, theta, phi)
-                rhs = (-1) ** m * np.conjugate(sph_harm(l, m, theta, phi))
+                rhs = np.conjugate(sph_harm(l, m, theta, phi))
                 assert lhs == pytest.approx(rhs, abs=1e-12)
 
 
@@ -80,19 +80,25 @@ def test_matches_scipy_sph_harm_y():
             for theta in (0.3, 1.1, 2.4):
                 for phi in (0.0, 1.7, -2.2):
                     # scipy is orthonormal and carries the Condon-Shortley phase;
-                    # ours is neither, so both factors appear
+                    # ours is neither.  The factor is (-1)^m on the positive orders
+                    # and one on the negative, the extension being conjugation.
+                    phase = (-1) ** m if m > 0 else 1
                     assert sph_harm(l, m, theta, phi) == pytest.approx(
-                        math.sqrt(4 * math.pi) * (-1) ** m
+                        math.sqrt(4 * math.pi) * phase
                         * sph_harm_y(l, m, theta, phi), abs=1e-12)
 
 
 def test_negative_order_relation_for_legendre():
+    """P_{l,-m} = (l-m)!/(l+m)! P_{lm}: conjugation, with no phase.
+
+    The absolute value absorbs the normalisation's order dependence, which is what
+    makes Y_{l,-m} the conjugate of Y_{lm} rather than the conjugate times (-1)^m.
+    """
     for l in range(4):
         for m in range(1, l + 1):
             for x in (-0.7, 0.0, 0.35):
                 lhs = associated_legendre(l, -m, x)
-                rhs = ((-1) ** m * factorial_ratio(l, m)
-                       * associated_legendre(l, m, x))
+                rhs = factorial_ratio(l, m) * associated_legendre(l, m, x)
                 assert lhs == pytest.approx(rhs, abs=1e-12)
 
 
