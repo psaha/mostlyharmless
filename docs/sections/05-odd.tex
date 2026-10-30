@@ -54,7 +54,7 @@ so that
 \subsection{The \texorpdfstring{$K$}{K} identity}
 \label{sec:k-identity}
 
-For $l+m$ odd, \citet{neves2006} give
+For $l+m$ even, \citet{neves2006} give
 \begin{equation}
   K_{lm}(a) = 2 \, \frac{(l+m-1)!!}{(l-m)!!} \, j_l(a) .
   \label{eq:K-identity}
@@ -124,11 +124,17 @@ from $j_l(a) \approx a^l/(2l+1)!!$.  This is part of the statement rather than a
 implementation detail, and certificate \vtag{13} covers it by putting $q = 0$ in
 its grid.
 
-As an independent check, \eqref{eq:odd-radial} agrees with equation (35) of
-\citet{dholakia2025} once one convention is accounted for: they drop the harmonic
-normalisation, which \eqref{eq:odd-mode} restores.  They also use associated Legendre
-functions without the Condon--Shortley phase, as this work does, so no sign has to be
-translated.
+As an independent check, \eqref{eq:odd-radial} \emph{is} equation (35) of
+\citet{dholakia2025}, term for term, with their $\rho = 2\pi q$: the same closed form reached
+by a different route, and in the same phase convention, which is the strongest form the
+comparison can take.  The radial integrals agree outright because neither carries a harmonic
+normalisation --- both are integrals of $P_{lm}$ itself.
+
+The visibilities are another matter, and their equation (36) differs from
+\eqref{eq:odd-mode} by a basis change rather than by one factor: their basis is built from the
+unnormalised $P_{lm}$ (their equation 15) where ours is built from $Y_{lm} = N_{lm}P_{lm}$, and
+they use the real $\cos/\sin$ pair where this work keeps $e^{im\varphi}$.  Nothing in the
+comparison of \eqref{eq:odd-radial} with their (35) turns on either difference.
 
 \subsection{What was checked}
 \label{sec:odd-register}

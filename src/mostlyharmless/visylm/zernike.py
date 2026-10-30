@@ -107,7 +107,7 @@ def zernike_coefficients(l, m):
     With P_{lm}(sqrt(1-rho^2)) = rho^m A(rho^2) = sum_k c_k R_{m+2k}^m(rho), the
     orthogonality gives
 
-        c_k = (2(m + 2k) + 2) int_0^1 rho^m A(rho^2) R_{m+2k}^m(rho) rho drho .
+        c_k = 2(m + 2k + 1) int_0^1 rho^m A(rho^2) R_{m+2k}^m(rho) rho drho .
 
     Returned as a tuple, one exact rational per k = 0, ..., (l-m)/2, and memoised.
     """

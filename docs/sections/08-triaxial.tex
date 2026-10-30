@@ -135,13 +135,14 @@ the four being a quadrupole signature rather than a coincidence: for a perturbat
 $\phi_1 \propto r^n$ the same argument gives $\delta g = (n+2)\phi_1$, so an octupole would
 give five.  Writing $\phi_1$ out,
 \begin{equation}
-  g \;\approx\; 1 - 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
-    + 4\epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr] ,
+  g \;=\; 1 - 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
+    + 4\epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr]
+    + O(\epsilon^2) ,
   \label{eq:deformation-gravity-first-order}
 \end{equation}
-to first order in both amplitudes jointly, products and squares discarded.  This is the same
-order as the rest of the deformation model --- $\delta r = -\phi_1$ is linear too --- so it
-introduces no inconsistency.  It is a check on the exact gradient rather than a substitute
+where $\epsilon$ stands for both amplitudes jointly, so the remainder contains the squares and
+the cross term.  This is the same order as the rest of the deformation model ---
+$\delta r = -\phi_1$ is linear too --- so it introduces no inconsistency.  It is a check on the exact gradient rather than a substitute
 for it: the code evaluates $|\nabla\Phi|$ from \eqref{eq:deformation-gradient}, and this is
 what certificate \vtag{19} compares it against.  The sign is the physically expected one: a
 rotating star is brightest at its poles and dimmest at its equator, six
@@ -379,9 +380,24 @@ two quadrupoles --- \eqref{eq:deformation-gravity-first-order} with $p = 1$ ---
     \;+\; 4\epsilon_\text{spin}\,P_2(n\cdot\hat e_\text{spin}) ,
   \label{eq:first-order-pattern}
 \end{equation}
-and each $P_2(n\cdot\hat e)$ is a zonal $l = 2$ pattern about its own axis, whose five
-coefficients are read off from \eqref{eq:zonal-l2} and \eqref{eq:harmonic-at-axis-l2}
-directly, in the observer frame:
+Each $P_2(n\cdot\hat e)$ is a zonal $l = 2$ pattern about its own axis, so the corollary
+\eqref{eq:zonal-l2} of section~\ref{sec:rotation-law} turns the bracket into harmonics
+outright,
+\begin{equation}
+  \begin{aligned}
+    I(\hat n) \;=\; &1 - 4\epsilon_\text{spin}
+      - \frac{4}{5}\Bigl[\bigl(\epsilon_\text{tide}\,\overline{Y_{20}(\hat e_\text{tide})}
+      - \epsilon_\text{spin}\,\overline{Y_{20}(\hat e_\text{spin})}\bigr)Y_{20}(\hat n) \\
+      &+ 2\sum_{m=1}^{2}\mathrm{Re}\Bigl(\bigl(
+      \epsilon_\text{tide}\,\overline{Y_{2m}(\hat e_\text{tide})}
+      - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat e_\text{spin})}\bigr)
+      Y_{2m}(\hat n)\Bigr)\Bigr] ,
+  \end{aligned}
+  \label{eq:first-order-harmonics}
+\end{equation}
+in the observer frame.  Nothing in that display is a coefficient yet: it is the pattern, with
+the addition theorem applied and the terms left where they fell.  Collecting them, the
+coefficients are
 \begin{equation}
   a_{00} \;=\; 1 - 4\epsilon_\text{spin} , \qquad
   a_{2m} \;=\; -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,

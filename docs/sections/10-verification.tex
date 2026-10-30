@@ -54,6 +54,17 @@ exponent and no prefactor,
 It is left unnormalised, so $V(0,0)$ is the total flux; the normalisation lives in the
 $\Delta V$ the models plot.
 
+The transform is done in plane polar coordinates on the sky and on the baseline plane.  The
+azimuth $\varphi$ runs from North through East on the sky and the position angle $\psi$ does the
+same on the ground, so $x$ and $u$ are the North components of both; $\rho$ is the projected
+radius, so the visible disk is $\rho \le 1$, and $q$ is the baseline length:
+\begin{align}
+  x = \rho\cos\varphi , \qquad y = \rho\sin\varphi ,
+    \label{eq:brief-sky-polar} \\
+  u = q\cos\psi , \qquad v = q\sin\psi .
+    \label{eq:brief-baseline-polar}
+\end{align}
+
 \begin{itemize}
   \item[$\checkmark$] \code{check_uniform_disk_visibility} checks the uniform disk against
     $2J_1(x)/x$, with flux $\pi$, the disk's area --- the anchor that fixes the harmonic
@@ -70,10 +81,16 @@ The map is carried in complex harmonics,
   N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
   \label{eq:brief-ylm}
 \end{equation}
-with no Condon--Shortley phase, so no $(-1)^m$ appears in the closed forms.  Only $m \ge 0$
-is ever needed:
-reality is a property of the expansion rather than of a separate set of coefficients, so half
-the orders suffice and the signed order is never formed.
+The associated functions come from Rodrigues' formula for the Legendre polynomials,
+\begin{equation}
+  P_{lm}(x) \;=\; (1-x^2)^{m/2}\,\frac{d^m P_l}{dx^m} .
+  \label{eq:brief-rodrigues}
+\end{equation}
+The square root in $N_{lm}$ is taken positive, so the only arbitrary sign left is the one in
+this display.  The Condon--Shortley convention fixes it as $(-1)^m$; this work does not, taking
+\eqref{eq:brief-rodrigues} as it stands, which is why no $(-1)^m$ appears in the closed forms
+below.  Only $m \ge 0$ is ever needed: reality is a property of the expansion rather than of a
+separate set of coefficients, so half the orders suffice and the signed order is never formed.
 
 The normalisation is $Y_{00} = 1$, so the average of $|Y_{lm}|^2$ over the sphere is unity and
 its integral is $4\pi$; the orthonormal convention scales every $Y_{lm}$ by $1/\sqrt{4\pi}$
@@ -200,8 +217,10 @@ next two subsections evaluate in closed form.
 
 The integral splits by the parity of $l+m$, and the two halves are different in kind.
 
-For $l+m$ odd, $P_{lm}(\sqrt{1-\rho^2})$ is $\rho^m$ times a polynomial in $\rho^2$ of degree
-$(l-m-1)/2$, and the Bessel integral collapses to a single term:
+For $l+m$ odd, $P_{lm}(\sqrt{1-\rho^2})$ is $\rho^m\sqrt{1-\rho^2}$ times a polynomial in
+$\rho^2$ of degree $(l-m-1)/2$; the factor of $\sqrt{1-\rho^2}$ is the one the Legendre
+recurrence of section~\ref{sec:odd-recurrence} absorbs, and the Bessel integral then collapses
+to a single term:
 \begin{equation}
   X_{lm}(q) \;=\; \frac{(l+m)!!}{(l-m-1)!!}\,
   \frac{j_l(2\pi q)}{2\pi q} , \qquad l+m \text{ odd} .
@@ -209,13 +228,16 @@ $(l-m-1)/2$, and the Bessel integral collapses to a single term:
 \end{equation}
 One spherical Bessel function, whatever the degree.
 
-For $l+m$ even there is an extra factor $\sqrt{1-\rho^2}$, and the same polynomial is instead
-expanded in Zernike radial polynomials of the same order,
+For $l+m$ even the factor is absent, and the quotient $P_{lm}(\sqrt{1-\rho^2})/\rho^m$ is a
+polynomial in $\rho^2$ --- precisely because the $m$-th derivative is then an even function of
+$x$.  That polynomial is expanded in Zernike radial polynomials of the same order,
 \begin{equation}
-  \rho^m A(\rho^2) \;=\; \sum_{k=0}^{(l-m)/2} c_k\, R_{m+2k}^{m}(\rho) ,
-  \qquad
-  c_k \;=\; \bigl(2(m+2k)+2\bigr)\int_0^1 \rho^m A(\rho^2)\,R_{m+2k}^{m}(\rho)\,
-  \rho\, d\rho .
+  \begin{gathered}
+    P_{lm}\bigl(\sqrt{1-\rho^2}\bigr) \;=\; \rho^m \sum_{k=0}^{(l-m)/2} c_k\,
+    R_{m+2k}^{m}(\rho) , \\
+    c_k \;=\; 2(m+2k+1)\int_0^1 \frac{P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)}{\rho^m}\,
+    R_{m+2k}^{m}(\rho)\,\rho\, d\rho .
+  \end{gathered}
   \label{eq:brief-even-coefficients}
 \end{equation}
 The expansion is finite because both sides have the same degree and parity, and the Zernike
