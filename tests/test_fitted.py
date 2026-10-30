@@ -112,19 +112,57 @@ def test_the_fitted_image_carries_the_right_flux():
                         centrifugal=SPIN, spin_direction=(0.0, 0.0, 1.0))
     fit, stretch, (east, north) = _fit(field, samples=20000)
     star = render.surface_samples(field, EYE, n_samples=20000)
-    _, brightness, weights = star
+    points, brightness, weights = star
 
-    image = fitted.model_image(fit.coefficients, stretch, half_width=1.5, n=241)
-    cell = (3.0 / 240.0) ** 2
-    model_flux = float(np.nansum(image)) * cell       # the rim is NaN, like sky_image
+    # The claim is about the fit, not the rasteriser: the constant is in the basis, so the
+    # normal equations force the model's flux over the *samples* to equal the data's, exactly.
+    # Comparing grid integrals instead would carry the disc's edge into the number --- the mask
+    # drops whole cells at the rim --- and 6.7 per cent of a perfectly good fit went into that
+    # difference.
+    plan, columns, _, _ = fitted.sample_columns(star, stretch, east, north, 4)
+    values = fitted._parameters_of(fit.coefficients, plan)
+    model_brightness = columns.T @ values
+
+    model_flux = float(np.sum(weights * model_brightness))
     numeric_flux = float(np.sum(weights * brightness))
-    print(f"\nflux: numeric {numeric_flux:.6f}, fitted image {model_flux:.6f}")
-    assert abs(model_flux - numeric_flux) < 0.02 * abs(numeric_flux)
+    print(f"\nflux: numeric {numeric_flux:.6f}, fitted {model_flux:.6f}")
+    assert model_flux == pytest.approx(numeric_flux, rel=1e-10)
 
 
 def test_the_fitted_round_trip():
     """V26: a synthetic image, fitted back to its own coefficients."""
     assert dv.check_fitted_round_trip() < 1e-10
+
+
+def test_the_residual_matches_a_brute_force_sum():
+    """The quoted residual must be the plain sum of squared image errors.
+
+    ``residual`` and ``residual_direct`` agree with each other by construction, so a mistake
+    that both share --- a stray |det Lambda| on only some of the terms --- passes every
+    internal check.  Since the basis functions carry the stretch, no determinant belongs in
+    the sum at all, and this compares the number with the sum written out.
+    """
+    from mostlyharmless.symbolic import affine
+
+    # a *deformed* field: with Lambda = 1 a stray determinant is invisible
+    field = Deformation(tide=TIDE, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=SPIN, spin_direction=(0.0, 0.0, 1.0))
+    star = render.surface_samples(field, EYE, n_samples=4000)
+    east, north = render.sky_basis(EYE)
+    stretch = affine.projected_stretch(field, EYE)
+    fit = fitted.fit_image(star, stretch, east, north, l_max=4)
+    points, brightness, weights = star
+    sky = np.stack([points @ east, points @ north], axis=-1)
+    disk = sky @ np.linalg.inv(stretch).T
+
+    plan = fitted.design(4)
+    columns = fitted._evaluate(plan, disk[:, 0], disk[:, 1])
+    values = fitted._parameters_of(fit.coefficients, plan)
+    model = columns.T @ values
+
+    expected = float(np.sum(weights * (model - brightness) ** 2))
+    assert fit.residual == pytest.approx(expected, rel=1e-10)
+    assert fit.norm == pytest.approx(float(np.sum(weights * brightness**2)), rel=1e-12)
 
 
 def test_the_disk_gram_against_brute_force():

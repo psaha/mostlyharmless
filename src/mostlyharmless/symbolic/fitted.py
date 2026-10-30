@@ -13,10 +13,13 @@ computed once, and the right-hand side is one pass over the samples.
 """
 
 __all__ = ["disk_harmonic", "design", "gram", "block_condition", "Fit", "fit_image",
-           "residual_of", "model_image"]
+           "residual_of", "pattern_residual", "relative_residual", "sample_columns",
+           "model_image"]
 
 import functools
 from dataclasses import dataclass
+
+import math
 
 import numpy as np
 
@@ -133,6 +136,32 @@ def block_condition(l_max=4):
                  for _, indices in _gram_and_blocks(l_max)[1])
 
 
+def relative_residual(residual, norm):
+    """``residual`` as a fraction of the map's own norm.
+
+    Both are squared quantities, so the square root is what makes the number readable: 1e-2
+    means the model is good to a per cent of the map, whichever row it came from.
+    """
+    return math.sqrt(max(float(residual), 0.0) / float(norm))
+
+
+def sample_columns(samples, stretch, east, north, l_max):
+    """The basis functions on the sky plane: the projected harmonics, stretched.
+
+    ``Psi_lm(x) = Phi_lm(Lambda^-1 x)``, evaluated at the samples' sky positions --- the same
+    coordinates the image lives in.  Written this way the row is ordinary least squares in
+    the plane measure: no ``|det Lambda|`` appears in the residual, the normal matrix or the
+    model image, because the basis functions already carry the change of variables.  Flux is
+    therefore *not* conserved between one model star and another, which is deliberate --- the
+    stretch is a coordinate change on the pattern, not a resampling of a map.
+    """
+    points, brightness, weights = samples
+    sky = np.stack([points @ east, points @ north], axis=-1)
+    disk = sky @ np.linalg.inv(stretch).T
+    plan = design(l_max)
+    return plan, _evaluate(plan, disk[:, 0], disk[:, 1]), brightness, weights
+
+
 @dataclass(frozen=True)
 class Fit:
     """What a fitted row reports: coefficients, residual, and the conditioning."""
@@ -170,23 +199,23 @@ def fit_image(samples, stretch, east, north, l_max=4):
     ``|det Lambda|`` would not show in the coefficients and would show here --- and
     :func:`check_fitted_round_trip` holds them to that at machine precision.
     """
-    points, brightness, weights = samples
-    sky = np.stack([points @ east, points @ north], axis=-1)
-    disk = sky @ np.linalg.inv(stretch).T                  # z = Lambda^-1 x
+    plan, columns, brightness, weights = sample_columns(samples, stretch, east, north,
+                                                        l_max)
+    rhs = columns @ (weights * brightness)
 
-    plan = design(l_max)
-    columns = _evaluate(plan, disk[:, 0], disk[:, 1])
-    weighted = weights * brightness
-    rhs = columns @ weighted
-
-    matrix = gram(l_max)
+    # The normal matrix comes from the samples, not from the cached disk Gram: the two agree
+    # only in the continuum limit, and only this one is the exact Hessian of the sum being
+    # minimised.  With the disk Gram the fit is optimal up to the measure, so adding a degree
+    # can *raise* the residual it reports.  ``gram`` stays what the condition numbers
+    # describe, since those are a property of the basis alone.
+    matrix = (columns * weights) @ columns.T
     values = np.linalg.solve(matrix, rhs)
 
-    scale = abs(float(np.linalg.det(stretch)))
-    norm = scale * float(np.sum(weights * brightness**2))
-    residual = norm - float(rhs @ values)
-    residual_direct = (norm - 2.0 * float(rhs @ values)
-                       + float(values @ matrix @ values))
+    model = columns.T @ values
+    norm = float(np.sum(weights * brightness**2))
+    residual = float(np.sum(weights * (model - brightness) ** 2))
+    residual_direct = (norm - 2.0 * float(np.sum(weights * brightness * model))
+                       + float(np.sum(weights * model**2)))
     return Fit(_as_coeffs(plan, values, l_max), residual, residual_direct, norm,
                block_condition(l_max))
 
@@ -194,9 +223,9 @@ def fit_image(samples, stretch, east, north, l_max=4):
 def model_image(coefficients, stretch, half_width=1.5, n=241):
     """The fitted model's image, indexed ``[north, east]`` like ``sky_image``.
 
-    ``I_model(x) = F(Lambda^-1 x) / |det Lambda|`` with ``F`` the fitted series, which is
-    eq. (88).  Evaluating it on a grid is all that the display needs: the visibility
-    itself comes from the mode sum, not from this array.
+    ``I_model(x) = F(Lambda^-1 x)`` with ``F`` the fitted series: the basis functions carry
+    the stretch, so no ``|det Lambda|`` appears.  Evaluating it on a grid is all that the
+    display needs: the visibility itself comes from the mode sum, not from this array.
     """
     axis = np.linspace(-half_width, half_width, n)
     east_coordinate = np.broadcast_to(axis[None, :], (n, n))
@@ -212,8 +241,6 @@ def model_image(coefficients, stretch, half_width=1.5, n=241):
         for m in range(1, l + 1):
             phi = disk_harmonic(l, m, disk_east, disk_north)
             image = image + 2.0 * (block[m] * phi).real
-    image = image / abs(float(np.linalg.det(stretch)))
-
     # Outside the silhouette, NaN rather than zero: that is what ``sky_image`` returns, and
     # the display divides by the *mean of the finite pixels*.  A zero rim would be counted,
     # diluting the mean by the disk-to-square area ratio and amplifying the contrast by
@@ -230,21 +257,36 @@ def residual_of(coefficients, samples, stretch, east, north, l_max=4):
     in the same span.  A coefficient set of lower truncation is padded with zeros, which is
     what "the same span" means.  Returns ``(residual, norm)``.
     """
-    points, brightness, weights = samples
-    sky = np.stack([points @ east, points @ north], axis=-1)
-    disk = sky @ np.linalg.inv(stretch).T
-
-    plan = design(l_max)
+    plan, columns, brightness, weights = sample_columns(samples, stretch, east, north,
+                                                        l_max)
     values = _parameters_of(coefficients, plan)
-    columns = _evaluate(plan, disk[:, 0], disk[:, 1])
-    rhs = columns @ (weights * brightness)
+    model = columns.T @ values
 
-    matrix = gram(l_max)
-    scale = abs(float(np.linalg.det(stretch)))
-    norm = scale * float(np.sum(weights * brightness**2))
-    residual = (norm - 2.0 * float(values @ rhs)
-                + float(values @ matrix @ values))
+    norm = float(np.sum(weights * brightness**2))
+    residual = float(np.sum(weights * (model - brightness) ** 2))
     return residual, norm
+
+
+def pattern_residual(coefficients, samples, stretch, east, north, l_max=2):
+    """Relative residual of a coefficient set whose brightness is matched to the data's.
+
+    The rows are normalised at the origin (D22), so their absolute brightness is a
+    convention and not a model, and the sampled surface's mean brightness differs from an
+    analytic row's at first order in the deformation.  The model is therefore rescaled to the
+    data's weighted mean before the difference is taken --- which is what the fit does when
+    it chooses its own constant --- and the residual is then in the same norm as
+    :func:`fit_image`'s, so the two can be compared.
+    """
+    plan, columns, brightness, weights = sample_columns(samples, stretch, east, north,
+                                                        l_max)
+    values = _parameters_of(coefficients, plan)
+    model = columns.T @ values
+    model = model * (float(np.sum(weights * brightness))
+                     / float(np.sum(weights * model)))
+
+    error = model - brightness
+    return math.sqrt(float(np.sum(weights * error**2))
+                     / float(np.sum(weights * brightness**2)))
 
 
 def _parameters_of(coefficients, plan):

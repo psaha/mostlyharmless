@@ -91,6 +91,26 @@ def test_the_analytic_and_numeric_panels_are_similar():
     assert np.max(np.abs(analytic - numeric)) < 0.15
 
 
+def test_the_first_order_residual_is_second_order():
+    """The row's relative residual must scale as eps^2, not as eps.
+
+    The order test behind the number the panel quotes.  A ratio near 1/4 means the
+    linearisation is complete; 1/2 would mean a term linear in the amplitudes had been
+    dropped.  Only at u_limb = 0: with the limb on, the dropped u_limb*eps term dominates and
+    the ratio is no longer a statement about the linearisation, which is why the report
+    returns no ratio there.
+    """
+    full, ratio = gui.first_order_report(gui.Parameters(tide=0.02, spin=0.01, limb=0.0))
+    assert 0.0 < full < 0.05, full
+    assert ratio is not None
+    print(f"\nfirst-order rho {full:.2e}, halving ratio {ratio:.3f}")
+    assert ratio < 0.3
+
+    with_limb, none = gui.first_order_report(gui.Parameters(tide=0.02, spin=0.01, limb=0.6))
+    assert none is None, "no order test is quoted while the limb term dominates"
+    assert with_limb > 0.0
+
+
 def test_the_linear_pattern_is_a_second_order_change():
     """Equation (74) differs from the exact pattern at O(eps^2), not at O(eps).
 

@@ -34,7 +34,8 @@ from mostlyharmless.visylm.deformation import Deformation
 from mostlyharmless.visylm.visibility import visibility, visibility_uniform_disk
 
 __all__ = ["Parameters", "closure_depth", "largest_spin", "smallest_latitude",
-           "clamped", "compute_image", "compute_visibility", "fitted_report", "build",
+           "clamped", "compute_image", "compute_visibility", "fitted_report",
+           "first_order_report", "build",
            "main"]
 
 # D25: the analytic row keeps l <= 2, the eps^2 truncation of the l >= 4 content with the
@@ -296,6 +297,35 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
     return np.array([[model_visibility(u, v) for v in axis] for u in axis]) - reference
 
 
+def first_order_report(parameters, samples=SAMPLES):
+    """The first-order row's residual, and its halving ratio where that means anything.
+
+    ``rho`` is the relative image residual of the row against the exact surface, so it is
+    comparable with a fitted row's.  ``ratio`` is ``rho(eps/2)/rho(eps)``: 1/4 for a
+    second-order error, 1/2 for one linear in the amplitudes.  It is returned only when
+    ``u_limb`` is zero, because with the limb on the dropped term is of order
+    ``u_limb*eps`` and dominates, so the ratio says nothing about the linearisation.  The
+    caller must show that absence rather than a number.
+    """
+    def rho(parameters):
+        field = parameters.field()
+        eye, (east, north) = _view(parameters.inclination)
+        star = render.surface_samples(field, eye, n_samples=samples,
+                                      limb=parameters.limb)
+        coefficients = affine.first_order_coefficients(field, eye,
+                                                       limb=parameters.limb)
+        return fitted.pattern_residual(
+            coefficients, star, affine.projected_stretch(field, eye), east, north,
+            l_max=2)
+
+    full = rho(parameters)
+    if parameters.limb != 0.0:
+        return full, None
+    half = replace(parameters, tide=0.5 * parameters.tide,
+                   spin=0.5 * parameters.spin)
+    return full, (rho(half) / full if full > 0.0 else None)
+
+
 def fitted_report(parameters, samples=SAMPLES, model="fitted, l = 0,2,4"):
     """The fitted row's diagnostics for the near side (manual section 8.8).
 
@@ -333,6 +363,10 @@ def build(parameters=None):  # pragma: no cover - needs a display
         current = state["parameters"]
         samples, pixels, grid = RESOLUTIONS[state["resolution"]]
         report = {}                     # filled by compute_image for the fitted row
+        if state["model"] == "first-order":
+            # the row's own diagnostic.  It samples the exact surface, which the row itself
+            # does not need --- that is the price of quoting a residual for it.
+            report["first_order"] = first_order_report(current, samples=samples)
         if state["visibility"]:
             values = compute_visibility(current, state["model"],
                                         samples=samples, grid=grid)
@@ -359,9 +393,15 @@ def build(parameters=None):  # pragma: no cover - needs a display
 
         if "fit" in report:
             # the residual is the point of the row: at fixed Lambda it is the truncation
-            # floor, so it is not a defect of the fit but the price of the degree
-            titles = tuple(f"{title}  (residual {report['fit'].residual:.1e})"
-                           for title in titles)
+            # floor, so it is not a defect of the fit but the price of the degree.  Quoted
+            # relative, so that it can be read against the first-order row's.
+            fit = report["fit"]
+            rho = fitted.relative_residual(fit.residual, fit.norm)
+            titles = tuple(f"{title}  (rho {rho:.1e})" for title in titles)
+        if "first_order" in report:
+            rho, ratio = report["first_order"]
+            tag = "ratio n/a at u > 0" if ratio is None else f"ratio {ratio:.2f}"
+            titles = tuple(f"{title}  (rho {rho:.1e}; {tag})" for title in titles)
 
         # a brightness wants a linear grey ramp; a signed Delta V wants a diverging map
         brightness = not state["visibility"]

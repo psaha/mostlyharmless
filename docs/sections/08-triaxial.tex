@@ -123,7 +123,11 @@ section~\ref{sec:deformation-exact}, so the same expression serves both purposes
 
 Two checks.  With both amplitudes zero the first term survives and $|\nabla\Phi| = 1/r^2$,
 which is $1$ at $r = 1$ as required.  And to first order the perturbation reaches $g$ by two
-routes.  Holding $r$ fixed, the amplitude's own radial derivative contributes
+routes.  Write $\phi_1$ for the perturbation to the potential, $\phi_1(r,n) = -E(n)\,r^2$ with
+$E$ the depth of \eqref{eq:level-depth} --- the sign being the one that makes $1/r + E r^2$ the
+level condition --- so that on the reference sphere $\phi_1 = -E(n)$, and $g = 1 + 4\phi_1$.
+Holding
+$r$ fixed, the amplitude's own radial derivative contributes
 $\partial_r\phi_1 = 2\phi_1$, since $\phi_1 \propto r^2$.  And the surface itself moves,
 $\delta r = -\phi_1$, which the monopole's $1/r^2$ turns into a further $-2\delta r = 2\phi_1$.
 The two are equal, so
@@ -547,10 +551,13 @@ a dipole and two quadrupoles.
 that image explicitly is what makes the fit a projection.  By
 \eqref{eq:affine-image-transform}, $V = \sum A_{lm}V_{lm}(\Lambda^{T}u)$ is the transform of
 \begin{equation}
-  I_\text{model}(x) \;=\; \frac{1}{|\det\Lambda|}\,F\bigl(\Lambda^{-1}x\bigr) ,
+  I_\text{model}(x) \;=\; F\bigl(\Lambda^{-1}x\bigr) ,
   \qquad F(y) \;=\; \sum_{lm} A_{lm}\,\Phi_{lm}(y) ,
   \label{eq:fitted-model-image}
 \end{equation}
+with no $|\det\Lambda|$: the stretch is a coordinate change on the pattern, not a resampling
+of a map, so the model is not required to conserve flux against another model star.  What is
+wanted is that it match the star in front of it, and that is a fit, not a normalisation.
 where the \textbf{disk harmonic} $\Phi_{lm}$ is the projection of $Y_{lm}$ onto the unit disk.  It
 needs no integral and no Zernike expansion, because the projection \emph{is} the visible surface
 value: the opaque convention absorbs the viewing cosine into the area element,
@@ -571,14 +578,13 @@ Gauss--Legendre.
 \paragraph{The fit.}  Substituting $y = \Lambda^{-1}x$ in the image-plane residual gives
 \begin{equation}
   \int \bigl|I_\text{num} - I_\text{model}\bigr|^{2}\,dx
-  \;=\; \frac{1}{|\det\Lambda|}
-  \int_{|y|\le 1} \bigl|I'(y) - F(y)\bigr|^{2}\,dy ,
+  \;=\; \int_{|y|\le 1} \bigl|I'(y) - F(y)\bigr|^{2}\,|\det\Lambda|\,dy ,
   \qquad
-  I'(y) \;=\; |\det\Lambda|\,I_\text{num}\bigl(\Lambda y\bigr) ,
+  I'(y) \;=\; I_\text{num}\bigl(\Lambda y\bigr) ,
   \label{eq:fitted-unstretched}
 \end{equation}
-so the fit is a projection of the \emph{unstretched} image onto the disk harmonics, and its normal
-equations are $G A = b$ with
+so the fit is a projection of the \emph{unstretched} image onto the disk harmonics in the sky
+measure, and its normal equations are $G A = b$ with
 \begin{equation}
   G_{lm,l'm'} \;=\; \int_{|y|\le 1} \Phi_{lm}\,\overline{\Phi_{l'm'}}\,dy ,
   \qquad
@@ -598,15 +604,24 @@ basis,
 so a fit costs one $2\times 2$ solve and fifteen mode evaluations per rendered sample.  No image
 grid is built and nothing is interpolated.  The same sums give
 \begin{equation}
-  \bigl\|I'\bigr\|^{2} \;=\; |\det\Lambda| \sum_s w_s\,I_s^{2} ,
+  \bigl\|I\bigr\|^{2} \;=\; \sum_s w_s\,I_s^{2} ,
   \qquad
-  \bigl\|I' - F\bigr\|^{2} \;=\; \bigl\|I'\bigr\|^{2} \;-\; b^{\dagger}G^{-1}b ,
+  \bigl\|I - M\bigr\|^{2} \;=\; \bigl\|I\bigr\|^{2} \;-\; b^{\dagger}G_s^{-1}b ,
   \label{eq:fitted-residual}
 \end{equation}
-the second being the residual at the optimum, which is the number that makes this rung worth
-having.
+with $M(x) = F(\Lambda^{-1}x)/|\det\Lambda|$ the model image and
+$G_s = \sum_s w_s\,\Phi\Phi^{\dagger}$ built from the same samples as $b$.  The second is the
+residual at the optimum, which is the number that makes this rung worth having.
 
-\paragraph{Bookkeeping.}  The map is real, so $A_{l,-m} = (-1)^{m}\overline{A_{lm}}$ and only
+$G_s$ is the sample Hessian rather than the disk Gram $G$ of
+\eqref{eq:fitted-normal-equations}, and the
+difference matters: $G$ is the basis's own integral over the unit disk, while the samples'
+weights are projected areas, so the two agree only in the continuum limit.  Fitting with $G$
+makes the reported residual optimal up to that measure rather than exactly, and adding a degree
+can then \emph{raise} the number --- which is how the distinction was found.  $G$ remains what
+the condition numbers describe, since those are a property of the basis alone.
+
+\paragraph{Bookkeeping.}  The map is real, so $A_{l,-m} = \overline{A_{lm}}$ and only
 $m \ge 0$ is fitted: one design function $\Phi_{l0}$ for $m = 0$, and the pair
 $\mathrm{Re}\,\Phi_{lm}$, $\mathrm{Im}\,\Phi_{lm}$ for $m > 0$.  Odd $l$ is excluded, and not for
 convenience: the parity argument of section~\ref{sec:deformation-brightness} forbids it, so fitting it
@@ -632,9 +647,9 @@ were cheaper --- a Zernike series, say --- would be a different choice of basis 
 construction, not a different construction.
 
 \paragraph{Checks built into the definition.}  The residual \eqref{eq:fitted-residual} is
-evaluated by two routes --- eliminating the normal equations, and expanding the quadratic directly
---- and the two must agree: they differ only through the identity $A = G^{-1}b$, so a stray factor
-of $|\det\Lambda|$ would leave the coefficients plausible and show up there.
+evaluated by two routes --- through the normal equations and by expanding the quadratic directly
+--- and the two must agree: they differ only through the identity $A = G_s^{-1}b$, so a stray
+factor of $|\det\Lambda|$ would leave the coefficients plausible and show up there.
 Certificate \vtag{26} removes the approximation altogether: the samples are manufactured from a
 known coefficient set using the disk's own quadrature weights, so every step is an identity and the
 fitted coefficients must come back at roundoff.  That pins the unstretching, the real pairing and
@@ -653,6 +668,60 @@ the affine row's error separates the two errors that row conflates --- the shape
 truncation at $l \le 2$.  It is not the floor of the class: that would need $\Lambda$ fitted too, and
 $\Lambda$ is only weakly identifiable, its limit being independent of it.  Finally, the five condition numbers of $G$ are what to watch as the
 mode count grows; they are properties of the basis alone, fixed once rather than per parameter set.
+
+\subsection{How good the first-order row is}
+\label{sec:first-order-residual}
+
+Write $g_\text{lin} = 1 + 4\phi_1$ for the row's brightness before the limb factor and
+$q = 4\phi_1 + 4\epsilon_\text{spin}$ for its quadrupole part, so that $g_\text{lin} = q +
+(1-4\epsilon_\text{spin})$ splits into quadrupole and constant.  The row applies the limb factor
+\eqref{eq:limb-factor} to the constant and the limb dipole and leaves the quadrupoles bare,
+which is what \eqref{eq:limb-coefficients} says.  Its two errors are then
+\begin{equation}
+  I_\text{exact} - I_\text{row} \;=\;
+    \bigl(1 - u_\text{limb}(1-\mu)\bigr)\bigl(g - g_\text{lin}\bigr)
+    \;-\; u_\text{limb}(1-\mu)\,q ,
+  \label{eq:row-error}
+\end{equation}
+both brightnesses: the first of order $\epsilon^2$, the linearisation of $g$; the second of order
+$u_\text{limb}\epsilon$, the limb factor that the quadrupoles never receive.
+
+The residual is quoted relative, in the fitted row's metric,
+\begin{equation}
+  \rho \;=\; \sqrt{\frac{\sum_s w_s \bigl(I_s - I^\text{row}_s\bigr)^2}{\sum_s w_s I_s^2}} ,
+  \label{eq:relative-residual}
+\end{equation}
+where $w_s$ is the area sample $s$ projects onto the sky plane --- the weight the renderer
+gives it, because the visibility integrates over that plane and not over the surface.  Thus
+$\rho = 10^{-2}$ means the row is good to a per cent of the map.
+
+The row's brightness must be matched to the sampled surface's weighted mean before the
+difference is taken.  The rows are normalised at the origin (D22), so their absolute brightness
+is a convention rather than a model, and the surface's mean brightness differs from an analytic
+row's at first order in the deformation; without that match $\rho$ measures the flux mismatch,
+which is first order and swamps the linearisation entirely.  The match is the freedom the fit
+exercises when it chooses its own constant, so $\rho$ is then in the same norm as the fitted
+row's --- and the fit, being optimal over a span that contains the first-order coefficients,
+must have the smaller of the two.  Its two terms scale
+differently in the amplitudes,
+\begin{equation}
+  \rho \;\simeq\; A\,\epsilon^2 \;+\; B\,u_\text{limb}\,\epsilon ,
+  \label{eq:rho-scaling}
+\end{equation}
+with $A$ and $B$ independent of them.  Halving both amplitudes, and letting the field follow so
+that the level surface relaxes with it, divides the first term by four and the second by two:
+$\rho(\epsilon/2)/\rho(\epsilon)$ is $1/4$ at $u_\text{limb} = 0$ and tends to $1/2$ as the limb
+term dominates.  At $\epsilon \approx 0.03$ and $u_\text{limb} = 0.6$ it dominates by an order of
+magnitude, so the ratio is informative only with the limb off.
+
+Two quantities are \emph{not} halved with the amplitudes: $u_\text{limb}$, which describes the
+atmosphere rather than the deformation, and $\Lambda$, which is not a parameter but follows from
+the level radii.  Holding either fixed changes the experiment.
+
+The panel quotes $\rho$ for the first-order row and for the fitted ones in the same relative
+form, so the two are comparable.  It quotes the halving ratio only when $u_\text{limb} = 0$, and
+says \emph{n/a at $u > 0$} otherwise: the ratio is an order test, and with the limb on the order
+it tests is not the one in \eqref{eq:row-error}.
 
 \subsection{Register}
 \label{sec:triaxial-register}
