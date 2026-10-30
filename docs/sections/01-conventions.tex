@@ -142,15 +142,20 @@ of information plus one for its $m = 0$ companion, the rotation of \eqref{eq:coe
 delivers observer-frame coefficients in the same half-complex form, and the cost of a
 visibility is set by the mode count rather than by any sampling.
 
-A real map is expanded in complex harmonics with non-negative orders only, and the reality
-is carried by the expansion itself rather than by a separate set of real coefficients,
+A real map is expanded in complex harmonics,
+\begin{equation}
+  I(\theta,\varphi) = \sum_{l} \sum_{m=-l}^{l} a_{lm} Y_{lm} ,
+  \label{eq:map-full}
+\end{equation}
+which is the form the literature writes.  The code holds half of it, the non-negative orders
+only, and written over that half the same sum is
 \begin{equation}
   I(\theta,\varphi) = \sum_{l} \Big[ \, a_{l0} Y_{l0}
   + \sum_{m=1}^{l} 2\,\mathrm{Re}\big( a_{lm} Y_{lm} \big) \Big] .
   \label{eq:map-from-half-complex}
 \end{equation}
-It is real by construction, because the second term in each order is the conjugate of the
-first, the harmonics obeying \eqref{eq:ylm-extension}: there are
+The two are one statement, the second being the first with each negative order replaced through
+\eqref{eq:ylm-extension}.  Reality is by construction in either form, and there are
 $\sum_{l=0}^{L} (2l+1) = (L+1)^2$ independent real numbers at degree $\le L$, which is what a
 flat coefficient vector holds.  A real cosine-and-sine basis, and its relation to published
 conventions, is set out in section~\ref{sec:other-conventions}; nothing in the derivation
@@ -177,8 +182,18 @@ and, composing the two,
   \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} .
   \label{eq:pairing-v-negative}
 \end{equation}
-The stored half of \eqref{eq:map-from-half-complex} therefore transforms to a sum in which each
-coefficient brings its conjugate partner.  The partner of $a_{lm}V_{lm}$ is
+The visibility is linear in the map, so it inherits the expansion outright:
+\begin{equation}
+  V(u,v) \;=\; \sum_{l}\sum_{m=-l}^{l} a_{lm}\,V_{lm}(u,v) ,
+  \label{eq:pairing-visibility-full}
+\end{equation}
+with the visibility's own negative order given by $V_{l,-m} = (-1)^m\overline{V_{lm}}$,
+which is \eqref{eq:pairing-v-negative} read with $Y_{l,-m} = \overline{Y_{lm}}$: the transform
+of the conjugate mirrors the baseline, and the $(-1)^m$ of \eqref{eq:pairing-baseline-sign} is
+what the mirroring costs.
+
+Written over the stored half, \eqref{eq:pairing-visibility-full} turns into a sum in which each
+coefficient brings its conjugate partner.  That partner is
 $a_{l,-m}V_{l,-m} = (-1)^m\overline{a_{lm}V_{lm}}$, the phase coming now from the visibility
 rather than from the coefficient:
 \begin{equation}

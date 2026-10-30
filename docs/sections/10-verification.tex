@@ -124,21 +124,22 @@ deformation uses: \eqref{eq:brief-zonal} combines them into a single zonal patte
 A map carried in the body frame reaches the observer through a rotation of its coefficients,
 $b = D(R)a$, where $D$ is the Wigner matrix of the rotation $R$.  In the zyz convention
 $R = R_z(\gamma)R_y(\beta)R_z(\alpha)$, with $\alpha$ the spin phase, $\beta$ the inclination
-and $\gamma$ the sky position angle of the spin.  Two features of $D$ do the work.  It is
-block diagonal in $l$, so the degree is untouched and a truncated map stays truncated.  And
-each block is a finite matrix of $(2l+1)^2$ numbers that depends only on the three angles,
-so a rotation costs a matrix product rather than a resampling.
+and $\gamma$ the sky position angle of the spin.  Two features do the work: it is block
+diagonal in $l$, so the degree is untouched and a truncated map stays truncated; and each block
+is a finite matrix of $(2l+1)^2$ numbers depending only on the three angles, so a rotation costs
+a matrix product rather than a resampling.
 
 For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity.
 With $\hat e$ the axis of the pattern,
 \begin{equation}
-  P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}\Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
-  \;+\; 2\sum_{m=1}^{2}\mathrm{Re}\bigl(\overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n)\bigr)\Bigr] ,
+  P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
+  \overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n) ,
   \label{eq:brief-zonal}
 \end{equation}
 which needs only the stored orders,\footnote{For an axis at direction cosines $(a,b,c)$ the
-same values are $\sqrt{5/4}(3c^2-1)$, $-\sqrt{15/2}\,c(a+ib)$ and $\sqrt{15/8}(a+ib)^2$, the
-form in which the deformation's coefficients are quoted in section~\ref{sec:triaxial}.}
+three stored values are \mbox{$\sqrt{5/4}(3c^2-1)$}, \mbox{$-\sqrt{15/2}\,c(a+ib)$} and
+\mbox{$\sqrt{15/8}(a+ib)^2$}, which is the form needed when the axis is given as a vector
+rather than as a pair of angles.}
 so a zonal pattern costs three numbers in any frame.
 
 
@@ -163,20 +164,18 @@ so a zonal pattern costs three numbers in any frame.
 
 \subsection{Combining the map with the transform}
 
-A real map is expanded in complex harmonics using non-negative orders only, the reality
-being carried by the expansion itself,
+A real map is expanded in complex harmonics,
 \begin{equation}
-  I(\theta,\varphi) \;=\; \sum_{l}\Bigl[\, a_{l0}Y_{l0}
-  + \sum_{m=1}^{l} 2\,\mathrm{Re}\bigl(a_{lm}Y_{lm}\bigr) \Bigr] .
+  I(\theta,\varphi) \;=\; \sum_{l}\sum_{m=-l}^{l} a_{lm}Y_{lm} .
   \label{eq:brief-expansion}
 \end{equation}
-The same pairing works through the transform, and the parity of $m$ decides which part of a
-coefficient survives: the contribution of one stored $a_{lm}$ is twice the real part of
-$a_{lm}V_{lm}$ when $m$ is even and twice $i$ times its imaginary part when $m$ is odd.  That
-is the whole of the negative-order bookkeeping, and it is why half the coefficients suffice.
-Its one consequence worth stating early: at a negative order the visibility carries no extra
-sign, because the $(-1)^m$ of the basis is cancelled by the $(-1)^m$ that $e^{im\pi}$
-contributes when the baseline is reversed.
+Written over the stored half, the same pairing works through the transform, and the parity of
+$m$ decides which part of a coefficient survives: the contribution of one stored $a_{lm}$ is
+twice the real part of $a_{lm}V_{lm}$ when $m$ is even and twice $i$ times its imaginary part
+when $m$ is odd.  That is the whole of the negative-order bookkeeping, and it is why half the
+coefficients suffice.  Its one consequence worth stating early: the two extensions differ, the
+map's being a plain conjugate and the visibility's carrying $(-1)^m$, because reversing the
+baseline advances the mode's azimuth by $m\pi$.
 
 
 \begin{itemize}

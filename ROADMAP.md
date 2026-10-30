@@ -696,6 +696,33 @@ changed the `a_00` convention, added the limb factor, retired the spot model and
 section, and a survey chapter would have needed touching for most of them.  So it is worth
 writing once the structure settles, not before.
 
+**T13 — render and project in the stored half-complex basis.** The renderer and the Earth's
+projection are the last two places that work in the real basis, and they are the only reason
+section 2.2 has an essential half.
+
+`maps.sky_map` (and `sky_map_batch`, its performance path: six panels against one shared
+Legendre table) renders by converting through `Coeffs.to_real` and then summing
+`real_sph_harm` with cosine and sine branches. `earth.channel` projects onto the same real basis,
+which is why the emitted `earth_levels.py` is a real-basis table. Everywhere else the package is
+half-complex, storing `m >= 0` and pairing each coefficient with its conjugate.
+
+The change: sum over the stored orders with the `2 Re` pairing that section 1 states, and drop
+`to_real`/`from_real` from both paths. The Legendre table is unaffected --- `legendre_rows`
+already computes `P_l^m` for `m >= 0` and one pass up each column, so the cost is the same; what
+goes is the `sqrt2` and the cosine/sine split. `to_vector`/`from_vector` stay as they are: they
+are the fitting interface, in starry's order, and are not a rendering path.
+
+Then section 2.2 loses its essential half. What is left is the translation to other conventions
+--- starry's signed order, pyshtools' `sqrt2`-free coefficients --- which is what the subsection
+says it is for. It could then be split or shrunk, and its opening sentence ("nothing in the
+derivation needs this") would stop being quietly misleading about what builds a picture.
+
+Two things to settle when it is done. V25 certifies the real basis and would need either to
+certify the pairing instead or to be retired with it. And `test_maps` compares the fast path
+against a per-mode sum written in the real basis, which is a genuine independent route at the
+moment and would become a comparison of one complex sum against another --- still worth having,
+but a weaker check, and the replacement should be chosen deliberately rather than inherited.
+
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
 evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by

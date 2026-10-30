@@ -60,28 +60,18 @@ with \eqref{eq:coefficient-rotation} gives
     \sum_{m=-l}^{l} D^l_{m0}(R_{\hat e})\,Y_{lm}(\hat n) ,
   \label{eq:zonal-in-d}
 \end{equation}
-which is the addition theorem of the literature, obtained here without citing it.  Written
-in stored orders, and at $l = 2$ expanded, with $\hat e = (a,b,c)$ and
-$\hat n$ the observer direction,
+which is the addition theorem of the literature, obtained here without citing it.  At $l = 2$
+it is the identity the whole deformation rests on,
 \begin{equation}
-  P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}
-    \Bigl[\, \overline{Y_{20}(\hat e)}\,Y_{20}(\hat n)
-    \;+\; 2\sum_{m=1}^{2} \mathrm{Re}\bigl(
-    \overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n) \bigr) \Bigr] ,
+  P_2(\hat n\cdot\hat e) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
+    \overline{Y_{2m}(\hat e)}\,Y_{2m}(\hat n) ,
   \label{eq:zonal-l2}
 \end{equation}
-and the five numbers it needs are
-\begin{equation}
-  \begin{aligned}
-    Y_{20}(\hat e) &= \sqrt{\tfrac54}\,\bigl(3c^2 - 1\bigr) , \\
-    Y_{2,\pm1}(\hat e) &= \mp\sqrt{\tfrac{15}{2}}\,c\,\bigl(a \pm ib\bigr) , \\
-    Y_{2,\pm2}(\hat e) &= \sqrt{\tfrac{15}{8}}\,\bigl(a \pm ib\bigr)^2 .
-  \end{aligned}
-  \label{eq:harmonic-at-axis-l2}
-\end{equation}
-So a zonal quadrupole about a known axis contributes these five coefficients and no
-summation over $m$ is needed anywhere in the deformation.  Certificate \vtag{3} checks
-\eqref{eq:harmonic-at-axis-l2} against the general \code{sph_harm_addition}.
+whose stored orders are the $m = 0$ term and twice the real part of the $m = 1$ and $2$ terms.
+Everything a zonal quadrupole needs is therefore the three numbers $Y_{2m}(\hat e)$ at
+$m = 0, 1, 2$, each one evaluation of the definition \eqref{eq:ylm} once the axis is known, and
+no summation over $m$ occurs anywhere in the deformation.  Certificate \vtag{3} checks the
+corollary against the general \code{sph_harm_addition}.
 
 \subsection{The Wigner matrices}
 \label{sec:wigner-matrices}
