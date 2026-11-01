@@ -91,7 +91,7 @@ def first_order_coefficients(field, eye, limb=0.0):
     To first order the pattern is a constant plus two quadrupoles, so the addition theorem
     gives its coefficients directly:
 
-        a_00 = (1 - 4 eps_spin) sqrt(4 pi) ,
+        a_00 = 1 - 2 eps_spin ,
         a_2m = -(16 pi / 5) [ eps_tide conj(Y_{2m}(t_hat))
                               - eps_spin conj(Y_{2m}(s_hat)) ] ,
 
@@ -124,7 +124,7 @@ def first_order_coefficients(field, eye, limb=0.0):
 
     tide_axis, spin_axis = field.axes()
     blocks = [np.zeros(l + 1, dtype=complex) for l in range(3)]
-    blocks[0][0] = 1.0 - 4.0 * field.centrifugal
+    blocks[0][0] = 1.0 - 2.0 * field.centrifugal
     if limb:
         # I = (1 - limb) + limb mu, and mu = sqrt(4 pi / 3) Y_10 about the observer's axis, so
         # the limb is a constant plus a dipole and nothing else to leading order.

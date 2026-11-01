@@ -932,7 +932,7 @@ def _sphere_directions(n):
 def check_deformation_first_order(amplitudes=(1e-4, 1e-3), n_dir=24):
     """V19, numerical rung -- the deformation field against its first-order limit.
 
-    On a level surface delta r = -phi_1/g_0 and delta g = d phi_1/d r, so for small
+    On a level surface the first-order relations of section 8.5 hold, so for small
     amplitudes the solver must reproduce those, with the residual going as eps^2.
     Both quadrupoles are present, perpendicular, and the residual is reported divided
     by eps^2 so that the two amplitudes can share a tolerance.
@@ -968,7 +968,7 @@ def check_level_surface(tide=0.03, centrifugal=0.01, n_dir=32):
     for direction in _sphere_directions(n_dir):
         radius = field.level_radius(direction)
         point = radius * direction
-        worst = max(worst, abs(float(field.potential(point)) + 1.0))
+        worst = max(worst, abs(float(field.potential(point)) - field.level_value()))
 
         step = 1e-6
         difference = np.array([
@@ -1111,7 +1111,7 @@ def check_first_order_frame(tide=0.03, centrifugal=0.01, inclination=0.9):
     # body frame: the harmonics are the ordinary ones about the body axes
     tide_axis, spin_axis = field.axes()
     body = [np.zeros(l + 1, dtype=complex) for l in range(3)]
-    body[0][0] = 1.0 - 4.0 * centrifugal
+    body[0][0] = 1.0 - 2.0 * centrifugal
     for m in range(3):
         terms = []
         for axis in (tide_axis, spin_axis):

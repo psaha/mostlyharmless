@@ -158,19 +158,20 @@ def sphere_samples(field, line_of_sight, n_samples=20000, power=1.0, linear=Fals
 
 
 def first_order_brightness(field, directions, power=1.0):
-    """The linearised surface gravity (equation 74), ``1 + 4 phi_1``, by direction.
+    """The linearised surface gravity, ``1 + 2 eps_spin + 4 phi_1``, by direction.
 
     ``phi_1`` is the perturbation on the *undeformed* sphere, which is what a linearisation
-    about uses.  The four collects two equal first-order contributions: the perturbation's
-    own radial derivative, ``2 phi_1``, and the surface's displacement,
-    ``-2 delta r = 2 phi_1``, since ``delta r = -phi_1``.
+    about uses.  The ``4 phi_1`` collects two equal first-order contributions: the
+    perturbation's own radial derivative, and the surface's displacement, which in the
+    mean-radius gauge is ``delta r = E - <E>``.
 
-    Evaluating ``|grad Phi|`` at ``r = 1`` instead keeps only the first of those and comes
-    out about half as deep --- the trap :func:`sphere_samples` warns about.  This is the
-    correct first-order expression, not that shortcut.
+    The constant is not zero.  The spin's ``l = 0`` term is not a quadrupole, so it is not
+    scaled by the displacement the way the quadrupoles are, and it survives as ``2 eps_spin``
+    above the undeformed value; with the gauge of section 8.2 that is exactly what makes the
+    pole come out at ``1 + 2 eps_spin`` and the equator at ``1 - 4 eps_spin``.
     """
     perturbation = field.potential(directions) + 1.0
-    return (1.0 + 4.0 * perturbation) ** power
+    return (1.0 + 2.0 * field.centrifugal + 4.0 * perturbation) ** power
 
 
 def sphere_brightness(field, power=1.0, n_samples=20000, linear=False):

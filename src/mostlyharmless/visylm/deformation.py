@@ -3,7 +3,7 @@
 Stage 6, section 8.  The shape and the surface gravity of a deformed star are not
 independent.  On a level surface the normal is along the gradient, so
 
-    g_eff = |grad Phi| ,   delta r = -phi_1 / g_0 ,   delta g = d phi_1 / d r ,
+    g_eff = |grad Phi| ,   delta r / a = (E - <E>) a^3 ,   delta g / g_0 = -2 delta r / a - 2 E a^3 ,
 
 the last two to first order in the perturbation.  The potential is a monopole plus
 one quadrupole per deformation, in units where GM = 1 and the unperturbed radius is 1:
@@ -18,11 +18,14 @@ quadrupole, and its l = 0 piece renormalises the effective monopole.
 
 Amplitudes are quoted as A r_0^3 / GM, so eps = 0.2 is a twenty per cent deformation
 of the potential at the reference radius, whatever axis ratio that produces.  The
-surface is the level set Phi = -1, and the volume-equivalent sphere is a separate
-quantity, since the deformation changes the volume.
+surface is a level set of Phi, and the level value is a *choice*: it is the star's size.
+``level_value`` fixes it by requiring the angular mean radius to be exactly 1, which makes
+the first-order displacement delta r = E - <E> a pure quadrupole --- the l = 0 part of the
+centrifugal term then shows up in the brightness alone, not in the shape.  The
+volume-equivalent sphere is a separate quantity, since the deformation changes the volume.
 
 **Range of validity.** The quadrupole potential grows as r^2 while the monopole falls
-as 1/r, so past a modest amplitude the level set Phi = -1 becomes unreachable along
+as 1/r, so past a modest amplitude the level set becomes unreachable along
 some directions and the surface opens, as a Roche lobe does.  The binding direction is
 the one where the perturbation is deepest, which for positive amplitudes is the tide
 axis, where phi_1 = -E r^2 with
@@ -50,7 +53,16 @@ from scipy.optimize import brentq
 
 __all__ = ["Deformation"]
 
-_SURFACE = -1.0
+def _level_value(spin):
+    """The potential at the surface, in the gauge the manual fixes.
+
+    The level value is ours to choose, and it is the star's size.  Choosing it so that
+    the angular mean radius is 1 gives a = 1 - eps_spin + O(eps^2), i.e. a level of
+    -1/a here.  The gauge matters: with the level pinned at -1 the l = 0 part of the
+    centrifugal potential shows up as a uniform change of radius, and every first-order
+    quantity then carries a term that the ellipsoid and Lambda immediately discard.
+    """
+    return -1.0 / (1.0 - spin)
 
 
 def _p2(cosine):
@@ -75,6 +87,10 @@ class Deformation:
     tide_direction: tuple = (1.0, 0.0, 0.0)
     centrifugal: float = 0.0
     spin_direction: tuple = (0.0, 0.0, 1.0)
+
+    def level_value(self):
+        """The potential at the surface, from the gauge of section 8.2."""
+        return _level_value(self.centrifugal)
 
     def axes(self):
         """The two quadrupole directions, normalised."""
@@ -139,8 +155,10 @@ class Deformation:
         direction = np.asarray(direction, dtype=float)
         direction = direction / np.linalg.norm(direction)
 
+        level = self.level_value()
+
         def residual(radius):
-            return float(self.potential(radius * direction)) - _SURFACE
+            return float(self.potential(radius * direction)) - level
 
         def slope(radius):
             return float(np.dot(self.gradient(radius * direction), direction))
@@ -172,16 +190,21 @@ class Deformation:
         directions = directions / np.linalg.norm(directions, axis=-1, keepdims=True)
         count = directions.shape[0]
 
+        level = self.level_value()
+        # The bracket comes from the *depth* of the perturbation, not from the level: the
+        # turning point of -1/r - E r^2 is at r^3 = 1/(2E) with E measured from the
+        # unperturbed potential.  Using the gauged level here would give E minus its l = 0
+        # part, widening the bracket past the outer root and reporting an open surface.
         depths = -1.0 - self.potential(directions)
         deepest = float(np.max(depths))
         upper = 3.0 if deepest <= 0.0 else (1.0 / (2.0 * deepest)) ** (1.0 / 3.0)
-        if np.any(self.potential(upper * directions) < _SURFACE):
+        if np.any(self.potential(upper * directions) < level):
             raise ValueError("the surface is open along some direction")
 
         lower, high = np.full(count, 0.2), np.full(count, upper)
         for _ in range(60):
             middle = 0.5 * (lower + high)
-            rising = self.potential(middle[:, None] * directions) < _SURFACE
+            rising = self.potential(middle[:, None] * directions) < level
             lower = np.where(rising, middle, lower)
             high = np.where(rising, high, middle)
         return 0.5 * (lower + high)
@@ -221,12 +244,14 @@ class Deformation:
         direction = np.asarray(direction, dtype=float)
         direction = direction / np.linalg.norm(direction)
         tide_axis, spin_axis = self.axes()
-        perturbation = 0.0
+        depth = 0.0
         if self.tide:
-            cosine = float(direction @ tide_axis)
-            perturbation -= self.tide * _p2(cosine)
+            depth += self.tide * _p2(float(direction @ tide_axis))
         if self.centrifugal:
-            cosine = float(direction @ spin_axis)
-            perturbation += self.centrifugal * (_p2(cosine) - 1.0)
-        delta_r = -perturbation
-        return delta_r, 2.0 * perturbation - 2.0 * delta_r
+            depth -= self.centrifugal * (_p2(float(direction @ spin_axis)) - 1.0)
+        # the gauge: the mean of the depth is the spin's l = 0 part, so the
+        # displacement is a pure quadrupole
+        quadrupole = depth - self.centrifugal
+        delta_r = quadrupole
+        delta_g = -2.0 * self.centrifugal - 4.0 * quadrupole
+        return delta_r, delta_g

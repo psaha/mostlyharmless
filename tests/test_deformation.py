@@ -39,9 +39,37 @@ def test_the_oblate_case_reproduces_the_standard_result():
     equator = np.array([1.0, 0.0, 0.0])
     pole = np.array([0.0, 0.0, 1.0])
 
-    assert field.level_radius(equator) - 1.0 == pytest.approx(1.5 * eps, rel=1e-4)
-    assert field.surface_gravity(equator) - 1.0 == pytest.approx(-6.0 * eps, rel=1e-4)
-    assert field.level_radius(pole) - 1.0 == pytest.approx(0.0, abs=1e-11)
+    r_equator = field.level_radius(equator)
+    r_pole = field.level_radius(pole)
+    # the mean-radius gauge puts the equator eps/2 above 1 and the pole eps below it,
+    # so the axis ratio is unchanged and is the gauge-invariant statement
+    assert r_equator / r_pole == pytest.approx(1.0 + 1.5 * eps, abs=1e-10)
+    assert r_equator - 1.0 == pytest.approx(0.5 * eps, abs=1e-12)
+    assert r_pole - 1.0 == pytest.approx(-eps, abs=1e-12)
+    assert field.surface_gravity(equator) - 1.0 == pytest.approx(-4.0 * eps, abs=1e-11)
+    assert field.surface_gravity(pole) - 1.0 == pytest.approx(2.0 * eps, abs=1e-11)
+
+
+def test_the_gauge_puts_the_mean_radius_at_one():
+    """The gauge of section 8.2, as a guard on half of it being applied.
+
+    The level value is chosen so that the angular mean of the radius is 1.  A change that
+    touched the potential but not the level, or the level but not the first-order
+    formulae, would leave the mean at 1 - O(eps) rather than 1 - O(eps^2).
+    """
+    eps = 0.03
+    field = Deformation(tide=eps, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=0.01, spin_direction=(0.0, 0.0, 1.0))
+    nodes, weights = np.polynomial.legendre.leggauss(32)
+    phi = 2.0 * np.pi * np.arange(64) / 64
+    mu = nodes[:, None]
+    sine = np.sqrt(1.0 - mu ** 2)
+    directions = np.stack([sine * np.cos(phi)[None, :],
+                           sine * np.sin(phi)[None, :],
+                           np.broadcast_to(mu, (32, 64))], axis=-1).reshape(-1, 3)
+    radii = field.level_radii(directions)
+    mean = float(np.mean(radii))
+    assert abs(mean - 1.0) < 20.0 * eps ** 2, mean
 
 
 def test_the_tidal_case_bulges_along_its_own_axis():
@@ -68,7 +96,7 @@ def test_two_perpendicular_quadrupoles_give_three_unequal_axes():
 
     assert lengths[0] > lengths[1] > lengths[2]
     assert lengths[0] > 1.0
-    assert lengths[1] == pytest.approx(1.0, abs=1e-10)
+    assert lengths[1] == pytest.approx(1.0 - SPIN, abs=1e-10)
     assert lengths[2] < 1.0
     # the deformation expands the volume, through the l = 0 piece and the bulge
     assert field.equivalent_radius() > 1.0

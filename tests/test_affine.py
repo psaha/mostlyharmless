@@ -187,6 +187,24 @@ def test_a_sphere_projects_to_the_unit_disk_from_any_direction():
         assert abs(np.linalg.det(stretch)) == pytest.approx(1.0, abs=1e-12)
 
 
+def test_the_stretch_is_area_preserving_to_first_order():
+    """det Lambda = 1 + O(eps^2), the other half of the gauge guard.
+
+    A pure l = 2 displacement moves the two axes in opposite senses, so the stretch has no
+    scale.  With the level pinned by the l = 0 part instead, both axes would carry it and the
+    determinant would depart from 1 at order eps --- which is what this watches for.
+    """
+    from mostlyharmless.symbolic import affine, render
+
+    eps = 0.03
+    eye = np.array([np.sin(0.9), 0.0, np.cos(0.9)])
+    field = Deformation(tide=eps, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=0.01, spin_direction=(0.0, 0.0, 1.0))
+    stretch = affine.projected_stretch(field, eye)
+    determinant = float(np.linalg.det(stretch))
+    assert abs(determinant - 1.0) < 20.0 * eps ** 2, determinant
+
+
 def test_the_first_order_coefficients_are_the_closed_form():
     """V21: the explicit first-order harmonics agree with the quadrature.
 
