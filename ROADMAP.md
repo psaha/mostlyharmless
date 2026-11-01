@@ -723,6 +723,25 @@ against a per-mode sum written in the real basis, which is a genuine independent
 moment and would become a comparison of one complex sum against another --- still worth having,
 but a weaker check, and the replacement should be chosen deliberately rather than inherited.
 
+**T14 — fix the mean-radius gauge for the deformation.** Section 8 pins the level surface at
+$\Phi = -M/a$ with $a$ the level-value radius, so the $l = 0$ part of the potential's
+perturbation shows up as a uniform change of radius. That is a gauge, not physics, and it makes
+every equation in the section carry a term that the ellipsoid and $\Lambda$ immediately discard.
+Gauge it away instead: pin the level by the monopole part alone, which makes the mean radius
+exactly 1. Three consequences, all of them wanted:
+
+- $\delta r$ is a pure quadrupole, so the first-order surface is an ellipsoid of mean radius 1;
+- $\det\Lambda = 1 + O(\epsilon^{2})$, so the stretch is area-preserving to first order and the
+  $|\det\Lambda|$ flux factor can be dropped at the order the model claims;
+- the brightness keeps its $l = 0$ part, $g = 1 - 2\epsilon_\text{spin} - 4q$ with $q$ the
+  quadrupole — that term is physical (rotation lowers the mean effective gravity) and cannot be
+  gauged away, which is worth saying rather than hiding.
+
+Order of work: this entry, then the order of presentation in section 8, then the section, then the
+code. The code step shifts every deformation coefficient and should move the GUI numbers and the
+first-order residual's halving ratio slightly; the Earth carries no deformation, so nothing cached
+depends on it.
+
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
 evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by
