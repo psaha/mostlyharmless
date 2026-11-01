@@ -15,44 +15,65 @@ undeformed radius is $1$.
 \subsection{The quadrupole potential}
 \label{sec:deformation-potential}
 
-Write $n = \mathbf{x}/r$ for the direction, with $\mathbf{x}$ the position in space, and
-$P_2(\xi) = \tfrac12(3\xi^2-1)$ for the Legendre polynomial.  Bold symbols are points in
-space throughout; plain $x$ and $y$ are the sky coordinates of
-section~\ref{sec:conventions}, so that $x_i$ and $y_i$ are the North and East components
-of a sample's sky position and are not components of a position vector.  The
-potential is a monopole plus two quadrupoles and one constant,
+The star is a monopole, $-1/r$, plus what its rotation and its companion do to it.
+
+Take the rotation first, in the frame that turns with the star at angular speed $\omega$.  A fluid
+element at distance $r_\perp$ from the spin axis feels the centrifugal potential
 \begin{equation}
-  \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
-    \;-\; \epsilon_\text{tide}\, r^2 P_2(n\cdot \hat e_\text{tide})
-    \;+\; \epsilon_\text{spin}\, r^2 P_2(n\cdot \hat e_\text{spin})
+  -\tfrac12\,\omega^2 r_\perp^2
+  \;=\; -\tfrac12\,\omega^2 r^2\sin^2\theta
+  \;=\; \tfrac13\,\omega^2 r^2 P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})
+  \;-\; \tfrac13\,\omega^2 r^2 ,
+  \label{eq:centrifugal}
+\end{equation}
+the last step using $\sin^2\theta = \tfrac23\bigl(1 - P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})\bigr)$:
+a quadrupole about the spin axis and a monopole of the same size.
+
+A companion of mass $M'$ at distance $d$ along $\hat{\mathbf e}_\text{tide}$ contributes
+$-GM'/|\mathbf r-\mathbf d|$.  Expanded in $r/d$, its $\ell = 1$ term is a uniform acceleration,
+removed by working in the star's free-fall frame, and its $\ell = 2$ term is a quadrupole about
+$\hat{\mathbf e}_\text{tide}$.  Its $\ell = 0$ term is the constant $GM'/d$, and a gravitational
+field is harmonic, so no other constant appears; a constant in $\Phi$ shifts the level value
+rather than the shape, and it is dropped.
+
+With the amplitudes
+\begin{equation}
+  \epsilon_\text{spin} \;=\; \tfrac13\,\omega^2 , \qquad
+  \epsilon_\text{tide} \;=\; \frac{GM'}{d^{3}} ,
+  \label{eq:deformation-amplitudes}
+\end{equation}
+both dimensionless in units where $GM = 1$ and the undeformed radius is $1$, the potential is
+\begin{equation}
+  \Phi(\mathbf r) \;=\; -\frac{1}{r}
+    \;-\; \epsilon_\text{tide}\, r^2 P_2(\hat{\mathbf r}\cdot \hat{\mathbf e}_\text{tide})
+    \;+\; \epsilon_\text{spin}\, r^2 P_2(\hat{\mathbf r}\cdot \hat{\mathbf e}_\text{spin})
     \;-\; \epsilon_\text{spin}\, r^2 .
   \label{eq:deformation-potential}
 \end{equation}
-Both perturbations are pure $l = 2$, and the amplitudes are positive for a tidal bulge
-along $\hat e_\text{tide}$ and a centrifugal flattening about $\hat e_\text{spin}$.  The
-last term is the $l = 0$ part of the centrifugal potential: the centrifugal term is not a
-pure quadrupole, because the frame rotating with the star is not inertial, and its $l = 0$
-piece renormalises the effective monopole.  Dropping it would leave the star's mean radius
-wrong by $\epsilon_\text{spin}$.
+Both quadrupoles are pure $l = 2$, and the amplitudes are positive for a tidal bulge along
+$\hat{\mathbf e}_\text{tide}$ and a centrifugal flattening about $\hat{\mathbf e}_\text{spin}$.
+The last term is the spin's monopole; unlike the tide's constant it is $r^2$ rather than constant,
+so it cannot be dropped: it renormalises the effective monopole, and omitting it would leave the
+mean radius wrong by $\epsilon_\text{spin}$.
 
-Amplitudes are quoted as $A r_0^3/GM$, so $\epsilon = 0.2$ means a twenty per cent
-deformation of the \emph{potential} at the reference radius, whatever axis ratio that
-produces.  The surface is the level set $\Phi = -1$.  The volume-equivalent sphere is a
+The amplitudes are dimensionless: $\epsilon = 0.2$ means a twenty per cent deformation of the
+\emph{potential} against the monopole at unit radius, whatever axis ratio that produces.  The
+surface is the level set $\Phi = -1$.  The volume-equivalent sphere is a
 separate quantity, since the deformation changes the volume, and the two should not be
 confused when quoting an axis ratio.
 
 \subsection{The level surface, and when it closes}
 \label{sec:deformation-closure}
 
-Along a direction $n$ the level condition is one equation in one unknown,
+Along a direction $\hat{\mathbf r}$ the level condition is one equation in one unknown,
 \begin{equation}
-  \frac{1}{r} + E(n)\, r^2 \;=\; 1 ,
+  \frac{1}{r} + E(\hat{\mathbf r})\, r^2 \;=\; 1 ,
   \label{eq:level-condition}
 \end{equation}
 where the depth of the perturbation there is
 \begin{equation}
-  E(n) \;=\; \epsilon_\text{tide} P_2(n\cdot\hat e_\text{tide})
-           - \epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr] .
+  E(\hat{\mathbf r}) \;=\; \epsilon_\text{tide} P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+           - \epsilon_\text{spin}\bigl[P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) - 1\bigr] .
   \label{eq:level-depth}
 \end{equation}
 The sign of the spin term is negative because its coefficient in
@@ -62,7 +83,7 @@ The left side of \eqref{eq:level-condition} is not monotone in $r$: the monopole
 the quadrupole grows.  Its minimum is at $r^3 = 1/(2E)$ and equals
 $1.89\,E^{1/3}$, so a solution exists only while
 \begin{equation}
-  E(n) \;<\; 0.148 \qquad \text{for every } n ,
+  E(\hat{\mathbf r}) \;<\; 0.148 \qquad \text{for every } \hat{\mathbf r} ,
   \qquad 0.148 = (1/1.89)^3 .
   \label{eq:closure}
 \end{equation}
@@ -98,34 +119,34 @@ nuisance.
 \label{sec:deformation-gravity}
 
 The gradient is worth writing out explicitly.  The $\Phi$ of
-\eqref{eq:deformation-potential} simplifies once $r^2(n\cdot\hat e)^2 =
-(\mathbf{x}\cdot\hat e)^2$ is used to move the $r$-dependence out of the Legendre
+\eqref{eq:deformation-potential} simplifies once $r^2(\hat{\mathbf r}\cdot\hat{\mathbf e})^2 =
+(\mathbf r\cdot\hat{\mathbf e})^2$ is used to move the $r$-dependence out of the Legendre
 polynomials:
 \begin{equation}
-  \Phi(\mathbf{x}) \;=\; -\frac{1}{r}
+  \Phi(\mathbf r) \;=\; -\frac{1}{r}
     \;+\; \tfrac12(\epsilon_\text{tide} - 3\epsilon_\text{spin})\,r^2
-    \;-\; \tfrac32\epsilon_\text{tide}\,(\mathbf{x}\cdot\hat e_\text{tide})^2
-    \;+\; \tfrac32\epsilon_\text{spin}\,(\mathbf{x}\cdot\hat e_\text{spin})^2 ,
+    \;-\; \tfrac32\epsilon_\text{tide}\,(\mathbf r\cdot\hat{\mathbf e}_\text{tide})^2
+    \;+\; \tfrac32\epsilon_\text{spin}\,(\mathbf r\cdot\hat{\mathbf e}_\text{spin})^2 ,
   \label{eq:deformation-potential-quadratic}
 \end{equation}
 which differentiates term by term to
 \begin{equation}
-  \nabla\Phi \;=\; \frac{\mathbf{x}}{r^3}
-    \;+\; (\epsilon_\text{tide} - 3\epsilon_\text{spin})\,\mathbf{x}
-    \;-\; 3\epsilon_\text{tide}\,(\mathbf{x}\cdot\hat e_\text{tide})\,\hat e_\text{tide}
-    \;+\; 3\epsilon_\text{spin}\,(\mathbf{x}\cdot\hat e_\text{spin})\,\hat e_\text{spin} .
+  \nabla\Phi \;=\; \frac{\mathbf r}{r^3}
+    \;+\; (\epsilon_\text{tide} - 3\epsilon_\text{spin})\,\mathbf r
+    \;-\; 3\epsilon_\text{tide}\,(\mathbf r\cdot\hat{\mathbf e}_\text{tide})\,\hat{\mathbf e}_\text{tide}
+    \;+\; 3\epsilon_\text{spin}\,(\mathbf r\cdot\hat{\mathbf e}_\text{spin})\,\hat{\mathbf e}_\text{spin} .
   \label{eq:deformation-gradient}
 \end{equation}
-Evaluating \eqref{eq:deformation-gradient} at $\mathbf{x} = r(n)\,n$, with $r(n)$ from
-\eqref{eq:level-condition}, and taking its norm gives $g(n)$.  The direction of
+Evaluating \eqref{eq:deformation-gradient} at $\mathbf r = r(\hat{\mathbf r})\,\hat{\mathbf r}$, with $r(\hat{\mathbf r})$ from
+\eqref{eq:level-condition}, and taking its norm gives $g(\hat{\mathbf r})$.  The direction of
 $\nabla\Phi$ is of course the outward normal used for the visibility sign in
 section~\ref{sec:deformation-exact}, so the same expression serves both purposes.
 
 Two checks.  With both amplitudes zero the first term survives and $|\nabla\Phi| = 1/r^2$,
 which is $1$ at $r = 1$ as required.  And to first order the perturbation reaches $g$ by two
-routes.  Write $\phi_1$ for the perturbation to the potential, $\phi_1(r,n) = -E(n)\,r^2$ with
+routes.  Write $\phi_1$ for the perturbation to the potential, $\phi_1(r,n) = -E(\hat{\mathbf r})\,r^2$ with
 $E$ the depth of \eqref{eq:level-depth} --- the sign being the one that makes $1/r + E r^2$ the
-level condition --- so that on the reference sphere $\phi_1 = -E(n)$, and $g = 1 + 4\phi_1$.
+level condition --- so that on the reference sphere $\phi_1 = -E(\hat{\mathbf r})$, and $g = 1 + 4\phi_1$.
 Holding
 $r$ fixed, the amplitude's own radial derivative contributes
 $\partial_r\phi_1 = 2\phi_1$, since $\phi_1 \propto r^2$.  And the surface itself moves,
@@ -139,8 +160,8 @@ the four being a quadrupole signature rather than a coincidence: for a perturbat
 $\phi_1 \propto r^n$ the same argument gives $\delta g = (n+2)\phi_1$, so an octupole would
 give five.  Writing $\phi_1$ out,
 \begin{equation}
-  g \;=\; 1 - 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
-    + 4\epsilon_\text{spin}\bigl[P_2(n\cdot\hat e_\text{spin}) - 1\bigr]
+  g \;=\; 1 - 4\epsilon_\text{tide}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+    + 4\epsilon_\text{spin}\bigl[P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) - 1\bigr]
     + O(\epsilon^2) ,
   \label{eq:deformation-gravity-first-order}
 \end{equation}
@@ -176,11 +197,21 @@ Limb darkening multiplies this by a function of the viewing angle, and the code 
 in the same place to every row: the sampled brightness, the linearised pattern and the fitted
 coefficients all carry the factor
 \begin{equation}
-  1 - u_\text{limb}\,(1-\mu) , \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  1 - u_\text{limb}\,(1-\mu) ,
   \label{eq:limb-factor}
 \end{equation}
-so $u_\text{limb} = 0$ recovers \eqref{eq:brightness-law} and $u_\text{limb} = 1$ darkens the
-limb to nothing.  It is linear in $\mu$ rather than a power law because $\mu$ is a single
+where $\mu$ is the cosine between the line of sight and the direction the row assigns to the sky
+position $(x,y)$: the true surface's in the numerical row, the sphere's in the model rows,
+\begin{equation}
+  \mu \;=\; \frac{z}{r} \;=\; \sqrt{1-\frac{\rho^{2}}{r^{2}}}
+  \quad\text{(numerical row)} , \qquad
+  \mu \;=\; \sqrt{1 - \bigl|\Lambda^{-1}(x,y)\bigr|^{2}}
+  \quad\text{(model rows)} .
+  \label{eq:limb-cosine}
+\end{equation}
+The two agree to first order in $\epsilon$, since $r = 1 + O(\epsilon)$; the difference is
+counted in \eqref{eq:row-error}.  With $u_\text{limb} = 0$ the factor recovers
+\eqref{eq:brightness-law} and with $u_\text{limb} = 1$ it darkens the limb to nothing.  It is linear in $\mu$ rather than a power law because $\mu$ is a single
 harmonic, which is what keeps the coefficients of section~\ref{sec:model-map} closed; the
 first-order coefficients of \eqref{eq:limb-coefficients} treat it as a dipole about the
 observer's axis.
@@ -214,15 +245,15 @@ With the surface and the brightness fixed, the visibility is the sum over the sa
 surface that section~\ref{sec:mode-visibility} defines, weighted by the sky-plane area each
 sample projects to:
 \begin{equation}
-  V(u,v) \;=\; \sum_i I(n_i)\,\frac{(N_i\cdot\hat e_\text{obs})\, r_i^2}{n_i\cdot N_i}\,
+  V(u,v) \;=\; \sum_i I(n_i)\,\frac{(N_i\cdot\hat{\mathbf z})\, r_i^2}{n_i\cdot N_i}\,
     \Delta\Omega_i \; e^{-2\pi i (u x_i + v y_i)} .
   \label{eq:deformation-visibility}
 \end{equation}
 Two properties of a level surface make this cheap.  The outward normal $N$ \emph{is} the
-gradient direction, so visibility is the sign of $N\cdot\hat e_\text{obs}$: there is no
+gradient direction, so visibility is the sign of $N\cdot\hat{\mathbf z}$: there is no
 z-buffer and no nested root find.  And for modest deformation the body is convex, so the
 map from direction to sky position is one-to-one and the near hemisphere is simply the set of
-directions with $N\cdot\hat e_\text{obs} > 0$.
+directions with $N\cdot\hat{\mathbf z} > 0$.
 
 Equation~\eqref{eq:deformation-visibility} is a quadrature, not a periodic transform, so its
 error is ordinary discretisation error that falls with the sampling.  It carries none of the
@@ -237,27 +268,27 @@ side is not monotone, and the outer branch is the far side of the lobe.
 Expanding the Legendre polynomials in \eqref{eq:level-depth} and simplifying puts the depth
 in monomial form,
 \begin{equation}
-  E(n) \;=\; \tfrac32\Bigl[\epsilon_\text{tide}\,(n\cdot\hat e_\text{tide})^2
-    - \epsilon_\text{spin}\,(n\cdot\hat e_\text{spin})^2\Bigr]
+  E(\hat{\mathbf r}) \;=\; \tfrac32\Bigl[\epsilon_\text{tide}\,(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})^2
+    - \epsilon_\text{spin}\,(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})^2\Bigr]
     + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} ,
   \label{eq:depth-form}
 \end{equation}
 every direction now entering as a squared projection.  Since
-$(n\cdot\hat e)^2 = n^{T}(\hat e\hat e^{T})n$, the bracket is the quadratic form
-$n^{T}Mn$ built from
+$(\hat{\mathbf r}\cdot\hat{\mathbf e})^2 = \hat{\mathbf r}^{T}(\hat{\mathbf e}\hat{\mathbf e}^{T})n$, the bracket is the quadratic form
+$\hat{\mathbf r}^{T}Mn$ built from
 \begin{equation}
-  M \;=\; \tfrac32\Bigl(\epsilon_\text{tide}\,\hat e_\text{tide}\hat e_\text{tide}^{T}
-    - \epsilon_\text{spin}\,\hat e_\text{spin}\hat e_\text{spin}^{T}\Bigr) ,
+  M \;=\; \tfrac32\Bigl(\epsilon_\text{tide}\,\hat{\mathbf e}_\text{tide}\hat{\mathbf e}_\text{tide}^{T}
+    - \epsilon_\text{spin}\,\hat{\mathbf e}_\text{spin}\hat{\mathbf e}_\text{spin}^{T}\Bigr) ,
   \label{eq:depth-tensor}
 \end{equation}
 and the depth is
 \begin{equation}
-  E(n) \;=\; n^{T}Mn + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} .
+  E(\hat{\mathbf r}) \;=\; \hat{\mathbf r}^{T}Mn + \tfrac{3\epsilon_\text{spin}-\epsilon_\text{tide}}{2} .
   \label{eq:depth-quadratic}
 \end{equation}
-The constant does not spoil the identification.  On the unit sphere it equals $c\,n^{T}In$
+The constant does not spoil the identification.  On the unit sphere it equals $c\,\hat{\mathbf r}^{T}In$
 with $c = \tfrac12(3\epsilon_\text{spin}-\epsilon_\text{tide})$, so
-$E(n) = n^{T}(M + cI)\,n$: adding $cI$ shifts every eigenvalue by the same $c$ and moves no
+$E(\hat{\mathbf r}) = \hat{\mathbf r}^{T}(M + cI)\,\hat{\mathbf r}$: adding $cI$ shifts every eigenvalue by the same $c$ and moves no
 eigenvector.  The principal directions are therefore the eigenvectors of $M$ itself, and the
 constant only shifts the depths along them.
 The principal axes of the level surface are those eigenvectors, and the radii along them
@@ -277,21 +308,21 @@ degenerate the freedom they leave is harmless, because the radii there are equal
 \label{sec:deformation-stretch}
 
 The stretch replaces the map \eqref{eq:deformation-visibility} by a linear one.  Write the
-deformed surface as $r(n)\,n$ with $n$ a unit direction and $n_\perp$ its sky-plane component;
+deformed surface as $r(\hat{\mathbf r})\,\hat{\mathbf r}$ with $\hat{\mathbf r}$ a unit direction and $\hat{\mathbf r}_\perp$ its sky-plane component;
 the sky position of the emitting point is
 \begin{equation}
-  \mathbf{x}_\perp(n) \;=\; r(n)\, n_\perp .
+  \mathbf r_\perp(\hat{\mathbf r}) \;=\; r(\hat{\mathbf r})\, \hat{\mathbf r}_\perp .
   \label{eq:sky-map}
 \end{equation}
 That map is \emph{radial-nonlinear}: $r$ depends on the full direction, including its
 component along the line of sight, so no constant matrix reproduces it.  What follows replaces
-it by its linear part, $\Lambda n_\perp$.  For an ellipsoid the projection onto the sky is
+it by its linear part, $\Lambda \hat{\mathbf r}_\perp$.  For an ellipsoid the projection onto the sky is
 exact and is an ellipse, so it is captured by a single $2\times2$ positive-definite matrix,
 \begin{equation}
   \Lambda \;=\; \sqrt{A A^{T}} , \qquad A = P\,(\text{frame}\cdot\text{radii}) ,
   \label{eq:deformation-stretch}
 \end{equation}
-with $P$ the two rows $(\text{east},\text{north})$ projecting onto the sky and the radii
+with $P$ the two rows $(\hat{\mathbf y},\hat{\mathbf x})$ projecting onto the sky and the radii
 taken along the principal directions of \eqref{eq:depth-tensor}.  Writing $V_\text{sph}$ for
 the visibility of a sphere carrying the same brightness pattern, the surrogate is
 \begin{equation}
@@ -336,7 +367,7 @@ statement of the model's claim, which concerns shape and pattern rather than flu
 
 Two orderings have to be kept apart, and getting either wrong produces an error that looks
 plausible.  The first is $\Lambda$'s own: it is expressed in the sky's
-$(\text{east},\text{north})$ order, the order section~\ref{sec:conventions} gives the sky
+$(\hat{\mathbf y},\hat{\mathbf x})$ order, the order section~\ref{sec:conventions} gives the sky
 axes and the order the image path uses, whereas the frequencies are $(u,v) =
 (\text{North},\text{East})$.  The frequency is therefore reordered into the sky's order
 before the stretch acts, and the result read back as $(\text{North},\text{East})$.  One
@@ -351,8 +382,8 @@ $l = 4$ content first appears at second order from $P_{2,2}$.
 
 No odd $l$ appears at any order, and the reason is symmetry rather than truncation.  Every
 term of \eqref{eq:deformation-potential} is even under $n \to -n$ --- the monopole depends
-on $r$ alone, and the others are squares of projections --- so $r(n)$ and $g(n)$ are even
-functions of direction.  Since $Y_{lm}(-n) = (-1)^l Y_{lm}(n)$, an even function carries only
+on $r$ alone, and the others are squares of projections --- so $r(\hat{\mathbf r})$ and $g(\hat{\mathbf r})$ are even
+functions of direction.  Since $Y_{lm}(-\hat{\mathbf r}) = (-1)^l Y_{lm}(\hat{\mathbf r})$, an even function carries only
 even $l$, and the argument is frame-independent because the point reflection is.  Spin and
 the first-order tide therefore produce $l = 0$ and $l = 2$ and nothing else, in the body
 frame and the observer frame alike; an $l = 1$ term would be a photocentre displacement,
@@ -390,10 +421,10 @@ wanted is that it match the star in front of it, and that is a fit, not a normal
 where the \textbf{disk harmonic} $\Phi_{lm}$ is the projection of $Y_{lm}$ onto the unit disk.  It
 needs no integral and no Zernike expansion, because the projection \emph{is} the visible surface
 value: the opaque convention absorbs the viewing cosine into the area element,
-$d^{2}x = (\hat n\cdot\hat e)\,d\Omega$, so the image at a sky position is the brightness there, and
+$d^{2}x = (\hat{\mathbf r}\cdot\hat{\mathbf z})\,d\Omega$, so the image at a sky position is the brightness there, and
 \begin{equation}
-  \Phi_{lm}(x,y) \;=\; Y_{lm}(n) ,
-  \qquad n \;=\; x\,\text{east} + y\,\text{north} + \sqrt{1-\rho^{2}}\;\hat e_\text{obs} ,
+  \Phi_{lm}(x,y) \;=\; Y_{lm}(\hat{\mathbf r}) ,
+  \qquad \hat{\mathbf r} \;=\; x\,\hat{\mathbf x} + y\,\hat{\mathbf y} + z\,\hat{\mathbf z} ,
   \label{eq:disk-harmonic}
 \end{equation}
 with $Y_{lm}$ evaluated in the observer frame by the rule of \eqref{eq:observer-angles}.  There is no
@@ -416,7 +447,7 @@ lives in.  The image it is fitted to is
   I(x,y) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\, g\bigl(n(x,y)\bigr) ,
   \label{eq:data-image}
 \end{equation}
-with $n$ the direction of \eqref{eq:disk-harmonic} and $\mu$ its viewing cosine; no $\Lambda$
+with $\hat{\mathbf r}$ the direction of \eqref{eq:disk-harmonic} and $\mu$ its viewing cosine; no $\Lambda$
 enters, the stretch being in $\Psi$ alone.  The least-squares solution is then the usual one,
 \begin{equation}
   a_{lm} \;=\; \sum_{l'm'} \bigl(G^{-1}\bigr)_{lm,l'm'}\, b_{l'm'} ,
@@ -532,19 +563,19 @@ in closed form and nothing is fitted at all.
 two quadrupoles --- \eqref{eq:deformation-gravity-first-order} with $p = 1$ ---
 \begin{equation}
   I \;=\; (1 - 4\epsilon_\text{spin})
-    \;-\; 4\epsilon_\text{tide}\,P_2(n\cdot\hat e_\text{tide})
-    \;+\; 4\epsilon_\text{spin}\,P_2(n\cdot\hat e_\text{spin}) ,
+    \;-\; 4\epsilon_\text{tide}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+    \;+\; 4\epsilon_\text{spin}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) ,
   \label{eq:first-order-pattern}
 \end{equation}
-Each $P_2(n\cdot\hat e)$ is a zonal $l = 2$ pattern about its own axis, so the corollary
+Each $P_2(\hat{\mathbf r}\cdot\hat{\mathbf e})$ is a zonal $l = 2$ pattern about its own axis, so the corollary
 \eqref{eq:zonal-l2} of section~\ref{sec:rotation-law} turns the bracket into harmonics
 outright,
 \begin{equation}
-  I(\hat n) \;=\; 1 - 4\epsilon_\text{spin}
+  I(\hat{\mathbf r}) \;=\; 1 - 4\epsilon_\text{spin}
     - \frac{4}{5}\sum_{m=-2}^{2}\bigl(
-      \epsilon_\text{tide}\,\overline{Y_{2m}(\hat e_\text{tide})}
-      - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat e_\text{spin})}\bigr)
-      Y_{2m}(\hat n) ,
+      \epsilon_\text{tide}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{tide})}
+      - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{spin})}\bigr)
+      Y_{2m}(\hat{\mathbf r}) ,
   \label{eq:first-order-harmonics}
 \end{equation}
 in the observer frame.  Nothing in that display is a coefficient yet: it is the pattern, with
@@ -553,8 +584,8 @@ coefficients are
 \begin{equation}
   a_{00} \;=\; 1 - 4\epsilon_\text{spin} , \qquad
   a_{2m} \;=\; -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,
-      \overline{Y_{2m}(\hat e_\text{tide})}
-    \;-\; \epsilon_\text{spin}\,\overline{Y_{2m}(\hat e_\text{spin})}\Bigr] ,
+      \overline{Y_{2m}(\hat{\mathbf e}_\text{tide})}
+    \;-\; \epsilon_\text{spin}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{spin})}\Bigr] ,
   \label{eq:first-order-coefficients}
 \end{equation}
 every other coefficient being zero, with the two axes referred to the observer frame by the
@@ -600,25 +631,25 @@ cheap even at a sparse set of baselines.
 
 The second ordering is the projection's, and it is worth stating because it is the point at
 which the surrogate has most often gone wrong.  The pattern must be projected in the
-\emph{observer} frame, not the body frame.  Let $(\text{north},\text{east})$ be the sky axes
+\emph{observer} frame, not the body frame.  Let $(\hat{\mathbf x},\hat{\mathbf y})$ be the sky axes
 of section~\ref{sec:conventions} for the viewing direction, and take as polar axis
 \begin{equation}
-  \hat n \;=\; \text{north} \times \text{east} \;=\; \hat e_\text{obs} ,
+  \hat{\mathbf z} \;=\; \hat{\mathbf x} \times \hat{\mathbf y} ,
   \label{eq:observer-polar-axis}
 \end{equation}
 the direction \emph{toward} the observer.  That identity is not free: it holds only when the
 sky's North is the projection of the body's North axis and the sky's East is
-$\hat e_\text{obs}\times\text{North}$, the pairing section~\ref{sec:conventions} fixes.  Taking
+$\hat{\mathbf z}\times\text{North}$, the pairing section~\ref{sec:conventions} fixes.  Taking
 East from a helper axis instead gives a North that is the projection of \emph{minus} North ---
 the same handedness, but rotated by $\pi$ in the sky plane.  The consequence is a reflection of
 the sphere, and since $Y_{lm}(\pi-\theta,\varphi) = (-1)^{l+m}Y_{lm}(\theta,\varphi)$ it leaves
 every $|a_{lm}|$ unchanged while negating the $m = 1$ coefficients and leaving $m = 2$ alone:
 the coefficients look plausible, every imaginary part has the wrong sign, and only a
 diagnostic that compares two routes to the same number shows it.  Then
-for each sampled direction $\mathbf{x}_i$,
+for each sampled direction $\mathbf r_i$,
 \begin{equation}
-  \theta_i = \arccos(\mathbf{x}_i\cdot\hat n) , \qquad
-  \varphi_i = \operatorname{atan2}(\mathbf{x}_i\cdot\text{east},\, \mathbf{x}_i\cdot\text{north}) ,
+  \theta_i = \arccos(\mathbf r_i\cdot\hat{\mathbf r}) , \qquad
+  \varphi_i = \operatorname{atan2}(\mathbf r_i\cdot\hat{\mathbf y},\, \mathbf r_i\cdot\hat{\mathbf x}) ,
   \label{eq:observer-angles}
 \end{equation}
 and $a_{lm} = \frac{1}{N}\sum_i I_i \overline{Y_{lm}(\theta_i,\varphi_i)}$ is a plain
@@ -654,11 +685,11 @@ near good enough, and the numerical model is what decides.
 
 Written out, the pattern is multiplied by the limb factor:
 \begin{equation}
-  I(\hat n) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
+  I(\hat{\mathbf r}) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
   \Bigl[\,1 - 4\epsilon_\text{spin}
-  - 4\epsilon_\text{tide}\,P_2(\hat n\cdot\hat t)
-  + 4\epsilon_\text{spin}\,P_2(\hat n\cdot\hat s) \Bigr] ,
-  \qquad \mu = \hat n\cdot\hat e_\text{obs} ,
+  - 4\epsilon_\text{tide}\,P_2(\hat{\mathbf r}\cdot\hat t)
+  + 4\epsilon_\text{spin}\,P_2(\hat{\mathbf r}\cdot\hat s) \Bigr] ,
+  \qquad \mu = \hat{\mathbf r}\cdot\hat{\mathbf z} ,
   \label{eq:limb-pattern}
 \end{equation}
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,

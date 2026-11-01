@@ -14,14 +14,14 @@ errors enter silently.
 
 The observer frame is right-handed, with axes
 \begin{equation}
-  \hat e_x = \text{North}, \qquad
-  \hat e_y = \text{East}, \qquad
-  \hat e_z = \text{toward the observer},
+  \hat{\mathbf x} = \text{North}, \qquad
+  \hat{\mathbf y} = \text{East}, \qquad
+  \hat{\mathbf z} = \text{toward the observer},
   \label{eq:observer-frame}
 \end{equation}
-so that $\hat e_x \times \hat e_y = \hat e_z$, the third axis pointing from the sky
+so that $\hat{\mathbf x} \times \hat{\mathbf y} = \hat{\mathbf z}$, the third axis pointing from the sky
 toward the observer --- into the ground for an observer looking up.  The line of
-sight is $-\hat e_z$, and the disk is the unit disk seen along it.  A point on the
+sight is $-\hat{\mathbf z}$, and the disk is the unit disk seen along it.  A point on the
 disk is specified either by Cartesian direction cosines $(x, y)$ or by plane polar
 coordinates
 \begin{equation}
@@ -29,12 +29,17 @@ coordinates
   \varphi = \arctan(y, x),
   \label{eq:disk-coords}
 \end{equation}
-where $\theta$ is the polar angle measured from $-\hat e_z$, and the
+where $\theta$ is the polar angle measured from $-\hat{\mathbf z}$, and the
 azimuth is measured from North through East, the same reference as the position
 angle (D23).  For a source of unit angular radius, $\rho \in [0,1]$.
 
-The body frame is the frame in which the surface map is specified, with $z$ along
-the spin axis.  Its orientation relative to the observer is fixed by three
+Write $\mathbf r = (x,y,z)$ for the position, $r = |\mathbf r|$ for its length and
+$\hat{\mathbf r} = \mathbf r/r$ for its direction.  On the sphere of directions $r = 1$, so
+$z = \sqrt{1-\rho^{2}}$ there and the triple $(x,y,z)$ \emph{is} the direction; off it, as on the
+deformed surface of section~\ref{sec:triaxial}, $r$ is the radius and the direction is $\hat{\mathbf r}$.
+
+The body frame is the frame in which the surface map is specified, with the spin axis as
+its polar axis.  Its orientation relative to the observer is fixed by three
 angles: the spin phase $\alpha$, the inclination $\beta$ measured from the line
 of sight, and the position angle $\PA$ of the sky frame, measured from North towards East.  The
 body-to-observer rotation is
@@ -45,7 +50,7 @@ body-to-observer rotation is
 \end{equation}
 with $R_y$ and $R_z$ active right-handed rotations.  The middle axis stays $y$:
 the inclination is applied first, and the position angle then carries the result to
-its place on the sky.  The body $z$ axis, which is the spin, maps to
+its place on the sky.  The body's polar axis, which is the spin, maps to
 $(\sin\beta\cos\PA,\ \sin\beta\sin\PA,\ \cos\beta)$, so it tilts toward the azimuth
 $\PA$ and sits $\cos\beta$ above the sky plane.
 
@@ -220,8 +225,8 @@ the mean intensity over the sphere,
 \end{equation}
 It is neither the mean over the visible disk nor the flux.  Those integrals lack
 the orthogonality of \eqref{eq:mean-intensity}: on the disk every harmonic picks up
-the foreshortening factor $n$ of the visibility measure,
-$\int_{\rm disk} Y_{lm} \, d^2x = \int_{\rm visible} Y_{lm}(\hat n)\, n \, d\Omega$,
+the foreshortening factor $z = \hat{\mathbf r}\cdot\hat{\mathbf z}$ of the visibility measure,
+$\int_{\rm disk} Y_{lm} \, d^2x = \int_{\rm visible} Y_{lm}(\hat{\mathbf r})\, z \, d\Omega$,
 which does not vanish for $l > 0$.
 
 Maps in this work are normalised so that
@@ -255,6 +260,7 @@ $\theta,\ \varphi$ & polar and azimuthal angles on the sphere \\
 $z = \cos\theta$ & natural variable for Legendre and Jacobi polynomials \\
 $\rho = \sin\theta$ & disk radius; also $\sqrt{x^2+y^2}$ \\
 $x,\ y$ & direction cosines: $x$ to North, $y$ to East \\
+$\mathbf r,\ r,\ \hat{\mathbf r}$ & position, its length, its direction \\
 $u,\ v,\ w$ & baseline coordinates, in wavelengths \\
 $q = \sqrt{u^2+v^2}$ & radial baseline, in wavelengths \\
 $\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\
