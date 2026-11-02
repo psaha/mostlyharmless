@@ -300,10 +300,19 @@ surface given, to quadrupole order, by a potential of two amplitudes,
   \;-\;\epsilon_\text{spin}\,r^2 ,
   \label{eq:brief-potential}
 \end{equation}
-whose surface is the level set $\Phi = -1$.  Writing the depth of the perturbation along a
-direction as $E(\hat{\mathbf r}) = \epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-- \epsilon_\text{spin}[P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})-1]$, that surface is the solution of
-$1/r + E(\hat{\mathbf r})r^2 = 1$, which is exact and costs one root per sampled direction.
+whose surface is a level set of $\Phi$, the level value being a gauge choice.  The one used
+here is the mean radius: with $a$ fixed so the angular mean of $r$ is $1$, $a = 1 -
+\epsilon_\text{spin}$ to first order.  Writing the depth of the perturbation along a direction as
+$E(\hat{\mathbf r}) = \epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+- \epsilon_\text{spin}[P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})-1]$, the surface is the
+solution of $1/r + E(\hat{\mathbf r})r^2 = 1/a$, exact and costing one root per sampled
+direction; the first-order displacement is then the pure quadrupole
+$\delta r = E - \langle E\rangle$, so the $l = 0$ part of the perturbation does not distort the
+shape at all.
+
+The surface is the equipotential of the external potential alone: the centrally condensed limit
+$h_2 = 1$, $k_2 = 0$.  A fluid star has $h_2 = 1 + k_2$; the amplitudes absorb $h_2$, and the one
+survivor of $k_2$ is the $l = 0$ term below.
 
 The brightness follows the gravity, $I \propto g^p$ with $g = |\nabla\Phi|$ on the surface and
 $p = 1$ the bolometric von Zeipel law, multiplied by a linear limb factor
@@ -312,7 +321,18 @@ $p = 1$ the bolometric von Zeipel law, multiplied by a linear limb factor
   \label{eq:brief-limb-law}
 \end{equation}
 which is linear in $\mu$ because $\mu$ is a single harmonic, and therefore costs one
-coefficient at $m = 0$ rather than a product of expansions.
+coefficient at $m = 0$ rather than a product of expansions.  $\mu$ is the cosine between the
+line of sight and the direction the row assigns to the sky position: the true surface's in the
+numerical row, the sphere's in the model rows, the two agreeing to first order.
+
+On that surface the gravity is $|\nabla\Phi|$, which to first order is
+\begin{equation}
+  g \;=\; 1 - 2\epsilon_\text{spin} - 4q , \qquad
+  q = \epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+    - \epsilon_\text{spin}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) ,
+  \label{eq:brief-gravity}
+\end{equation}
+the constant being the spin's $l = 0$ part, which the gauge cannot remove.
 
 The shape and the brightness together make the map a function of position that no closed form
 covers, so the scale of the calculation is set by how the surface is approximated.  Two
@@ -331,26 +351,27 @@ frequency,
   V_\text{affine}(u,v) \;=\; V_\text{sph}\bigl(\Lambda^{T}(u,v)\bigr) ,
   \label{eq:brief-affine}
 \end{equation}
-with no flux factor: the determinant that stretching puts on the brightness cancels the one
-it puts on the measure.  $\Lambda$ is best read as a preconditioner, since a different but
+with no flux factor: the basis functions carry the stretch, so no determinant appears in the
+model, and $\det\Lambda = 1 + O(\epsilon^2)$ follows from the displacement being a pure
+quadrupole.  $\Lambda$ is best read as a preconditioner, since a different but
 equally defensible stretch changes the coefficients of any series built on it without
 changing the exact answer.
 
 To first order in both amplitudes the pattern is a constant plus two quadrupoles, and with
 the limb factor carried through it becomes
 \begin{equation}
-  I(\hat{\mathbf r}) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 4\epsilon_\text{spin}
-  - 4\epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat t)
-  + 4\epsilon_\text{spin}P_2(\hat{\mathbf r}\cdot\hat s)\Bigr] ,
+  I(\hat{\mathbf r}) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 2\epsilon_\text{spin}
+  - 4\epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
+  + 4\epsilon_\text{spin}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})\Bigr] ,
   \label{eq:brief-first-order}
 \end{equation}
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
 \begin{equation}
   \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-4\epsilon_\text{spin}) , \\
+    a_{00} &= (1-u_\text{limb})\,(1-2\epsilon_\text{spin}) , \\
     a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
-    a_{2m} = -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat t)}
-    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat s)}\Bigr] .
+    a_{2m} = -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{tide})}
+    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{spin})}\Bigr] .
   \end{aligned}
   \label{eq:brief-first-order-coefficients}
 \end{equation}
@@ -361,8 +382,9 @@ quadrupoles come from \eqref{eq:brief-zonal} and \eqref{eq:brief-y2m}.
 The second approximation does not assume the coefficients at all.  The surface is rendered,
 sampled on the level surface with the limb factor applied, and coefficients fitted by least
 squares in the image plane, which is the norm the data live in.  The fit solves a normal
-equation whose matrix is a Gram matrix of the basis alone, and whose right-hand side is a sum
-over the samples,
+equation whose matrix is the sample Gram $G_s = \sum_s w_s \Psi_s\Psi_s^{\dagger}$, built from
+the same samples as the right-hand side --- pairing the samples with the analytic Gram would
+bias every coefficient (section 8.9) --- and whose right-hand side is a sum over the samples,
 \begin{equation}
   b_{lm} \;=\; \sum_s w_s\, I_s\, \overline{\Phi_{lm}\bigl(\Lambda^{-1}x_s\bigr)} ,
   \label{eq:brief-fitted-rhs}
