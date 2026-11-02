@@ -29,7 +29,7 @@ def coefficients_table(l_max=L_MAX):
         r"\begin{center}",
         r"\begin{tabular}{llll}",
         r"\hline",
-        r"$l$ & $m$ & $k$ & $c_k$ \\",
+        r"$l$ & $m$ & $k$ & $c_{lmk}$ \\",
         r"\hline",
     ]
     for l in range(l_max + 1):

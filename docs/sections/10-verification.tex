@@ -232,9 +232,9 @@ polynomial in $\rho^2$ --- precisely because the $m$-th derivative is then an ev
 $x$.  That polynomial is expanded in Zernike radial polynomials of the same order,
 \begin{equation}
   \begin{gathered}
-    P_{lm}\bigl(\sqrt{1-\rho^2}\bigr) \;=\; \rho^m \sum_{k=0}^{(l-m)/2} c_k\,
+    P_{lm}\bigl(\sqrt{1-\rho^2}\bigr) \;=\; \rho^m \sum_{k=0}^{(l-m)/2} c_{lmk}\,
     R_{m+2k}^{m}(\rho) , \\
-    c_k \;=\; 2(m+2k+1)\int_0^1 \frac{P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)}{\rho^m}\,
+    c_{lmk} \;=\; 2(m+2k+1)\int_0^1 \frac{P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)}{\rho^m}\,
     R_{m+2k}^{m}(\rho)\,\rho\, d\rho .
   \end{gathered}
   \label{eq:brief-even-coefficients}
@@ -242,7 +242,7 @@ $x$.  That polynomial is expanded in Zernike radial polynomials of the same orde
 The expansion is finite because both sides have the same degree and parity, and the Zernike
 transform turns it term by term into ordinary Bessel functions,
 \begin{equation}
-  X_{lm}(q) \;=\; \sum_{k=0}^{(l-m)/2} c_k\,(-1)^k\,
+  X_{lm}(q) \;=\; \sum_{k=0}^{(l-m)/2} c_{lmk}\,(-1)^k\,
   \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} .
   \label{eq:brief-even}
 \end{equation}
@@ -252,7 +252,7 @@ is a short sum over modes with no quadrature anywhere.
 The expressions \eqref{eq:brief-odd} and \eqref{eq:brief-even}
 were derived by \cite{dholakia2025} but the
 expression \eqref{eq:brief-even-coefficients} giving the
-coefficients $c_k$ as rational numbers is a refinement.
+coefficients $c_{lmk}$ as rational numbers is a refinement.
 
 
 \begin{itemize}

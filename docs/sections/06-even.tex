@@ -39,10 +39,25 @@ normalisation $R_n^m(1) = 1$, and $n-m$ even,
 \end{equation}
 Equivalently, and better for evaluation,
 \begin{equation}
-  R_n^m(\rho) = (-1)^{(n-m)/2} \rho^m P_{(n-m)/2}^{(m,0)}\!\left(1-2\rho^2\right) ,
+  R_{m+2k}^m(\rho) = (-1)^{k} \rho^m P_k^{(m,0)}\!\left(1-2\rho^2\right) ,
+  \qquad k \ge 0 ,
   \label{eq:zernike-jacobi}
 \end{equation}
-a Jacobi polynomial in $1-2\rho^2$.
+the indices being the ones the expansion of section~\ref{sec:even-projection} needs.  The Jacobi
+polynomial there is the standard $P_k^{(m,0)}$ in $1-2\rho^2$, whose Rodrigues form carries the
+sign of its own family,
+\begin{equation}
+  P_k^{(m,0)}(x) \;=\; \frac{(-1)^{k}}{2^{k}k!}\,(1-x)^{-m}\,
+  \frac{d^{k}}{dx^{k}}\Bigl[(1-x)^{m+k}(1+x)^{k}\Bigr] ,
+  \label{eq:jacobi-rodrigues}
+\end{equation}
+evaluated at $x = 1-2\rho^2$, where $1-x = 2\rho^2$ and $1+x = 2(1-\rho^2)$, the derivative
+being taken in $x$ before the substitution.  The $(-1)^{k}$ of \eqref{eq:jacobi-rodrigues}
+cancels the prefactor of \eqref{eq:zernike-jacobi}.  The Zernike polynomials therefore carry no
+phase of their own: their signs are fixed by \eqref{eq:zernike-jacobi} alone, and their
+normalisation by $R_n^m(1) = 1$.  No Condon--Shortley convention enters here --- that phase is a
+property of the associated Legendre functions of \eqref{eq:associated-legendre}, and the Zernike
+route reaches the same polynomials by a different road.
 
 They are orthogonal against the weight $\rho$,
 \begin{equation}
@@ -62,20 +77,20 @@ They are orthogonal against the weight $\rho$,
 \subsection{The expansion, and its coefficients}
 \label{sec:even-projection}
 
-Write the mode's radial part as $\rho^m A(\rho^2)$, a polynomial of degree $l$, and
-expand it in Zernike polynomials of the same order,
+By \eqref{eq:even-A} the mode's radial part is $P_{lm}(\sqrt{1-\rho^2})$ itself, a
+polynomial in $\rho$ of degree $l$.  Expand it in Zernike polynomials of the same order,
 \begin{equation}
-  \rho^m A(\rho^2) = \sum_{k=0}^{(l-m)/2} c_k\, R_{m+2k}^m(\rho) .
+  P_{lm}\bigl(\sqrt{1-\rho^{2}}\bigr) \;=\; \sum_{k=0}^{(l-m)/2} c_{lmk}\, R_{m+2k}^m(\rho) .
   \label{eq:even-expansion}
 \end{equation}
 The expansion is finite because both sides have the same degree and parity, and
 \eqref{eq:zernike-orthogonality} turns the coefficients into integrals,
 \begin{equation}
-  c_k = 2(m+2k+1) \int_0^1 \rho^m A(\rho^2)\, R_{m+2k}^m(\rho)\,
-  \rho\, d\rho .
+  c_{lmk} \;=\; 2(m+2k+1) \int_0^1 P_{lm}\bigl(\sqrt{1-\rho^{2}}\bigr)\,
+  R_{m+2k}^m(\rho)\, \rho\, d\rho .
   \label{eq:even-coefficients}
 \end{equation}
-The integrand is a polynomial, so every $c_k$ is an exact rational.  They are not
+The integrand is a polynomial, so every $c_{lmk}$ is an exact rational.  They are not
 tabulated: they are computed on demand and memoised (decision D19), which is why
 there is no data file and no maximum $l$.
 
@@ -109,7 +124,7 @@ scope, $n \le 6$ and $J = 6$.
 Substituting \eqref{eq:even-expansion} into the radial integral and applying
 \eqref{eq:zernike-hankel} term by term gives
 \begin{equation}
-  X_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_k\, (-1)^k\,
+  X_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_{lmk}\, (-1)^k\,
   \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} ,
   \label{eq:even-radial}
 \end{equation}
