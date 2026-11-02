@@ -110,7 +110,30 @@ on the page: the standard rotation matrices are quoted in the phase-carrying bas
 positive orders and one elsewhere, one-sided rather than symmetric because the extension is
 conjugation.  Both
 choices, here and above, trade a complication in the implementation for a simpler equation.}
-for $l \ge 0$ and $0 \le m \le l$, with no Condon--Shortley phase inside $P_{lm}$.  Negative orders are never formed --- not in the derivations, not for
+for $l \ge 0$ and $0 \le m \le l$, with no Condon--Shortley phase inside $P_{lm}$.  The
+associated functions are
+\begin{equation}
+  P_{lm}(x) \;=\; (1-x^{2})^{m/2}\,\frac{d^{m}}{dx^{m}}P_l(x) , \qquad
+  P_l(x) \;=\; \frac{1}{2^{l}l!}\,\frac{d^{l}}{dx^{l}}\,(x^{2}-1)^{l} ,
+  \label{eq:associated-legendre}
+\end{equation}
+so that for $l \le 2$ and $m \ge 0$
+\begin{equation}
+  \begin{bmatrix}
+    Y_{00} & Y_{10} & Y_{11} \\[2pt]
+    Y_{20} & Y_{21} & Y_{22}
+  \end{bmatrix}
+  \;=\;
+  \begin{bmatrix}
+    1 & \sqrt{3}\,\cos\theta & \sqrt{\tfrac32}\,\sin\theta\,e^{i\varphi} \\[4pt]
+    \tfrac{\sqrt{5}}{2}(3\cos^{2}\theta-1) &
+      \sqrt{\tfrac{15}{2}}\,\sin\theta\cos\theta\,e^{i\varphi} &
+      \sqrt{\tfrac{15}{8}}\,\sin^{2}\theta\,e^{2i\varphi}
+  \end{bmatrix}
+  \label{eq:legendre-table}
+\end{equation}
+with the standard $(-1)^m$ the two odd-$m$ entries would change sign, so that
+$Y_{11} = -\sqrt{3/2}\sin\theta e^{i\varphi}$ and $Y_{21}$ likewise.  Negative orders are never formed --- not in the derivations, not for
 maps, not anywhere --- so the magnitude $|m|$ is never needed either.  The order is
 non-negative wherever it appears, and there is consequently no signed-order
 convention to get wrong.

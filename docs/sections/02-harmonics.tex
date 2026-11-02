@@ -32,13 +32,13 @@ Fourier statement
 \end{equation}
 and the polar factor is
 \begin{equation}
-  \int_{-1}^{1} P_{lm}(x) \, P_{l'}^m(x) \, dx
+  \int_{-1}^{1} P_{lm}(x) \, P_{l'm}(x) \, dx
   = \delta_{ll'} \, \frac{2}{2l+1} \frac{(l+m)!}{(l-m)!} , \qquad m \ge 0 .
   \label{eq:legendre-orthogonality}
 \end{equation}
 Equation \eqref{eq:legendre-orthogonality} is a polynomial identity.  Substituting
-the Rodrigues form $P_{lm}(x) = (1-x^2)^{m/2} Q_{lm}(x)$ with
-$Q_l^m = (-1)^m d^m P_l / dx^m$ turns it into an integral of a polynomial, which
+the Rodrigues form \eqref{eq:associated-legendre}, $P_{lm}(x) = (1-x^2)^{m/2}
+d^m P_l/dx^m$ turns it into an integral of a polynomial, which
 certificate \vtag{1} evaluates exactly for every $0 \le m \le l \le 5$.
 \emph{Exact}, range-limited to $l \le 5$.  The negative orders need no separate
 treatment: by \eqref{eq:ylm-extension} they are conjugates of the positive ones up

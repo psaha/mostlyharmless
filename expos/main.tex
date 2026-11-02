@@ -7,6 +7,14 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,filecolor=blue,urlcolor=blue}
 
+\newcommand{\uvece}{\hat{\mathbf e}}
+\newcommand{\uvecg}{\hat{\mathbf g}}
+\newcommand{\uvecr}{\hat{\mathbf r}}
+\newcommand{\uvecx}{\hat{\mathbf x}}
+\newcommand{\uvecy}{\hat{\mathbf y}}
+\newcommand{\uvecz}{\hat{\mathbf z}}
+\newcommand{\vecr}{{\mathbf r}}
+
 \begin{document}
 
 \title{AI sans Slop:\\ Basis functions for stellar interferometry\\ developed with AI assistance}
@@ -58,8 +66,55 @@ result in mathematics.
 Here would like to study how the first four stages translate into
 astrophysics.
 
-\section{Astronomical interferometry}
+\section{Stellar interferometry}
 
+\begin{equation}
+  V(u,v) \propto \int I(x,y)\, e^{-2\pi i (u x + v y)}\; dx\, dy
+  \label{eq:visibility-definition}
+\end{equation}
+
+\begin{equation}
+  V(u,v) \propto \int_{\uvecg\cdot\uvecz > 0}
+  I(\vecr\in S)\, 
+  e^{-2\pi i (u x + v y)}\; (\uvecg\cdot\uvecz)\, dS
+  \label{eq:deformation-visibility-integral}
+\end{equation}
+
+\section{Spherical harmonics}
+
+\begin{equation}
+  Y_{lm}(\theta,\phi) = N_{lm}\, P_{lm}(\cos\theta)\, e^{im\phi}
+\end{equation}
+where
+\begin{equation}
+\begin{aligned}
+  P_{lm}(x) &= (1-x^{2})^{m/2}\,\frac{d^{m}}{dx^{m}}P_l(x) \\
+  P_l(x)    &= \frac{1}{2^{l}l!}\,\frac{d^{l}}{dx^{l}}\,(x^{2}-1)^{l}
+\end{aligned}
+\label{eq:associated-legendre}
+\end{equation}
+and
+\begin{equation}
+  N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
+  \label{eq:ylm}
+\end{equation}
+
+\begin{equation}
+  Y_{l,-m} =   Y_{l,m}^*
+\end{equation}
+
+\begin{equation}
+\begin{matrix}
+    Y_{00} = 1 \hfill
+  & Y_{10} = \sqrt{3}\,\cos\theta \hfill
+  & Y_{11} = \sqrt{\tfrac32}\,\sin\theta\,e^{i\phi} \hfill \\[4pt]
+    Y_{20} = \tfrac{\sqrt{5}}{2}(3\cos^{2}\theta-1) \qquad \hfill
+  & Y_{21} = \sqrt{\tfrac{15}{2}}\,\sin\theta\cos\theta\,e^{i\phi}
+    \qquad \hfill
+  & Y_{22} = \sqrt{\tfrac{15}{8}}\,\sin^{2}\theta\,e^{2i\phi} \hfill
+\end{matrix}
+\label{eq:ylm-table}
+\end{equation}
 
 \def\apj{ApJ}
 \def\pasp{PASP}
