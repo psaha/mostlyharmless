@@ -547,196 +547,26 @@ changed the `a_00` convention, added the limb factor, retired the spot model and
 section, and a survey chapter would have needed touching for most of them.  So it is worth
 writing once the structure settles, not before.
 
-**T13 — render and project in the stored half-complex basis.** The renderer and the Earth's
-projection are the last two places that work in the real basis, and they are the only reason
-section 2.2 has an essential half.
-
-`maps.sky_map` (and `sky_map_batch`, its performance path: six panels against one shared
-Legendre table) renders by converting through `Coeffs.to_real` and then summing
-`real_sph_harm` with cosine and sine branches. `earth.channel` projects onto the same real basis,
-which is why the emitted `earth_levels.py` is a real-basis table. Everywhere else the package is
-half-complex, storing `m >= 0` and pairing each coefficient with its conjugate.
-
-The change: sum over the stored orders with the `2 Re` pairing that section 1 states, and drop
-`to_real`/`from_real` from both paths. The Legendre table is unaffected --- `legendre_rows`
-already computes `P_l^m` for `m >= 0` and one pass up each column, so the cost is the same; what
-goes is the `sqrt2` and the cosine/sine split. `to_vector`/`from_vector` stay as they are: they
-are the fitting interface, in starry's order, and are not a rendering path.
-
-Then section 2.2 loses its essential half. What is left is the translation to other conventions
---- starry's signed order, pyshtools' `sqrt2`-free coefficients --- which is what the subsection
-says it is for. It could then be split or shrunk, and its opening sentence ("nothing in the
-derivation needs this") would stop being quietly misleading about what builds a picture.
-
-Two things to settle when it is done. V25 certifies the real basis and would need either to
-certify the pairing instead or to be retired with it. And `test_maps` compares the fast path
-against a per-mode sum written in the real basis, which is a genuine independent route at the
-moment and would become a comparison of one complex sum against another --- still worth having,
-but a weaker check, and the replacement should be chosen deliberately rather than inherited.
-
-**The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
-before anything was changed, which was worth doing: the guess that the panel's Legendre
-evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by
-two orders. Three fixes, all measured:
-
-- `sky_map` used to call `lpmv` per `(l, m)`, re-walking the recurrence from `m` to `l` every
-  time --- `O(L^3)` per panel. `maps.legendre_rows` builds a whole column of the table in one
-  pass instead, and the panel became `O(L^2)`: at `l = 32`, 361 pixels, 14.93 s to 0.28 s.
-- The three colour channels rebuilt the same basis. `maps.sky_map_batch` renders several
-  coefficient sets in one pass, which is another factor of three.
-- `rotate_coefficients` rebuilt every `wigner_d(l, beta)` on every call, and the two
-  z-rotations are already phases. The matrices are now cached per `beta`: the cold cost is
-  0.39 s at `l = 32` and a warm rotation is a millisecond.
-
-End to end, all six renders at `l = 32`, 361 pixels went from 91.4 s to 1.18 s, and at
-`l = 16` from 12.9 s to 0.26 s.
-
-The suite was separately trimmed by `--durations=10`, which is the lesson: every slow test
-found that way had a parameter nobody needed. The `(u,v)` view was filling its grid with a
-double Python loop over 121 baselines when the mode sum was already vectorised, and three
-tests were rendering or transforming at `l = 16` while asserting properties that hold at any
-degree. All are now at the degree they actually need, and the suite runs in about 4 s rather
-than 45.
-
-One measurement caveat, found by chasing a slowdown that no code change explained: **the suite
-takes twice as long on battery as on mains** --- 3.7 s against 7.5 s for the same 163 tests ---
-because of the power policy's frequency scaling.  Earlier runs also showed a further factor of
-two, which was contention with something else; the two together made the wall time vary by 4x
-and made four separate explanations look plausible and wrong.  Time a benchmark on mains, or
-compare only the `--durations` column within a single run.
-
-**The normalisation is `a_00 = 1`, and the two-level fork now obeys it.** D16 fixes `a_00 = 1`,
-which puts the sphere mean at `1/sqrt(4 pi) = 0.2821` --- not at one.  The retired map GUI
-`multiplied` by `sqrt(4 pi)` for display, so its panels were in units of the mean while its
-coefficients were not; the fork inherited the panels' convention in the coefficients, giving
-`a_00 = sqrt(4 pi)` and quietly contradicting D16.  Now `emit_levels` divides by `sqrt(4 pi)`,
-`levels_gui` multiplies on the way to the screen, and the test asserts both facts: `a_00 = 1`
-gives 0.2821, and `a_00 = sqrt(4 pi)` gives 1.  `SEA` and `LAND` stay the brightness levels.
-
-### Decisions deliberately left open
-
-**O2 — The form of the diagnostic for triaxiality.** The mirror-symmetry null of section 8 is the
-   candidate: the `psi`-antisymmetric part of `|V|^2` about the projected spin axis, zero for an
-   oblate star and `O(eps)` for a triaxial one. Alternatives — the phase of the azimuthal structure,
-   or a fit of the low-order azimuthal harmonics — have not been compared against it, and the
-   comparison should account for what the sparse sampling can actually constrain.
-
-**O4 --- the `a_00` convention, and the three integrals it gets confused with.** Three objects
-carry coefficients and they do not agree on scale:
-
-| object | `a_00` | where the scale comes from |
-| --- | --- | --- |
-| `earth_levels` (a map from an image) | 1 | the same: `a_00 = 1` is mean one |splay factor |
-| `affine`, `fitted` (forward models) | `(1-u)(1-4 eps)` | the physics |
-
-The manual says both things and flags neither as a convention: D16 normalises supplied maps to
-`a_00 = 1`, while eq. (106) gives the affine model its physical value. Neither is wrong --- a
-forward model must carry its own scale, since the limb darkening and the area change *are* what it
-predicts --- but the rule is stated too broadly and the exception is not stated at all.
-
-Compounding it, "mean brightness" has been used for three different functionals. For an ellipsoid
-with limb darkening:
-
-- the *sphere* mean of the pattern is `a_00/sqrt(4 pi)`, which eq. (106) makes `(1-u)(1-4 eps)`;
-- the mean over the *visible disc* is a different number again;
-- the *flux* `V(0,0)` is the cosine-weighted one, and that is what an interferometer measures.
-
-Section 1 already says `a_00/sqrt(4 pi)` is *neither* the disc mean *nor* the flux, so the material
-is there; what is missing is one statement of which convention governs which object.
-
-The choice is nearly cosmetic, because the scale cancels in `Delta V` --- normalised at the origin
---- so it affects the absolute flux and the displayed map and nothing else.  That is precisely why
-it survived this long.
-
-To settle: pick one rule for supplied maps; state it once, with its forward-model exception; replace
-"mean brightness" by the integral meant; and decide whether a display factor is acceptable at all.
-`levels_gui` needs one today, and the manual does not mention it.
-
-**I1 — Spectral scope.** Gravity darkening is temperature-dependent, and intensity interferometry can
-   observe in more than one band, so a *ratio* of `|V|^2` between bands would isolate the
-   temperature variation from the shape. In scope now or later.
-
-   A data point for the degree question, since it recurs: Dholakia & Pope (2025, PASP,
-   arXiv:2509.25433) paint the word SPOT on the surface in their Figure 3 at
-   **`l_max = 15`**, and it is legible. The painted lettering comes from earlier work
-   (arXiv:2110.06271). So our `l = 16`-`32` for the two-level Earth is *finer* than the
-   published demonstration, not coarser, and `l = 20` being a featureless blob for Greenland is
-   consistent: a word is a simpler test pattern than a coastline.
-
-   It is also a *stress* test rather than a like-for-like one: the lettering is near-black on a
-   bright surface, so the step at every stroke is the full brightness and the ringing around it is
-   severe.  The two-level map here is 1.5:1 and tapered, so it is doing the harder thing at lower
-   contrast --- which is the reason to be content with what it shows.
-
-**I2 — A disk-mode surrogate, and whether limb darkening needs Gaunt.**  The Gaunt half is
-answered: limb darkening on the *disk* needs no Gaunt coefficient, because
-`mu = sqrt(1 - rho^2)` is a function of the impact parameter alone, so a limb law is a radial
-profile and a Zernike expansion with `m = 0` is a two-term Bessel combination.  That is now
-stated in section 8.4.  The disk-mode surrogate has not been built, and section 9 has been
-retired in its favour, because the fitted row *is* that construction with the projected
-harmonics as its basis.
-
-What a different basis would have to beat, if it were ever tried: the residual at the working
-amplitudes, 0.0016 at `E = 0.033`; a residual that falls with mode count rather than
-plateauing, since a plateau means geometry the basis cannot see; and a per-frequency cost small
-against the projection. The affine model's error is **second order in
-   `eps`**, which is what linearising a stretch should give. Against the direct sum over three
-   baselines it is **0.0016** at `E = 0.033`, **0.00021** at half of it --- a ratio of 0.23, close
-   to the 1/4 of a quadratic --- and 0.0000 for the undeformed sphere. The projection machinery is
-   therefore sound and the residual is the 2 x 2 stretch's own linearisation of a radial-nonlinear
-   sky map. (An earlier version of this entry measured *first* order, with 0.0437 and a ratio of
-   0.48. That was the reflected frame of the `sky_basis` bug: an O(eps) error dominates an O(eps^2)
-   one, and the fix improved the small-amplitude residual 27-fold while barely touching the
-   ceiling. The order of the model is a stronger statement than the old entry could make.)
-
-   At the ceiling the scaling steepens, as a non-asymptotic model should: `E = 0.144` gives
-   **0.1122**, seventy times the `E = 0.033` value for a 4.4-fold amplitude. That number is also
-   *grid-sensitive* --- the difference of two oscillating visibilities peaks between coarse grid
-   points, so a 7 x 7 grid over the same range reports about 0.16 --- and the grid must be quoted
-   with it. The surrogate is therefore a fraction-of-a-per-cent instrument for `eps` below about
-   0.03 and a ten-per-cent one at the ceiling, which is the strongest argument for the disk-mode
-   series that follows. Since the purpose is a
-   fast search over **sparse `(u,v)`** rather than
-   percent-level accuracy, the option to explore is composing the stretch with a **disk-mode
-   series** in the stretched frame, `V ∝ sum_M c_M Z_M(Lambda^T u)`: the stretch maps the elliptical
-   silhouette to a circle, where the Zernike transforms are closed forms in `J_{n+1}`, so one mode
-   costs one Bessel function, the affine model becomes the leading term, and the residual becomes a
-   mode-count truncation the user controls. The reason this may also **re-scope limb darkening (T1)** is that
-   limb darkening is radial in the disk --- `mu = sqrt(1 - rho^2)` --- so it *is* a Zernike
-   expansion with `m = 0`, and the classical linearly limb-darkened disk visibility is a two-term
-   Bessel combination. Staying on the sphere makes `mu = n . e_obs` a degree-1 factor and therefore
-   needs Gaunt coefficients; working on the disk may not. *To explore, not decided.* The criterion
-   is whether a modest mode count beats the affine model on the existing certificate while keeping
-   the per-frequency cost small against the setup, and whether the radial basis really removes the
-   Gaunt requirement once the surface is deformed --- there the normal tilts by `O(eps)`, so `mu` is
-   only radial to first order. Written up in section 9 of the manual.
-
-**I3 — An amortised surrogate for a family of atmosphere models.** Suppose a family of
-   stellar-atmosphere models becomes available, parameterised by `s` and evaluated at time `t`, so
-   that `V(u,v,t,s)` is computable but expensive per parameter set. Then a **network that outputs
-   the low-dimensional pair `(b_lm, Lambda)`**, with the analytic layer `V = sum_lm b_lm V_lm(Lambda^T
-   (u,v))` supplying the rest, makes the family cheap to search: the network learns a handful of
-   numbers, and the exact basis relation fixes the behaviour in `(u,v)`. That inductive bias is the
-   point for **sparse `(u,v)`**: between and beyond the sampled baselines the surrogate still
-   behaves like the basis functions rather than like a black box. Four rules follow from the design
-   discussion, and each changes what is built. (i) **Targets by rule, not by fit**: `b` comes from
-   projecting the lifted near-side image, which is linear and exact, and `Lambda` is *defined* ---
-   the image's second-moment ellipse is the natural choice --- because a fitted `Lambda` is only
-   weakly identifiable, its value drifting with truncation. (ii) **The loss is on `V`, not on the
-   coefficients**, since `b` is non-unique (the kernel is the invisible far side) and `Lambda` is
-   truncation-dependent, so coefficient-space error can be meaningless. (iii) **Factor the rotation
-   out** analytically with the `D` matrices, so the network carries only the slowly varying part
-   instead of spending capacity on sine waves. (iv) **Pin the mode count and the `Lambda` rule as
-   part of the definition**, without which `Lambda(t,s)` is not a well-defined target.
-   *Speculative, and dependent on an atmosphere model we do not have; it would also benefit from
-   I2's disk basis, which converges in few modes.* What would settle it: a cost-accuracy
-   comparison against direct projection at a fixed residual on a fixed `(u,v)` set, including the
-   failure mode that matters --- behaviour at baselines outside the training set. Two pieces of
-   the procedure are settled: the fit is in image space rather than in `(u,v)` (D27), and the
-   first candidate for the surrogate is a **sparse-grid or Chebyshev interpolant** of the residual
-   against the first-order expectation, with a network reserved for the case where the target
-   turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **Rendering and projection in the stored half-complex basis (T13).** The last two real-basis
+  call sites are gone. `maps.sky_map_batch` -- and `sky_map`, which calls it -- now sums the stored
+  orders with the $2\,\mathrm{Re}$ pairing, $2N_{lm}P_{lm}[\mathrm{Re}(a)\cos m\varphi -
+  \mathrm{Im}(a)\sin m\varphi]$, and `earth.channel` projects onto $\overline{Y_{lm}}$ with the
+  $1/4\pi$ that makes the projection an average rather than an integral.
+
+  Two things turned out simpler than the entry expected. The emitted `earth_levels.py` needed no
+  regeneration: the old path divided by $4\pi$ and by $\sqrt2$ against $\sqrt2\,\mathrm{Re}\,Y$
+  entries, so the new $a_{lm} = \frac{1}{4\pi}\sum w f\overline{Y}$ gives the same numbers, and the
+  emitter already wrote complex blocks. And `test_maps` is *stronger* than the entry feared, not
+  weaker: its per-mode reference is still written with `real_sph_harm`, so the comparison is now one
+  complex sum against one real sum rather than two complex sums.
+
+  `real_sph_harm`, `to_real` and `from_real` all survive, with narrower jobs: the first is V25's
+  subject and the independent reference in `test_maps`, and the last two are how `to_vector` and
+  `from_vector` work, which is the fitting interface in starry's order. Section 2.2 is now purely
+  the translation to other conventions, which is what its opening sentence always claimed it was
+  for.
 
 * **The spot model retired (T10).** The code went first: the RGB map GUI kept at tag
   `rgb-mapgui`, the renderer and cap tests moved to `test_maps.py`, the view sweep to the

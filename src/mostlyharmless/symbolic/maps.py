@@ -98,8 +98,7 @@ def sky_map_batch(coeff_sets, back=False, n=241):
     cos_phi = [np.cos(m * phi) for m in range(l_max + 1)]
     sin_phi = [np.sin(m * phi) for m in range(l_max + 1)]
 
-    reals = [s.to_real() for s in coefficient_sets]
-    images = [np.zeros_like(x_east) for _ in reals]
+    images = [np.zeros_like(x_east) for _ in coefficient_sets]
 
     for m in range(l_max + 1):
         rows = legendre_rows(m, l_max, np.cos(theta))
@@ -107,16 +106,17 @@ def sky_map_batch(coeff_sets, back=False, n=241):
             p = rows[l - m]
             if m == 0:
                 factor = normalisation(l, 0) * p
-                for image, real in zip(images, reals):
-                    image += real[l][l] * factor
+                for image, coeffs in zip(images, coefficient_sets):
+                    image += coeffs.blocks[l][0].real * factor
             else:
-                # R_{l,m,c} = sqrt(2) Re Y and R_{l,m,s} = sqrt(2) Im Y, and the real block
-                # indexes them at l + m and l - m respectively
-                scale = np.sqrt(2.0) * normalisation(l, m) * p
+                # the stored order and its conjugate: a_lm Y_lm + conj(a_lm) conj(Y_lm)
+                # = 2 Re(a_lm Y_lm), since Y_{l,-m} is the conjugate of Y_{lm}
+                scale = 2.0 * normalisation(l, m) * p
                 cosine = scale * cos_phi[m]
                 sine = scale * sin_phi[m]
-                for image, real in zip(images, reals):
-                    image += real[l][l + m] * cosine + real[l][l - m] * sine
+                for image, coeffs in zip(images, coefficient_sets):
+                    a = coeffs.blocks[l][m]
+                    image += a.real * cosine - a.imag * sine
 
     inside = rho_squared <= 1.0
     return tuple(np.where(inside, image, np.nan) for image in images)

@@ -9,11 +9,12 @@ depends on pyshtools.
 An equirectangular image *is* a lat-lon grid, so the projection is the identity: pixel
 $(i,j)$ is $(\theta_i, \varphi_j)$ with uniform spacing.  The analysis is a quadrature,
 
-    a_lm = sum_ij sin(theta_i) dtheta dphi f(i,j) real_sph_harm(l, m, theta_i, phi_j),
+    a_lm = (1/4 pi) sum_ij sin(theta_i) dtheta dphi f(i,j) conj(Y_lm(theta_i, phi_j)),
 
-with ``real_sph_harm`` being our own real basis, so each channel feeds ``Coeffs.from_real``
-directly and every downstream consumer --- the renderer, the visibility, the rotation ---
-takes it unchanged.
+projected onto the stored half-complex basis, so a channel is a ``Coeffs`` directly and every
+downstream consumer --- the renderer, the visibility, the rotation --- takes it unchanged.  The
+4 pi is the average rather than the integral: our harmonics are orthonormal with Y_00 = 1, so
+the integral alone would make a uniform unit map carry a_00 = 4 pi.
 
 Three channels, because the image is colour: red, green and blue are carried as three
 independent brightness maps and recombined only at the end.  Land, ice and ocean then differ
@@ -29,7 +30,8 @@ from __future__ import annotations
 import numpy as np
 
 from mostlyharmless.visylm.coefficients import Coeffs
-from mostlyharmless.visylm.spherical_harmonics import real_sph_harm
+from mostlyharmless.visylm.spherical_harmonics import normalisation
+from mostlyharmless.symbolic.maps import legendre_rows
 
 __all__ = ["read_grid", "channel", "channels", "taper", "truncate", "emit",
            "land_mask", "levels", "land_sea", "emit_levels", "timing", "main"]
@@ -66,7 +68,7 @@ def read_grid(path, n_lat=180, n_lon=360):
 
 
 def channel(values, l_max=DEFAULT_L_MAX):
-    """Project one colour plane onto the real basis.
+    """Project one colour plane onto the stored half-complex basis.
 
     ``theta`` is the colatitude, so the area element is ``sin(theta) dtheta dphi``; a
     ``cos`` weight would be the latitude weight and vanishes on a symmetric grid.
@@ -81,12 +83,19 @@ def channel(values, l_max=DEFAULT_L_MAX):
     theta_grid = np.broadcast_to(theta[:, None], (n_lat, n_lon))
     phi_grid = np.broadcast_to(phi[None, :], (n_lat, n_lon))
 
-    plan = [np.zeros(2 * l + 1) for l in range(l_max + 1)]
+    cos_theta = np.cos(theta)
+    plan = []
     for l in range(l_max + 1):
-        for m in range(-l, l + 1):
-            plan[l][m + l] = np.sum(weighted * real_sph_harm(l, m, theta_grid, phi_grid))
-    # the projection is (1/4 pi) * int I conj(Y): the average of |Y|^2 over the sphere is 1
-    return Coeffs.from_real([block / (4.0 * np.pi) for block in plan])
+        block = np.zeros(l + 1, dtype=complex)
+        for m in range(l + 1):
+            p = legendre_rows(m, l, cos_theta)[l - m]
+            y = normalisation(l, m) * p[:, None] * np.exp(1j * m * phi_grid)
+            block[m] = np.sum(weighted * np.conjugate(y))
+        plan.append(block)
+    # the projection is the average, (1/4 pi) int I conj(Y), so that a uniform unit map
+    # has a_00 = 1: our Y are orthonormal with Y_00 = 1, so the integral alone would be
+    # 4 pi times the mean
+    return Coeffs(tuple(block / (4.0 * np.pi) for block in plan))
 
 
 def channels(path, l_max=DEFAULT_L_MAX, n_lat=180, n_lon=360):

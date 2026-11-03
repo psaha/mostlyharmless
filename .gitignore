@@ -20,3 +20,7 @@ misc/
 # ... except the figures, which are committed with the rest of docs/generated/
 # !docs/generated/*.pdf
 *.html
+
+earth_coefficients.py
+# generated
+
