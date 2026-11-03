@@ -130,10 +130,10 @@ is a finite matrix of $(2l+1)^2$ numbers depending only on the three angles, so 
 a matrix product rather than a resampling.
 
 For the zonal $l = 2$ patterns that the deformation needs, this specialises to one identity.
-With $\hat{\mathbf e}$ the axis of the pattern,
+With $\uvece$ the axis of the pattern,
 \begin{equation}
-  P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
-  \overline{Y_{2m}(\hat{\mathbf e})}\,Y_{2m}(\hat{\mathbf r}) ,
+  P_2(\uvecr\cdot\uvece) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
+  \overline{Y_{2m}(\uvece)}\,Y_{2m}(\uvecr) ,
   \label{eq:brief-zonal}
 \end{equation}
 which needs only the stored orders,\footnote{For an axis at direction cosines $(a,b,c)$ the
@@ -294,18 +294,18 @@ coefficients $c_{lmk}$ as rational numbers is a refinement.
 A star deformed by its own rotation and by a companion has a level
 surface given, to quadrupole order, by a potential of two amplitudes,
 \begin{equation}
-  \Phi(\mathbf r) \;=\; -\frac{1}{r}
-  \;-\;\epsilon_\text{tide}\,r^2P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-  \;+\;\epsilon_\text{spin}\,r^2P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})
-  \;-\;\epsilon_\text{spin}\,r^2 ,
+  \Phi(\vecr) \;=\; -\frac{1}{r}
+  \;-\;\etide\,r^2P_2(\uvecr\cdot\uvectide)
+  \;+\;\espin\,r^2P_2(\uvecr\cdot\uvecspin)
+  \;-\;\espin\,r^2 ,
   \label{eq:brief-potential}
 \end{equation}
 whose surface is a level set of $\Phi$, the level value being a gauge choice.  The one used
 here is the mean radius: with $a$ fixed so the angular mean of $r$ is $1$, $a = 1 -
-\epsilon_\text{spin}$ to first order.  Writing the depth of the perturbation along a direction as
-$E(\hat{\mathbf r}) = \epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-- \epsilon_\text{spin}[P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})-1]$, the surface is the
-solution of $1/r + E(\hat{\mathbf r})r^2 = 1/a$, exact and costing one root per sampled
+\espin$ to first order.  Writing the depth of the perturbation along a direction as
+$E(\uvecr) = \etide{}P_2(\uvecr\cdot\uvectide)
+- \espin[P_2(\uvecr\cdot\uvecspin)-1]$, the surface is the
+solution of $1/r + E(\uvecr)r^2 = 1/a$, exact and costing one root per sampled
 direction; the first-order displacement is then the pure quadrupole
 $\delta r = E - \langle E\rangle$, so the $l = 0$ part of the perturbation does not distort the
 shape at all.
@@ -317,7 +317,7 @@ survivor of $k_2$ is the $l = 0$ term below.
 The brightness follows the gravity, $I \propto g^p$ with $g = |\nabla\Phi|$ on the surface and
 $p = 1$ the bolometric von Zeipel law, multiplied by a linear limb factor
 \begin{equation}
-  1 - u_\text{limb}(1-\mu) , \qquad \mu = \hat{\mathbf r}\cdot\hat{\mathbf z} ,
+  1 - u_\text{limb}(1-\mu) , \qquad \mu = \uvecr\cdot\uvecz ,
   \label{eq:brief-limb-law}
 \end{equation}
 which is linear in $\mu$ because $\mu$ is a single harmonic, and therefore costs one
@@ -327,9 +327,9 @@ numerical row, the sphere's in the model rows, the two agreeing to first order.
 
 On that surface the gravity is $|\nabla\Phi|$, which to first order is
 \begin{equation}
-  g \;=\; 1 - 2\epsilon_\text{spin} - 4q , \qquad
-  q = \epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-    - \epsilon_\text{spin}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) ,
+  g \;=\; 1 - 2\espin - 4q , \qquad
+  q = \etide{}P_2(\uvecr\cdot\uvectide)
+    - \espin{}P_2(\uvecr\cdot\uvecspin) ,
   \label{eq:brief-gravity}
 \end{equation}
 the constant being the spin's $l = 0$ part, which the gauge cannot remove.
@@ -344,7 +344,7 @@ captured by a single $2\times2$ positive-definite matrix, the stretch
 \end{equation}
 where $P$ projects onto $(\text{East},\text{North})$ and the radii are taken along the
 principal directions.  Those directions are the eigenvectors of the quadratic form of
-$E(\hat{\mathbf r})$, and the radii along them are the exact level radii, so $\Lambda$ is computed from the
+$E(\uvecr)$, and the radii along them are the exact level radii, so $\Lambda$ is computed from the
 level surface rather than fitted.  The stretch acts on the visibility as a change of
 frequency,
 \begin{equation}
@@ -360,18 +360,18 @@ changing the exact answer.
 To first order in both amplitudes the pattern is a constant plus two quadrupoles, and with
 the limb factor carried through it becomes
 \begin{equation}
-  I(\hat{\mathbf r}) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 2\epsilon_\text{spin}
-  - 4\epsilon_\text{tide}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-  + 4\epsilon_\text{spin}P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin})\Bigr] ,
+  I(\uvecr) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\Bigl[\,1 - 2\espin
+  - 4\etide{}P_2(\uvecr\cdot\uvectide)
+  + 4\espin{}P_2(\uvecr\cdot\uvecspin)\Bigr] ,
   \label{eq:brief-first-order}
 \end{equation}
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
 \begin{equation}
   \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-2\epsilon_\text{spin}) , \\
+    a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \\
     a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
-    a_{2m} = -\frac{4}{5}\Bigl[\epsilon_\text{tide}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{tide})}
-    - \epsilon_\text{spin}\,\overline{Y_{2m}(\hat{\mathbf e}_\text{spin})}\Bigr] .
+    a_{2m} = -\frac{4}{5}\Bigl[\etide\,\overline{Y_{2m}(\uvectide)}
+    - \espin\,\overline{Y_{2m}(\uvecspin)}\Bigr] .
   \end{aligned}
   \label{eq:brief-first-order-coefficients}
 \end{equation}

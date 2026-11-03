@@ -14,14 +14,14 @@ errors enter silently.
 
 The observer frame is right-handed, with axes
 \begin{equation}
-  \hat{\mathbf x} = \text{North}, \qquad
-  \hat{\mathbf y} = \text{East}, \qquad
-  \hat{\mathbf z} = \text{toward the observer},
+  \uvecx = \text{North}, \qquad
+  \uvecy = \text{East}, \qquad
+  \uvecz = \text{toward the observer},
   \label{eq:observer-frame}
 \end{equation}
-so that $\hat{\mathbf x} \times \hat{\mathbf y} = \hat{\mathbf z}$, the third axis pointing from the sky
+so that $\uvecx \times \uvecy = \uvecz$, the third axis pointing from the sky
 toward the observer --- into the ground for an observer looking up.  The line of
-sight is $-\hat{\mathbf z}$, and the disk is the unit disk seen along it.  A point on the
+sight is $-\uvecz$, and the disk is the unit disk seen along it.  A point on the
 disk is specified either by Cartesian direction cosines $(x, y)$ or by plane polar
 coordinates
 \begin{equation}
@@ -29,14 +29,14 @@ coordinates
   \varphi = \arctan(y, x),
   \label{eq:disk-coords}
 \end{equation}
-where $\theta$ is the polar angle measured from $-\hat{\mathbf z}$, and the
+where $\theta$ is the polar angle measured from $-\uvecz$, and the
 azimuth is measured from North through East, the same reference as the position
 angle (D23).  For a source of unit angular radius, $\rho \in [0,1]$.
 
-Write $\mathbf r = (x,y,z)$ for the position, $r = |\mathbf r|$ for its length and
-$\hat{\mathbf r} = \mathbf r/r$ for its direction.  On the sphere of directions $r = 1$, so
+Write $\vecr = (x,y,z)$ for the position, $r = |\vecr|$ for its length and
+$\uvecr = \vecr/r$ for its direction.  On the sphere of directions $r = 1$, so
 $z = \sqrt{1-\rho^{2}}$ there and the triple $(x,y,z)$ \emph{is} the direction; off it, as on the
-deformed surface of section~\ref{sec:triaxial}, $r$ is the radius and the direction is $\hat{\mathbf r}$.
+deformed surface of section~\ref{sec:triaxial}, $r$ is the radius and the direction is $\uvecr$.
 
 The body frame is the frame in which the surface map is specified, with the spin axis as
 its polar axis.  Its orientation relative to the observer is fixed by three
@@ -248,8 +248,8 @@ the mean intensity over the sphere,
 \end{equation}
 It is neither the mean over the visible disk nor the flux.  Those integrals lack
 the orthogonality of \eqref{eq:mean-intensity}: on the disk every harmonic picks up
-the foreshortening factor $z = \hat{\mathbf r}\cdot\hat{\mathbf z}$ of the visibility measure,
-$\int_{\rm disk} Y_{lm} \, d^2x = \int_{\rm visible} Y_{lm}(\hat{\mathbf r})\, z \, d\Omega$,
+the foreshortening factor $z = \uvecr\cdot\uvecz$ of the visibility measure,
+$\int_{\rm disk} Y_{lm} \, d^2x = \int_{\rm visible} Y_{lm}(\uvecr)\, z \, d\Omega$,
 which does not vanish for $l > 0$.
 
 Maps in this work are normalised so that
@@ -283,7 +283,7 @@ $\theta,\ \varphi$ & polar and azimuthal angles on the sphere \\
 $z = \cos\theta$ & natural variable for Legendre and Jacobi polynomials \\
 $\rho = \sin\theta$ & disk radius; also $\sqrt{x^2+y^2}$ \\
 $x,\ y$ & direction cosines: $x$ to North, $y$ to East \\
-$\mathbf r,\ r,\ \hat{\mathbf r}$ & position, its length, its direction \\
+$\vecr,\ r,\ \uvecr$ & position, its length, its direction \\
 $u,\ v,\ w$ & baseline coordinates, in wavelengths \\
 $q = \sqrt{u^2+v^2}$ & radial baseline, in wavelengths \\
 $\psi = \arctan(v,u)$ & baseline azimuth in the $(u,v)$ plane \\

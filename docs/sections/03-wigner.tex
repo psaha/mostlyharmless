@@ -13,10 +13,10 @@ indices of the representation, never as coefficients.
 \subsection{The rotation law}
 \label{sec:rotation-law}
 
-With $\hat{\mathbf r}$ a direction in the body frame and $R$ the body-to-observer rotation,
+With $\uvecr$ a direction in the body frame and $R$ the body-to-observer rotation,
 the harmonics transform as
 \begin{equation}
-  Y_{lm}(R^{-1}\hat{\mathbf r}) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_{lm'}(\hat{\mathbf r}) ,
+  Y_{lm}(R^{-1}\uvecr) = \sum_{m'=-l}^{l} D^l_{m'm}(R) \, Y_{lm'}(\uvecr) ,
   \label{eq:rotation-law}
 \end{equation}
 so a map whose coefficients are $A_{lm}$ in the body frame has coefficients
@@ -53,22 +53,22 @@ $D$; none is a coefficient.  This is the one place the negative orders are neede
 their consequence.
 
 One corollary is used by the deformation, so it is worth writing out here.  A zonal harmonic
-about an axis $\hat{\mathbf e}$ is $Y_{l0}$ in the frame whose pole is $\hat{\mathbf e}$, and rotating it back
+about an axis $\uvece$ is $Y_{l0}$ in the frame whose pole is $\uvece$, and rotating it back
 with \eqref{eq:coefficient-rotation} gives
 \begin{equation}
-  P_l(\hat{\mathbf r}\cdot\hat{\mathbf e}) \;=\; \frac{1}{2l+1}
-    \sum_{m=-l}^{l} D^l_{m0}(R_{\hat{\mathbf e}})\,Y_{lm}(\hat{\mathbf r}) ,
+  P_l(\uvecr\cdot\uvece) \;=\; \frac{1}{2l+1}
+    \sum_{m=-l}^{l} D^l_{m0}(R_{\uvece})\,Y_{lm}(\uvecr) ,
   \label{eq:zonal-in-d}
 \end{equation}
 which is the addition theorem of the literature, obtained here without citing it.  At $l = 2$
 it is the identity the whole deformation rests on,
 \begin{equation}
-  P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
-    \overline{Y_{2m}(\hat{\mathbf e})}\,Y_{2m}(\hat{\mathbf r}) ,
+  P_2(\uvecr\cdot\uvece) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
+    \overline{Y_{2m}(\uvece)}\,Y_{2m}(\uvecr) ,
   \label{eq:zonal-l2}
 \end{equation}
 whose stored orders are the $m = 0$ term and twice the real part of the $m = 1$ and $2$ terms.
-Everything a zonal quadrupole needs is therefore the three numbers $Y_{2m}(\hat{\mathbf e})$ at
+Everything a zonal quadrupole needs is therefore the three numbers $Y_{2m}(\uvece)$ at
 $m = 0, 1, 2$, each one evaluation of the definition \eqref{eq:ylm} once the axis is known, and
 no summation over $m$ occurs anywhere in the deformation.  Certificate \vtag{3} checks the
 corollary against the general \code{sph_harm_addition}.
@@ -141,7 +141,7 @@ transform against direct geometry by the same certificate: rotating the
 coefficients must agree with evaluating the original map at the inversely rotated
 direction,
 \begin{equation}
-  I_{\rm new}(\hat{\mathbf r}) = I_{\rm body}(R^{\!\top}\hat{\mathbf r}) ,
+  I_{\rm new}(\uvecr) = I_{\rm body}(R^{\!\top}\uvecr) ,
   \label{eq:rotation-geometry}
 \end{equation}
 which shares nothing with the algebra.  Composition is checked the same way, by
