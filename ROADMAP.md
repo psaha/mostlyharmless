@@ -491,63 +491,43 @@ One property to state rather than discover: the residual the row prints is the *
 correctly --- the fit stops being optimal in its own norm --- so the row becomes "cleaner
 picture, worse number", and the number is the honest one.
 
-**T11 — make the five parts the document's structure.** The manual has five parts, and they are
-not its section structure:
+**T17 — keep the manual and the human-written exposition in step.** The two documents have
+different jobs and are now diverging by design in one respect and by accident in another.
 
-| part | sections | status |
-| --- | --- | --- |
-| 1. spherical harmonics and Wigner D | 1--3 | standard |
-| 2. the `V_lm` structure, up to `X_lm` as an integral | 4 | standard |
-| 3. simplifying `X_lm` | 5--7 | Dholakia & Pope's split, with an explicit closed form per `(l, m)` rather than a basis-change matrix |
-| 4. spin, tide, limb darkening | 8 | new |
-| 5. the two GUIs | 9 | new |
+*By design:* the exposition, `expos/`, is a paper --- "AI sans Slop" --- whose order is motivation,
+background, machinery, results, and whose notation is abbreviated: $\epsilon_\text{s}$,
+$\epsilon_\text{t}$, $\hat{\mathbf e}_\text{s}$, $\hat{\mathbf e}_\text{t}$ where the manual writes
+$\epsilon_\text{spin}$, $\epsilon_\text{tide}$, $\hat{\mathbf e}_\text{spin}$,
+$\hat{\mathbf e}_\text{tide}$. That abbreviation is right for a journal and wrong for the manual,
+whose job is to be unambiguous rather than compact, so the difference should stay and be written
+down rather than discovered.
 
-Parts 4 and 5 are already one section each. Parts 1--3 are seven sections, and 1--3 and 5--7
-each want coalescing, which would leave three. That is the proposal; whether it is right is the
-open question.
+*By accident:* the exposition's last three sections are placeholders of one line each --- "Introduce
+$\Lambda$", "SH coefficients", "Two versions of $\mu$" --- and those three are exactly the material
+the manual now carries in finished form (the three-step stretch, the hemispheric basis, the two
+cosines). The risk is not that the exposition is unwritten; it is that when it is written it will be
+written from an older reading of the manual, which has changed substantially.
 
-The fault lines are real, not editorial: part 2 ends when the visibility is reduced to one
-unknown integral per mode, and part 3 begins because that integral splits by the parity of
-`l + m` into a single spherical Bessel function and a finite ordinary-Bessel sum. Part 4 begins
-when the map stops being given and starts being computed.
-
-The cost is that the roadmap's own prose quotes section numbers, and the equation numbering
-shifts again; every cross-reference is by label, so those follow. The benefit is that the
-structure is visible from the first page, which reading nine flat sections does not give. A
-paragraph in the preamble naming the five parts would be the cheap half of it, and is worth
-doing whether or not the coalescing happens.
-
-Started as O3, which recorded three parts and quoted "sections 8--9". The five-part reading is
-finer and came from reading the thing as a reader rather than as an author.
-
-*A six-part variant.* One part in front of the other five: a survey chapter that states the
-results at a high level, so a reader can stop after it and still have the essentials, with the
-rest of the manual as the derivations. The working notes call this the "Russian style"; there
-is no standard English name that I know, though *synopsis*, *overview* and *survey* all occur,
-and publishing would call it an extended abstract.
-
-The genre has exemplars and no settled English name.  Two, both opening with a section that
-carries the whole argument in outline before the derivations begin:
-
-- Shakura & Sunyaev (1973), "Black holes in binary systems. Observational appearance",
-  *A&A* 24, 337 --- the accretion-disc paper, author order Shakura first;
-- Braginsky & Vorontsov (1974), "Quantum-mechanical limitations in macroscopic experiments and
-  modern experimental technique", *Sov. Phys. Usp.* 17, 644 (Russian original *UFN* 114, 199)
-  --- the standard-quantum-limit review.  Both are Soviet, which is presumably where
-the slang comes from.  "Extended abstract" is the publishing term and the closest;
-"synopsis", "summary chapter" and "survey" are the descriptive ones.  If the manual ever has
-such a chapter it should be titled plainly --- "Summary" or "Overview" --- rather than with a
-label that needs explaining.
-
-It suits this document because the results are few and sharp --- the mode formula, the two
-closed forms for `X_lm`, the deformation coefficients, the four rows --- so such a chapter would
-be two pages and would survive on its own. The risk is drift: a summary that no longer matches
-the sections is worse than none, because a reader trusts it and stops. This session alone
-changed the `a_00` convention, added the limb factor, retired the spot model and deleted a
-section, and a survey chapter would have needed touching for most of them.  So it is worth
-writing once the structure settles, not before.
+Three things worth doing. A short notation map --- manual symbol, exposition symbol, and the one or
+two cases where the object itself differs rather than the label --- kept where both documents can
+see it, not in either one's prose. A rule that the exposition quotes the manual's results by section
+and equation rather than restating them, so a change in the manual shows up as a dangling reference
+rather than as a quiet contradiction. And a pass over the exposition's sections 1--5 for statements
+that the manual has since overtaken: the gauge of section 8.2, the limb's two cosines, and the
+retirement of the affine row all postdate most of what is written there.
 
 ### Closed since this list was written
+
+* **The five-part document structure (T11), superseded rather than done.** The parts were: spherical
+  harmonics and Wigner D; the $V_{lm}$ structure; simplifying $X_{lm}$; spin, tide and limb
+  darkening; and the models. They are a description of the material, not a good order for a document
+  whose job is to be checkable in place --- the manual's ordering, where each certificate sits under
+  the object it certifies, is the one that serves that job, and reordering the sections to match the
+  parts would have put the certificates at a distance from what they certify.
+
+  The narrative order the item was reaching for belongs to the exposition, `expos/`, where it now
+  exists: motivation, background, machinery, physics, results. What survives of the item is the
+  coordination between the two documents, which is T17.
 
 * **Rendering and projection in the stored half-complex basis (T13).** The last two real-basis
   call sites are gone. `maps.sky_map_batch` -- and `sky_map`, which calls it -- now sums the stored
