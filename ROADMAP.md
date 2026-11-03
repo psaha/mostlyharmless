@@ -464,14 +464,6 @@ cross-reference elsewhere.
 
 ### Yet to be implemented
 
-**T4 — retire the affine model.** Its radio button is gone from the interface: with the fitted
-row at `l <= 4`, the affine row is strictly worse by every measure we have, since the fit minimises
-the same norm the affine row projects into. What is left is the code path --- the `affine` branch of
-`compute_image` and `compute_visibility`, `affine.sphere_coefficients`, and the tests that pin it
-(`test_the_analytic_and_numeric_panels_are_similar`, the affine row of the Im-sign test). Delete it
-once the fitted row has been looked at for a while and nothing wants it back; the first-order row
-stays, because it is closed form and has no fit in it at all.
-
 **T9 — Tikhonov regularisation for the fitted rows.** The fitted rows ring at the rim, where
 the brightness falls to zero, and near the cusp at the equator; with the grayscale rendering the
 ripples are the most conspicuous thing in the panel. The truncation is real --- the textbook
@@ -498,30 +490,6 @@ One property to state rather than discover: the residual the row prints is the *
 `norm - rhs . values`, which does not include the penalty. Regularising therefore *raises* it,
 correctly --- the fit stops being optimal in its own norm --- so the row becomes "cleaner
 picture, worse number", and the number is the honest one.
-
-**T10 — retire the spot model.** The Earth does everything the spot does and is easier to
-interpret: a user recognises the continents, so a wrong orientation is visible at a glance,
-whereas a circular cap is nearly symmetric and hid a reflected frame for months. The *radio*
-can therefore go, and the four geometry presets can be re-labelled around the Earth.
-
-*Done for the code.*  The RGB map GUI is retired, kept at tag `rgb-mapgui`; `levels_gui` is the
-surviving basic model and `gui` the research one.  The renderer and cap tests moved to
-`test_maps.py`, the view sweep to the surviving GUI's tests, and the three-channel data is
-deleted since `make earth` regenerates it.  Section 10.2 of the manual still describes the
-retired GUI --- its spot, its presets, its sliders --- and needs rewriting around the survivor.
-
-A two-level variant exists as `levels_gui`, extracted by `make earth-levels`: one brightness
-channel, sea and land at a fixed *ratio* rather than fixed levels, so the sphere mean is one
-whatever land fraction the colour test finds.  It finds 0.281 against the accepted 0.292 ---
-a point low, from a mask that tests "warmer than blue, or bright enough to be ice" --- giving
-sea 0.877 and land 1.315, a 50 per cent jump.  The ratio is the knob: a 3:1 step rings badly
-because the overshoot at a truncation is a fraction of the step.
-
-The *function* cannot, or not yet. `cap_coefficients` used to be the one model with a closed-form
-coefficient set --- `a_l0` from the Legendre moments of a cap, no quadrature --- and it was what V28
-and the fitted rows' tests used. Both have since gone: the tests moved onto the Earth's committed
-coefficients, which is the trade this passage anticipated, and the analytic case turned out not to
-be needed for anything.
 
 **T11 — make the five parts the document's structure.** The manual has five parts, and they are
 not its section structure:
@@ -769,6 +737,38 @@ against the projection. The affine model's error is **second order in
    against the first-order expectation, with a network reserved for the case where the target
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **The spot model retired (T10).** The code went first: the RGB map GUI kept at tag
+  `rgb-mapgui`, the renderer and cap tests moved to `test_maps.py`, the view sweep to the
+  surviving GUI's tests, and the three-channel data deleted because `make earth` regenerates it.
+  The manual was rewritten around the survivor in the same pass --- section 10.2's subject is the
+  Earth map, its sliders the three angles a fixed map leaves --- so the "still describes the
+  retired GUI" sentence in this item was stale by the time the item closed.
+
+  What survives of the spot is one retrospective paragraph, "The retired starspot", saying why the
+  Earth replaced it: real data with the same sharp edge, structure at every degree rather than one
+  analytic profile, and a taper that answers the ringing a discontinuity provokes. That is history
+  rather than mathematics, so it is a candidate for trimming under D30 rather than a requirement
+  of the model.
+
+* **The affine model retired (T4).** Its radio button had gone long before; what remained was the
+  code path, and it is now gone. `MODEL_TITLES` no longer carries an `affine` entry, the fallback
+  branch of `compute_visibility` raises on an unknown model name instead of quietly building one,
+  and `SPHERE_L_MAX`, which only that branch used, went with it.
+
+  Three things survive deliberately. `affine.sphere_coefficients` stays as the quadrature
+  reference for V21, so the certificate still compares the closed form against an independent
+  projection rather than against itself. `affine.affine_visibility` stays, since the first-order
+  and fitted rows both reach their visibility through it. And the first-order row stays in the
+  interface, being closed form with no fit in it at all.
+
+  The tests that pinned the retired row now use survivors: the finite-panel sweep covers
+  `numeric` and `first-order`, the analytic-against-numeric comparison uses `first-order`, the
+  order test takes the fitted row as its exact comparison, and the imaginary-part sign test drops
+  its affine column. `test_the_fitted_row_beats_the_projected_one_in_its_own_norm` keeps
+  `sphere_coefficients`, because there it is a projection to compare against rather than a model
+  claim --- the property, that the fit is optimal in the image norm, is why the row is a diagnostic
+  rather than another approximation.
 
 * **`real_sph_harm` labelling (T2), closed as documented rather than unified.** The manual labels the
   real basis `(l, m, c)` and `(l, m, s)` with $m>0$; the code reaches the sine branch as

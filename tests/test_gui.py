@@ -73,7 +73,7 @@ def test_compute_visibility_vanishes_at_the_origin():
 
 def test_all_three_models_produce_finite_panels():
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    for model in ("numeric", "affine", "first-order"):
+    for model in ("numeric", "first-order"):
         values = gui.compute_visibility(parameters, model, samples=3000, grid=9,
                                         q_max=1.0)
         assert np.all(np.isfinite(values))
@@ -84,7 +84,7 @@ def test_all_three_models_produce_finite_panels():
 def test_the_analytic_and_numeric_panels_are_similar():
     """First order in eps and l <= 2, so the two models should agree closely."""
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    analytic = gui.compute_visibility(parameters, "affine", samples=4000,
+    analytic = gui.compute_visibility(parameters, "first-order", samples=4000,
                                       grid=11, q_max=1.0)
     numeric = gui.compute_visibility(parameters, "numeric", samples=4000,
                                      grid=11, q_max=1.0)
@@ -121,7 +121,7 @@ def test_the_linear_pattern_is_a_second_order_change():
     """
     def spread(scale):
         parameters = gui.Parameters(tide=0.02 * scale, spin=0.01 * scale)
-        exact = gui.compute_visibility(parameters, "affine", samples=4000, grid=7,
+        exact = gui.compute_visibility(parameters, "fitted, l = 0,2,4", samples=4000, grid=7,
                                        q_max=1.0)
         linear = gui.compute_visibility(parameters, "first-order", samples=4000,
                                         grid=7, q_max=1.0)
@@ -148,8 +148,8 @@ def test_every_model_label_computes():
 def test_the_fitted_row_beats_the_projected_one_in_its_own_norm():
     """The fit is optimal in the image norm, so no projection can do better there.
 
-    Both live in the same span: the affine row's ``l <= 2`` coefficients, padded with
-    zeros to ``l <= 4``, against the fit's.  This is the property that makes the row a
+    Both live in the same span: a projected ``l <= 2`` coefficient set, padded with zeros
+    to ``l <= 4``, against the fit's.  This is the property that makes the row a
     diagnostic rather than another approximation.
     """
     from mostlyharmless.symbolic import affine, fitted, render
@@ -205,7 +205,6 @@ def test_the_imaginary_part_keeps_its_sign_between_the_rows():
     what rules out a sign flip; an O(eps) discrepancy is the model, not the convention.
     """
     parameters = gui.Parameters(tide=0.03, spin=0.01)
-    affine = gui.compute_visibility(parameters, "affine", samples=4000, grid=9, q_max=1.0)
     numeric = gui.compute_visibility(parameters, "numeric", samples=4000, grid=9, q_max=1.0)
 
     fitted_row = gui.compute_visibility(parameters, "fitted, l = 0,2,4",
@@ -215,10 +214,9 @@ def test_the_imaginary_part_keeps_its_sign_between_the_rows():
 
     index = np.unravel_index(np.argmax(np.abs(numeric.imag)), numeric.shape)
     print(f"\nIm at {index}: numeric {numeric.imag[index]:+.4f}, "
-          f"affine {affine.imag[index]:+.4f}, "
           f"fitted {fitted_row.imag[index]:+.4f}, "
           f"first-order {first_order.imag[index]:+.4f}")
-    for name, values in (("affine", affine), ("fitted", fitted_row),
+    for name, values in (("fitted", fitted_row),
                          ("first-order", first_order)):
         assert np.sign(values.imag[index]) == np.sign(numeric.imag[index]), name
         # the rows differ by the shape model and the truncation, both O(eps); a convention

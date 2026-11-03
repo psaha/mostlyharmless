@@ -40,7 +40,6 @@ __all__ = ["Parameters", "closure_depth", "largest_spin", "smallest_latitude",
 
 # D25: the analytic row keeps l <= 2, the eps^2 truncation of the l >= 4 content with the
 # l = 2 coefficient resummed.  Not a choice to make.
-SPHERE_L_MAX = 2
 # The fitted row's truncation (manual section 8.8).  Wider than the analytic row's two,
 # because the point of it is to measure what the truncation costs.
 FIT_L_MAX = 4
@@ -78,7 +77,6 @@ PRESETS = {
 # time, so an unsupported symbol crashes the draw rather than a callback --- and draw-time
 # code cannot be covered by a headless test unless the strings are reachable.
 MODEL_TITLES = {"numeric": "the star",
-                "affine": "affine",
                 "first-order": "affine, linear $g$",
                 "fitted, l = 0,2,4": "fitted, l = 0,2,4",
                 "fitted, l = 0,2,4,6,8": "fitted, l = 0,2,4,6,8"}
@@ -280,8 +278,7 @@ def compute_visibility(parameters, model="numeric", samples=SAMPLES,
             coefficients = affine.first_order_coefficients(field, eye,
                                                            limb=parameters.limb)
         else:
-            coefficients = affine.sphere_coefficients(
-                field, l_max=SPHERE_L_MAX, n_samples=samples, eye=eye)
+            raise ValueError(f"unknown model {model!r}")
         sphere_flux = complex(visibility(coefficients, 0.0, 0.0))
         stretch = affine.projected_stretch(field, eye)
 
