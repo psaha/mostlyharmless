@@ -4,6 +4,37 @@
 \section{The master reduction}
 \label{sec:visibility}
 
+\subsection{The disk basis}
+\label{sec:disk-basis}
+
+The disk is the near side of the sphere, so a spherical harmonic restricted to it is the basis
+for the visible brightness --- spots, granulation, gravity darkening, whatever the pattern's
+origin.  With the positive branch of the square root,
+\begin{equation}
+  \Yup_{lm}(x,y) \;=\; N_{lm}\,P_{lm}\bigl(\sqrt{1-\rho^{2}}\bigr)\,e^{im\varphi} ,
+  \qquad \rho \le 1 ,
+  \label{eq:disk-harmonic}
+\end{equation}
+$\theta > \pi/2$ being the negative branch and the far side, and $\rho > 1$ outside the disk.
+
+These are Dholakia \& Pope's (2025) hemispheric harmonics for $l+m$ even and their complementary
+hemispheric harmonics for $l+m$ odd, their real basis being split by the sign of the order.  With
+a shared azimuth origin and their unnormalised functions,
+\begin{equation}
+  \begin{aligned}
+    N_{lm}^{-1}\,\Yup_{lm} &\;=\;
+      \tilde y_{\mathrm{HSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)+m)}
+      \;+\; i\,\tilde y_{\mathrm{HSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)-m)} ,
+      & l+m\ \text{even} , \\
+    N_{lm}^{-1}\,\Yup_{lm} &\;=\;
+      \tilde y_{\mathrm{CHSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)+m)}
+      \;+\; i\,\tilde y_{\mathrm{CHSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)-m)} ,
+      & l+m\ \text{odd} .
+  \end{aligned}
+  \label{eq:disk-basis-hsh}
+\end{equation}
+For $m = 0$ the two indices coincide and the imaginary part vanishes.
+
 \subsection{From the transform to a radial integral}
 \label{sec:separation}
 
@@ -71,6 +102,14 @@ The measure is the planar one of section 1.3, which is what makes
 \eqref{eq:master-reduction} a half-range integral against a bare $\rho\,d\rho$.
 The solid-angle alternative carries a factor $1/n$, and moves the square root
 between the two families --- it swaps which of them is easy.
+
+Dholakia \& Pope's (2025) transform is the same one in different units.  Their
+exponent is $e^{-i(ux+vy)}$, without the $2\pi$, so their baseline coordinate is
+$2\pi$ times ours; their polar frequency coordinates $(\rho,\phi)$ are our $(q,\psi)$,
+and their sky azimuth $\theta$ is our $\varphi$.  The sign and the normalisation
+agree, and no factor relates the two visibilities: a component at their $\rho$ is
+ours at $q = \rho/2\pi$.  What differs between the two treatments is the basis, not
+the transform (section~\ref{sec:disk-basis}).
 
 \subsection{The visibility of a single mode}
 \label{sec:mode-visibility}

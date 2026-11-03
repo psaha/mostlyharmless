@@ -36,134 +36,22 @@ Spin and tide
 
 \keywords{methods: miscellaneous --- sociology of astronomy --- artificial intelligence}
 
-\section{Introduction}
+\input sec1intro
 
-Interferometric observations of gravity darkening in stars
-\citep[e.g.,][]{2018MNRAS.480.1263H,2018A&A...619A.167D} and the
-recent progress of intensity interferometry
-\citep{2025ApJ...995..191A} have created interest in basis functions
-for stellar interferometry.
+\input sec2stelinterf
 
-\cite{2026PASP..138e4504D} developed such a basis set for a rotating
-star.  In this work we will re-derive their basis set with a
-refinement that makes it closed-form, and extend it both
-perturbatively and numerically to the case of a triaxial star, which
-is flattened by spin and stretched by tide in along different axes.
-This is done using symbolic computing and AI assistance.
+\input sec3ylm
 
-A recent essay by \citet{tao2026} identifies five stages of a new
-result in mathematics.
-\begin{itemize}
-\item \textit{Generation} of new theorem proofs.  Here AI has brought
-  revolutionary changes.
-\item \textit{Verification} of the proofs.  Symbolic computing had
-  made it possible to keep up with the speed of generation.
-\item \textit{Exposition} for human readers.  AI has not (yet) helped
-  here, and in fact has made things worse --- the problem of AI slop.
-\item \textit{Publication} in the research literature.
-\item \textit{Canonicalization}, or absorption into textbooks.
-\end{itemize}
-Here would like to study how the first four stages translate into
-astrophysics.
+\input sec4fbasis
 
-\section{Stellar interferometry}
+\input sec5spintide
 
-\begin{equation}
-  V(u,v) = \int I(x,y)\, e^{-2\pi i (u x + v y)}\; dx\, dy
-  \label{eq:visibility-definition}
-\end{equation}
+\input sec6affine
 
-\begin{equation}
-  V(u,v) = \int_{\uvecg\cdot\uvecz > 0}
-  I(\vecr\in S)\, 
-  e^{-2\pi i (u x + v y)}\; (\uvecg\cdot\uvecz)\, dS
-  \label{eq:deformation-visibility-integral}
-\end{equation}
+\input sec7pert
 
-\section{Spherical harmonics}
+\input sec8limbdark
 
-\begin{equation}
-  Y_{lm}(\theta,\phi) = N_{lm}\, P_{lm}(\cos\theta)\, e^{im\phi}
-\end{equation}
-where
-\begin{equation}
-\begin{aligned}
-  P_{lm}(x) &= (1-x^{2})^{m/2}\,\frac{d^{m}}{dx^{m}}P_l(x) \\
-  P_l(x)    &= \frac{1}{2^{l}l!}\,\frac{d^{l}}{dx^{l}}\,(x^{2}-1)^{l}
-\end{aligned}
-\label{eq:associated-legendre}
-\end{equation}
-and
-\begin{equation}
-  N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
-  \label{eq:ylm}
-\end{equation}
-
-\begin{equation}
-  Y_{l,-m} =   Y_{l,m}^*
-\end{equation}
-
-\begin{equation}
-\begin{matrix}
-    Y_{00} = 1 \hfill
-  & Y_{10} = \sqrt{3}\,\cos\theta \hfill
-  & Y_{11} = \sqrt{\tfrac32}\,\sin\theta\,e^{i\phi} \hfill \\[4pt]
-    Y_{20} = \tfrac{\sqrt{5}}{2}(3\cos^{2}\theta-1) \qquad \hfill
-  & Y_{21} = \sqrt{\tfrac{15}{2}}\,\sin\theta\cos\theta\,e^{i\phi}
-    \qquad \hfill
-  & Y_{22} = \sqrt{\tfrac{15}{8}}\,\sin^{2}\theta\,e^{2i\phi} \hfill
-\end{matrix}
-\label{eq:ylm-table}
-\end{equation}
-
-\section{Fourier transforms of hemispheres}
-
-\begin{equation}
-  V_{lm}(q,\psi) = N_{lm}
-  \int_0^1 P_lm\!\left(\sqrt{1-\rho^2}\right)\, \rho\,d\rho
-  \int_0^{2\pi} e^{im\phi} e^{-2\pi i q\rho\cos(\phi-\psi)} \, d\phi
-\end{equation}
-
-\begin{equation}
-\begin{aligned}
-  V_{lm}(q,\psi) &= 2\pi(-i)^m e^{im\psi}\, N_{lm} \, X_{lm}(q) \\
-  X_{lm}(q) &= \int_0^1 P_{lm}\!\left(\sqrt{1-\rho^2}\right) \,
-                        J_m(2\pi q\rho)\,\rho\,d\rho
-\end{aligned}
-\end{equation}
-
-\begin{equation}
-  X_{lm}(q) = \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
-  \qquad l+m \text{ odd} ,
-  \label{eq:odd-radial}
-\end{equation}
-
-\begin{equation}
-  X_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_{lmk}\, (-1)^k\,
-  \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even} ,
-  \label{eq:even-radial}
-\end{equation}
-
-where
-
-\begin{equation}
-  c_{lmk} = 2(m+2k+1) \int_0^1 P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)\,
-  R_{m+2k}^m(\rho)\, \rho\, d\rho
-  \label{eq:even-coefficients}
-\end{equation}
-and
-
-\begin{equation}
-  R_{m+2k}^m(\rho) = (-1)^{k} \rho^m P_k^{(m,0)}\!\left(1-2\rho^2\right) ,
-  \qquad k \ge 0
-  \label{eq:zernike-jacobi}
-\end{equation}
-a Jacobi polynomial in $1-2\rho^2$ with
-\begin{equation}
-  P_k^{(m,0)}(x) = \frac{(-1)^{k}}{2^{k}k!}\,(1-x)^{-m}\,
-  \frac{d^{k}}{dx^{k}}\Bigl[(1-x)^{m+k}(1+x)^{k}\Bigr]
-  \label{eq:jacobi-rodrigues}
-\end{equation}
 
 \def\apj{ApJ}
 \def\pasp{PASP}

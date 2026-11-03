@@ -73,7 +73,7 @@ units of $GM/a$ leaves a dimensionless problem.  Written with
   \epsilon_\text{tide} \;=\; (1 + k_2)\,\frac{M'}{M}\Bigl(\frac{a}{d}\Bigr)^{3}
   \label{eq:deformation-amplitudes}
 \end{equation}
-and then setting $a = 1$ and $GM = 1$, the potential is
+and dividing $\Phi$ by $GM/a$, the potential is
 \begin{equation}
   \Phi(\mathbf r) \;=\; -\frac{1}{r}
     \;-\; \epsilon_\text{tide}\, r^2 P_2(\hat{\mathbf r}\cdot \hat{\mathbf e}_\text{tide})
@@ -81,8 +81,11 @@ and then setting $a = 1$ and $GM = 1$, the potential is
     \;-\; \epsilon_\text{spin}\, r^2
   \label{eq:deformation-potential}
 \end{equation}
-\emph{This} is the form used from here on: $GM$ and $a$ are no longer written, and every equation
-below is in units where the monopole is $-1/r$ and lengths are measured in $a$.
+\emph{This} is the form used from here on: $GM$ is no longer written, the monopole is $-1/r$, and
+lengths are in units of the unperturbed radius, which is therefore $1$.  The level value is a
+different number: it settles at $a = 1 + O(\epsilon)$, and
+section~\ref{sec:deformation-gravity} carries it explicitly.  Fixing the unperturbed radius fixes
+no gauge.
 
 Both quadrupoles are pure $l = 2$, and the amplitudes are positive for a tidal bulge along
 $\hat{\mathbf e}_\text{tide}$ and a centrifugal flattening about $\hat{\mathbf e}_\text{spin}$.
@@ -337,24 +340,35 @@ level for $\epsilon \approx 0.03$.  The three roots are the cheaper error.
 \label{sec:deformation-stretch}
 
 The stretch replaces the sky map \eqref{eq:deformation-visibility-integral} by a linear one.  We
-want an affine map $\Lambda$ carrying the unit circle onto the ellipse
-that the ellipsoid projects to on the sky.  Not by the standard quadratic-form route: the
-ellipsoid's semi-axes are $r_k$ along the principal directions $\hat{\mathbf e}_k$
-(section~\ref{sec:deformation-axes}), and their endpoints $r_k\hat{\mathbf e}_k$ already fix the
-map.  Projecting those three points onto the sky gives the $2\times3$ matrix
+want an affine map $\Lambda$ carrying the unit circle onto the ellipse that the ellipsoid projects
+to on the sky, built from the ellipsoid's own axes rather than by the standard quadratic-form
+route.
+
+First the ellipsoid.  Its semi-axes are $r_k$ along the principal directions
+$\hat{\mathbf e}_k$ of section~\ref{sec:deformation-axes}, and the $r_k$ are found numerically from
+the level surface, one root per direction: this is where the approximation enters, and the only
+place it does.  The matrix carrying the unit sphere onto the ellipsoid is
 \begin{equation}
-  \mathbf{A} \;=\; \bigl[\,r_1 P\hat{\mathbf e}_1,\ r_2 P\hat{\mathbf e}_2,\
-    r_3 P\hat{\mathbf e}_3\,\bigr] ,
-  \qquad P = \begin{pmatrix} \hat{\mathbf x}^{T} \\ \hat{\mathbf y}^{T} \end{pmatrix} ,
-  \label{eq:deformation-axis-matrix}
+  \Lambda_{\mathrm{3D}} \;=\; \sum_k r_k\,\hat{\mathbf e}_k\hat{\mathbf e}_k^{T} ,
+  \label{eq:deformation-stretch-3d}
 \end{equation}
-and the stretch is its symmetric square root,
+symmetric positive definite, with those eigenvalues and eigenvectors.
+
+Second, the projection.  The observer sees the shadow on the sky plane, so the $\hat{\mathbf z}$
+row is discarded and $\Lambda_{\mathrm{3D}}$ becomes the $2\times3$ matrix $P\Lambda_{\mathrm{3D}}$
+carrying the $(\hat{\mathbf x},\hat{\mathbf y})$ rows.
+
+Third, the stretch.  The shadow's matrix is the Gram of that restricted map, and $\Lambda$ is its
+symmetric square root,
 \begin{equation}
-  \Lambda \;=\; \sqrt{\mathbf{A}\mathbf{A}^{T}} ,
+  \Lambda \;=\; \sqrt{(P\Lambda_{\mathrm{3D}})(P\Lambda_{\mathrm{3D}})^{T}} ,
   \label{eq:deformation-stretch}
 \end{equation}
-which carries the unit circle to the projected ellipse.  Three endpoints, one Gram matrix, one
-square root.
+which carries the unit circle onto the shadow.  That square root is not the only map with the
+property --- the circle is rotation-invariant, so $\Lambda R$ for any orthogonal $R$ does as well
+--- but the choice has no content.  The silhouette and the flux are fixed by
+$\Lambda\Lambda^{T}$ alone, and the model is a change of coordinates, so a different choice moves
+the difference into the coefficients of whatever series is built on it.
 
 Writing $V_\text{sph}$ for
 the visibility of a sphere carrying the same brightness pattern, the surrogate is
@@ -368,7 +382,7 @@ in the normalised quantity \eqref{eq:normalised-visibility} the determinant canc
 again.  So only the shape is modelled, while the brightness pattern --- gravity darkening
 included --- is carried exactly.
 
-The model rows place the limb factor inside $\Phi_{lm}$, so they need the viewing cosine at the
+The model rows place the limb factor inside the disk basis, so they need the viewing cosine at the
 disk coordinate rather than at the sky position, and that is a second role for $\Lambda$:
 \begin{equation}
   \mu \;=\; \sqrt{1 - \bigl|\Lambda^{-1}(x,y)\bigr|^{2}} ,
@@ -506,8 +520,8 @@ must agree.
     \\[1pt] \vtag{24}\quad \emph{Algebraic}
 \end{itemize}
 
-One is tempted to linearise the radii as well, replacing the bisection by $\delta r = -\phi_1$
-and making the row analytic all the way through.  The temptation should be resisted.  First it
+One is tempted to linearise the radii as well, replacing the bisection by $\delta r = E$ --- the
+first term of \eqref{eq:radius-series} --- and making the row analytic all the way through.  The temptation should be resisted.  First it
 is exact only to first order, and the next term is not small: expanding
 \eqref{eq:level-condition} gives
 \begin{equation}
@@ -667,104 +681,51 @@ expansions.
 \subsection{The fitted row}
 \label{sec:deformation-fitted}
 
-\paragraph{The model in image space.}  The visibility is the transform of an image, and writing
-that image explicitly is what makes the fit a projection.  By
-\eqref{eq:affine-image-transform}, $V = \sum a_{lm}V_{lm}(\Lambda^{T}u)$ is the transform of
+\paragraph{The model in image space.}  By \eqref{eq:deformation-affine} the transform of the
+image
 \begin{equation}
-  I_\text{model}(x) \;=\; F\bigl(\Lambda^{-1}x\bigr) ,
-  \qquad F(y) \;=\; \sum_{lm} a_{lm}\,\Phi_{lm}(y)
+  \tilde I(x,y) \;=\; \sum_{lm} a_{lm}\,\Psi_{lm}(x,y) ,
+  \qquad \Psi_{lm}(x,y) \;=\; \Yup_{lm}\bigl(\Lambda^{-1}(x,y)\bigr) ,
   \label{eq:fitted-model-image}
 \end{equation}
-with no $|\det\Lambda|$: the stretch is a coordinate change on the pattern, not a resampling
-of a map, so the model is not required to conserve flux against another model star.  What is
-wanted is that it match the star in front of it, and that is a fit, not a normalisation.
-where the \textbf{disk harmonic} $\Phi_{lm}$ is the projection of $Y_{lm}$ onto the unit disk.  It
-needs no integral and no Zernike expansion, because the projection \emph{is} the visible surface
-value: the opaque convention absorbs the viewing cosine into the area element,
-$d^{2}x = (\hat{\mathbf r}\cdot\hat{\mathbf z})\,d\Omega$, so the image at a sky position is the brightness there, and
-\begin{equation}
-  \Phi_{lm}(x,y) \;=\; Y_{lm}(\hat{\mathbf r}) ,
-  \qquad \hat{\mathbf r} \;=\; x\,\hat{\mathbf x} + y\,\hat{\mathbf y} + z\,\hat{\mathbf z}
-  \label{eq:disk-harmonic}
-\end{equation}
-with $Y_{lm}$ evaluated in the observer frame by the rule of \eqref{eq:observer-angles}.  There is no
-cosine factor: for a uniform star $\Phi_{00}$ is constant, the image is the uniform disk whose flux
-is $\pi$, and the visibility is the anchor of section~\ref{sec:visibility}.  The parametrisation
-$\rho = \sin\theta$ makes every $\Phi_{lm}$ smooth on $\theta \in [0,\pi/2]$, the
-$\sqrt{1-\rho^{2}}$ of the odd family being $\cos\theta$ there --- it comes from the parity of
-$P_{lm}$ in its argument, not from a viewing cosine --- so inner products converge spectrally under
-Gauss--Legendre.
+is the affine visibility, so this is the row in the form the fit uses.  $\Psi_{lm}$ is the disk
+basis of section~\ref{sec:visibility} carried through the stretch, and $\Yup_{lm}$ is limb-free:
+a limb-darkened star is fitted by absorbing the limb into the coefficients.
 
-\paragraph{The fit.}  The model is linear in the coefficients: written on the sky plane it is
-$I_\text{model} = \sum_{lm} a_{lm}\Psi_{lm}$ with
+\paragraph{The fit.}  The image it is fitted to is
 \begin{equation}
-  \Psi_{lm}(x,y) \;=\; \Phi_{lm}\bigl(\Lambda^{-1}(x,y)\bigr)
-  \label{eq:fitted-basis-on-sky}
-\end{equation}
-the disk harmonic carried through the stretch, so it is a function of the coordinates the image
-lives in.  The image it is fitted to is
-\begin{equation}
-  I(x,y) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\, g\bigl(n(x,y)\bigr)
+  I(x,y) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\, g\bigl(n(x,y)\bigr) ,
   \label{eq:data-image}
 \end{equation}
-with $\hat{\mathbf r}$ the direction of \eqref{eq:disk-harmonic} and $\mu$ its viewing cosine; no $\Lambda$
-enters, the stretch being in $\Psi$ alone.  The least-squares solution is then the usual one,
+with $\hat{\mathbf r}$ the near-side direction above $(x,y)$ and $\mu$ its viewing cosine; no
+$\Lambda$ enters, the stretch being in $\Psi$ alone.  Least squares in the image plane gives the
+normal equations
 \begin{equation}
-  a_{lm} \;=\; \sum_{l'm'} \bigl(G^{-1}\bigr)_{lm,l'm'}\, b_{l'm'}
-  \label{eq:fitted-solution}
-\end{equation}
-with
-\begin{equation}
+  G\,\mathbf{a} \;=\; \mathbf{b} ,
+  \qquad
   G_{lm,l'm'} \;=\; \iint \Psi_{lm}\,\overline{\Psi_{l'm'}}\,dx\,dy ,
   \qquad
-  b_{lm} \;=\; \iint I(x,y)\,\overline{\Psi_{lm}}\,dx\,dy
+  b_{lm} \;=\; \iint I(x,y)\,\overline{\Psi_{lm}}\,dx\,dy ,
   \label{eq:fitted-normal-equations}
 \end{equation}
-both integrals over the sky plane.  $G$ carries no data: it is block diagonal in $m$ by the $e^{im\phi}$ factors, with blocks of size
-$3$ for $m = 0$ ($l = 0, 2, 4$), $4$ for $m = 1, 2$ ($l = 2, 4$) and $2$ for $m = 3, 4$
-($l = 4$) --- fifteen real parameters, matching $1 + 5 + 9$, which is
-\eqref{eq:fitted-solution} read as a $15 \times 15$ real system.  No $|\det\Lambda|$ appears:
-the measure is the sky's, where the image is, and the stretch is already inside $\Psi$.
+both integrals over the sky plane.  $G$ carries no data: it is block diagonal in $m$, with blocks
+of $3$, $4$, $4$, $2$, $2$ --- fifteen real parameters, matching $1+5+9$.  The renderer returns
+samples rather than a function, so both integrals are sums over them, weighted by the sky area
+each sample projects to; the basis is unchanged, and no image grid is built.
 
-\paragraph{The integrals are sums over the samples.}  The renderer returns points rather than a
-function, so both integrals become sums over the rendered samples,
+Quoted relative to the map's own norm, the residual at the optimum is
 \begin{equation}
-  G_s \;=\; \sum_s w_s\,\Psi_s\Psi_s^{\dagger} ,
-  \qquad
-  b_s \;=\; \sum_s w_s\,I_s\,\overline{\Psi_s}
-  \label{eq:fitted-sample-sums}
-\end{equation}
-with $w_s$ the area sample $s$ projects onto the sky plane and $\Psi_s$ its basis row.  A fit
-therefore costs one block-diagonal solve of $G_s$ --- blocks of $3$, $4$, $4$, $2$, $2$ by
-$m$ --- and, per sample, one $2\times2$ unstretching and fifteen mode evaluations: no image grid
-is built and nothing is interpolated.  $G_s$ and $b_s$ estimate the same integrals as $G$ and $b$,
-so the two differ by quadrature alone --- which is why the fit solves with $G_s$ while the
-condition numbers describe $G$, a property of the basis rather than of any data.
-
-With $M(x) = F(\Lambda^{-1}x)$ the model image, the same sums give
-\begin{equation}
-  \bigl\|I\bigr\|^{2} \;=\; \sum_s w_s\,I_s^{2} ,
-  \qquad
-  \bigl\|I - M\bigr\|^{2} \;=\; \bigl\|I\bigr\|^{2} \;-\; b_s^{\dagger}G_s^{-1}b_s
-  \label{eq:fitted-residual}
-\end{equation}
-and it is the second that makes this rung worth having: the residual at the optimum, which is the
-truncation floor given the shape.
-
-Quoted relative to the map's own norm, it is
-\begin{equation}
-  \rho \;=\; \sqrt{\frac{\sum_s w_s\bigl(I_s - M_s\bigr)^{2}}{\sum_s w_s I_s^{2}}}
+  \rho \;=\; \sqrt{\frac{\sum_s w_s\bigl(I_s - \tilde I_s\bigr)^{2}}{\sum_s w_s I_s^{2}}} ,
   \label{eq:relative-residual}
 \end{equation}
-where $w_s$ is the area sample $s$ projects onto the sky plane --- the weight the renderer gives
-it, because the visibility integrates over that plane and not over the surface.  A $\rho$ of
-$10^{-2}$ therefore means the row is good to a per cent of the map.  The same definition scores
-any coefficient set, which is what makes the rows comparable, and what \eqref{eq:row-error} and
-its consequences use for the first-order row of section~\ref{sec:deformation-first-order}.
+the truncation floor given the shape.  A $\rho$ of $10^{-2}$ therefore means the row is good to a
+per cent of the map.  The same definition scores any coefficient set, which is what makes the rows
+comparable, and what \eqref{eq:row-error} and its consequences use for the first-order row of
+section~\ref{sec:deformation-first-order}.
 
 \paragraph{Bookkeeping.}  The map is real, so $a_{l,-m} = \overline{a_{lm}}$ and only
-$m \ge 0$ is fitted: one design function $\Phi_{l0}$ for $m = 0$, and the pair
-$\mathrm{Re}\,\Phi_{lm}$, $\mathrm{Im}\,\Phi_{lm}$ for $m > 0$.  Odd $l$ is excluded, and not for
+$m \ge 0$ is fitted: one design function $\Psi_{l0}$ for $m = 0$, and the pair
+$\mathrm{Re}\,\Psi_{lm}$, $\mathrm{Im}\,\Psi_{lm}$ for $m > 0$.  Odd $l$ is excluded, and not for
 convenience: the parity argument of section~\ref{sec:deformation-brightness} forbids it, so fitting it
 would only absorb noise.
 
@@ -781,10 +742,9 @@ section~\ref{sec:deformation-axes}, so a different but equally defensible $\Lamb
 coefficients --- and because the fitted row's brightness is painted onto the surface, they are
 meaningful only at the orientation they were fitted for.
 
-The row is therefore already a disk series: $F(y) = \sum_{lm}a_{lm}\Phi_{lm}(y)$ with
-$\Phi_{lm}$ the projected harmonics, composed with the same stretch.  A basis whose transforms
-were cheaper --- a Zernike series, say --- would be a different choice of basis in the same
-construction, not a different construction.
+The row is therefore already a disk series, $\sum_{lm}a_{lm}\Yup_{lm}$ composed with the
+stretch.  A basis whose transforms were cheaper --- a Zernike series, say --- would be a different
+choice of basis in the same construction, not a different construction.
 
 \begin{itemize}
   \item[$\checkmark$] \code{check_fitted_round_trip} manufactures the samples from a known
@@ -792,14 +752,15 @@ construction, not a different construction.
     fitted coefficients must return at roundoff.  It pins the unstretching, the real pairing and the
     normalisation at once, with no renderer and no sampling noise to hide behind.
     \\[1pt] \vtag{26}\quad \emph{Algebraic}
-  \item[$\checkmark$] \code{check_disk_gram} pins the basis: $G_{00,00} = \pi$ exactly, the disk's
-    area, since $\Phi_{00} = 1$; entries between different orders vanish by the orthogonality of the
-    angular factors; and the matrix agrees with a brute-force midpoint rule over the disk that shares
-    nothing with the Gauss--Legendre construction but the definition.
+  \item[$\checkmark$] \code{check_disk_gram} pins the basis by its inner products over the disk: the
+    $l = m = 0$ one is $\pi$ exactly, the disk's area, since $\Yup_{00} = 1$; entries between
+    different orders vanish by the orthogonality of the angular factors; and the whole matrix agrees
+    with a brute-force midpoint rule that shares nothing with the Gauss--Legendre construction but
+    the definition.
     \\[1pt] \vtag{27}\quad \emph{Numerical}
-  \item[$\checkmark$] The residual \eqref{eq:fitted-residual} is evaluated by two routes --- through
-    the normal equations and by expanding the quadratic directly --- and the two must agree: they
-    differ only through the identity $A = G_s^{-1}b$, so a stray factor would leave the coefficients
+  \item[$\checkmark$] The residual is evaluated by two routes --- through the normal equations and by
+    expanding the quadratic directly --- and the two must agree: they differ only through the
+    identity $\mathbf{a} = G^{-1}\mathbf{b}$, so a stray factor would leave the coefficients
     plausible and show up there.
     \\[1pt] \emph{Untagged}
 \end{itemize}

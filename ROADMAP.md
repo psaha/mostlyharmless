@@ -743,6 +743,27 @@ code. The code step shifts every deformation coefficient and should move the GUI
 first-order residual's halving ratio slightly; the Earth carries no deformation, so nothing cached
 depends on it.
 
+**T16 — one account of limb darkening, and of what $\mu$ means in each row.** The limb is now
+described in five places and $\mu$ is defined four times: $z/r$ for the numerical row, the
+sphere's $\sqrt{1-\rho^{2}}$ for the pattern, $\sqrt{1-|\Lambda^{-1}(x,y)|^{2}}$ for the model
+rows, and $\hat{\mathbf r}\cdot\hat{\mathbf z}$ again in the appendix. Three of the four are the
+same quantity seen through a different row, which is worth a table -- row, what $\mu$ is, where
+the limb is applied -- and one sentence saying they agree to first order and where the difference
+is counted.
+
+The substantive item underneath: the fitted row's basis is limb-free, $\Yup_{lm}$ is a basis for
+any visible pattern, while the image it is fitted to carries the limb, so a limb-darkened star is
+fitted by absorbing the limb into the coefficients. That is stated in 8.9 but not in 8.8, which
+still says the limb reaches "the fitted coefficients" and reads as though the basis carried it.
+Say once, in 8.8, which rows carry the limb analytically and which absorb it, and let 8.9 drop
+its own sentence.
+
+Two smaller ones seen while looking. The appendix's (A15) repeats the $\mu$ definition that
+section 8.4 now owns. And "why the limb is not done analytically" in 8.8 explains the absence of
+Gaunt coefficients on the disk, which is a different point from the row bookkeeping and should
+not be merged with it.
+
+
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
 evaluation dominated was right, but the guess that the rotation was milliseconds was wrong by
@@ -906,6 +927,19 @@ against the projection. The affine model's error is **second order in
    against the first-order expectation, with a network reserved for the case where the target
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **The translation to Dholakia & Pope's conventions is written, and needs no table.**
+  Section 4.1 carries the basis: $\Yup_{lm}$ is their $\tilde y_{\mathrm{HSH}}$ for $l+m$ even and
+  their $\tilde y_{\mathrm{CHSH}}$ for $l+m$ odd, and (38) gives both cases at once, with the
+  normalisation $N_{lm}$ against their unnormalised functions and their index spelled out as
+  $\tfrac12(l(l+2)\mp m)$. Section 4.2 carries the transform: the same sign and normalisation,
+  with $u_{\mathrm{DP}} = 2\pi u$, and the letter collisions $(\rho,\phi) = (q,\psi)$,
+  $\theta = \varphi$. The $l,m \to j$ direction is what the comparison needs, and (38) states it
+  in full; the inverse is not needed and is not written.
+
+  One dependence remains stated in the text rather than resolved: their paper does not say where
+  $\theta$ is measured from, so (38) holds for a shared azimuth origin, and a different one would
+  rotate every $m$ by $e^{im\delta}$ --- a convention, not a physical difference.
 
 * **The negative order is plain conjugation, and the convention now lives in one function.**
   The extension is `Y_{l,-m} = conj(Y_lm)`, with no phase, and the `(-1)^m` has moved to the
