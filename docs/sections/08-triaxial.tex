@@ -231,15 +231,16 @@ convective envelope is nearer to $p \approx 0.3$, because the flux there is carr
 convection and so responds to gravity more weakly.  Thus $p = 1$ is an upper bound rather
 than a convenient default, and it is the one the code uses.
 
-The brightness is evaluated on the surface, and the limb factor needs the cosine between the
-line of sight and the direction of each sample,
+The brightness is evaluated on the surface at each sample, so what the row needs of it is its
+value there and nothing else; $I(x,y)$ may in general come from a stellar-atmosphere model with no
+simple form.  An instance, and the one the figures and every row below use, adds a linear limb
+factor to the gravity,
 \begin{equation}
-  \mu \;=\; \frac{z}{r} \;=\; \sqrt{1 - \frac{\rho^{2}}{r^{2}}} ,
-  \label{eq:limb-cosine}
+  I(x,y) \;=\; \bigl(1 - u_\text{limb}\,(1 - z/r)\bigr)\, g(x,y) ,
+  \label{eq:brightness-example}
 \end{equation}
-the surface's own rather than the sphere's, since this row samples the surface itself.  The model
-rows use the sphere's value instead, which needs the stretch of
-section~\ref{sec:deformation-stretch}.
+with $z/r$ the viewing cosine of the surface point that projects to $(x,y)$ and $g$ its surface
+gravity.  \eqref{eq:brightness-law} is its $u_\text{limb} = 0$ case.
 
 With the surface and the brightness fixed, the visibility is the integral of
 section~\ref{sec:mode-visibility} over the sky plane.  The level surface carries it to an integral
@@ -381,15 +382,6 @@ $1/|\det\Lambda|$ on the brightness and $|\det\Lambda|$ on the measure, and the 
 in the normalised quantity \eqref{eq:normalised-visibility} the determinant cancels
 again.  So only the shape is modelled, while the brightness pattern --- gravity darkening
 included --- is carried exactly.
-
-The model rows place the limb factor inside the disk basis, so they need the viewing cosine at the
-disk coordinate rather than at the sky position, and that is a second role for $\Lambda$:
-\begin{equation}
-  \mu \;=\; \sqrt{1 - \bigl|\Lambda^{-1}(x,y)\bigr|^{2}} ,
-  \label{eq:model-cosine}
-\end{equation}
-the sphere's cosine at the unstretched position.  The numerical row has no $\Lambda$ and uses the
-surface's own, $z/r$ \eqref{eq:limb-cosine}.
 
 $\Lambda$ is best read as a \emph{preconditioner} rather than as part of the answer.  It enters
 twice --- in the frequency argument above and in the pull-back of the image --- and a different
@@ -597,21 +589,30 @@ few-per-cent instrument for $\epsilon \lesssim 0.03$ and a forty-per-cent one at
 \subsection{Limb darkening}
 \label{sec:deformation-brightness}
 
-Limb darkening is \emph{absent} by construction: \eqref{eq:brightness-law} depends only on
-gravity, not on the angle between the surface normal and the line of sight.  That is a
-deliberate scope restriction until the limb-darkening stage, and any figure caption or
-comparison with a resolved observation has to say so.
-
-Limb darkening multiplies this by a function of the viewing angle, and the code applies it
-in the same place to every row: the sampled brightness, the linearised pattern and the fitted
-coefficients all carry the factor
+The numerical row has applied limb darkening sample by sample since
+\eqref{eq:brightness-example}.  What that row does not need is any algebra of the factor; what the
+first-order row does need is its projection onto the disk basis, and that is what this section
+supplies.  The factor itself is the same everywhere: the sampled brightness, the linearised
+pattern and the fitted coefficients all carry
 \begin{equation}
   1 - u_\text{limb}\,(1-\mu)
   \label{eq:limb-factor}
 \end{equation}
-where $\mu$ is the cosine of \eqref{eq:limb-cosine} in the numerical row and \eqref{eq:model-cosine}
-in the model rows.  The two agree to first order in $\epsilon$, since $r = 1 + O(\epsilon)$; the
-difference is counted in \eqref{eq:row-error}.  With $u_\text{limb} = 0$ the factor recovers
+where $\mu$ is a different thing in each row.  The numerical row samples the surface, so its
+cosine is the surface's own,
+\begin{equation}
+  \mu \;=\; \frac{z}{r} \;=\; \sqrt{1 - \frac{\rho^{2}}{r^{2}}} ,
+  \label{eq:limb-cosine}
+\end{equation}
+$r$ being the distance to that sample.  The model rows place the factor inside the disk basis and so need it at the disk coordinate, which is where $\Lambda$ enters:
+\begin{equation}
+  \mu \;=\; \sqrt{1 - \bigl|\Lambda^{-1}(x,y)\bigr|^{2}} ,
+  \label{eq:model-cosine}
+\end{equation}
+the sphere's cosine at the unstretched position.  The two agree to first order in $\epsilon$,
+since $r = 1 + O(\epsilon)$; the difference is counted in \eqref{eq:row-error}.  Of the model rows,
+the closed-form one carries the limb exactly, in the coefficients of \eqref{eq:limb-coefficients},
+while the fitted row absorbs it into the coefficients: its basis $\Yup_{lm}$ is limb-free.  With $u_\text{limb} = 0$ the factor recovers
 \eqref{eq:brightness-law} and with $u_\text{limb} = 1$ it darkens the limb to nothing.
 
 Written out, the pattern is multiplied by the limb factor:
@@ -619,8 +620,7 @@ Written out, the pattern is multiplied by the limb factor:
   I(\hat{\mathbf r}) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
   \Bigl[\,1 - 2\epsilon_\text{spin}
   - 4\epsilon_\text{tide}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{tide})
-  + 4\epsilon_\text{spin}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) \Bigr] ,
-  \qquad \mu = \hat{\mathbf r}\cdot\hat{\mathbf z}
+  + 4\epsilon_\text{spin}\,P_2(\hat{\mathbf r}\cdot\hat{\mathbf e}_\text{spin}) \Bigr]
   \label{eq:limb-pattern}
 \end{equation}
 whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
@@ -656,6 +656,34 @@ a dipole and two quadrupoles.  The law is linear in $\mu$ because $\mu$ is a sin
 which is what keeps the coefficients closed at that order; the first-order coefficients of
 \eqref{eq:limb-coefficients} treat it as a dipole about the observer's axis.
 
+At zero deformation that row is the classical limb-darkened disk, and its answer follows from one
+standard integral,
+\begin{equation}
+  \int_0^1 (1-\rho^{2})^{1/2} J_0(x\rho)\,\rho\,d\rho
+  \;=\; \sqrt{\tfrac{\pi}{2}}\,\frac{J_{3/2}(x)}{x^{3/2}}
+  \;=\; \frac{j_1(x)}{x} ,
+  \label{eq:limb-disk-integral}
+\end{equation}
+so that with $I = 1 - u_\text{limb}(1-\mu)$ and $x = 2\pi q$,
+\begin{equation}
+  \frac{V(q)}{V(0)} \;=\;
+  \frac{2\bigl[(1-u_\text{limb})\,J_1(x)/x \;+\; u_\text{limb}\,j_1(x)/x\bigr]}
+       {(1-u_\text{limb}) \;+\; \tfrac23 u_\text{limb}} .
+  \label{eq:limb-disk-visibility}
+\end{equation}
+The two terms are the $l = 0$ and $l = 1$ rows at $\epsilon = 0$: the uniform disk's $J_1$, and the
+limb's $j_1$, which is the odd family's single spherical Bessel.  At $u_\text{limb} = 0$ this is
+$2J_1(x)/x$, the anchor of section~\ref{sec:mode-visibility}.
+
+\begin{itemize}
+  \item[$\checkmark$] \code{check_limb_darkened_disk} evaluates the row at $\epsilon = 0$ and
+    compares $V(q)/V(0)$ with \eqref{eq:limb-disk-visibility} over a range of $q$, against
+    scipy's Bessel functions rather than ours.  It also checks the row's value at the origin
+    against $2\pi[\tfrac12(1-u_\text{limb}) + \tfrac13u_\text{limb}]$, which fixes the
+    normalisation the ratio is taken with.
+    \\[1pt] \vtag{28}\quad \emph{Numerical}
+\end{itemize}
+
 \paragraph{Why the limb is not done analytically.}  The original plan was to expand the star
 and the limb-darkening factor separately and multiply them with Gaunt coefficients, which
 would be fully analytic.  On the disk that product is cheaper than it looks: for a disk seen
@@ -688,17 +716,12 @@ image
   \qquad \Psi_{lm}(x,y) \;=\; \Yup_{lm}\bigl(\Lambda^{-1}(x,y)\bigr) ,
   \label{eq:fitted-model-image}
 \end{equation}
-is the affine visibility, so this is the row in the form the fit uses.  $\Psi_{lm}$ is the disk
-basis of section~\ref{sec:visibility} carried through the stretch, and $\Yup_{lm}$ is limb-free:
-a limb-darkened star is fitted by absorbing the limb into the coefficients.
+is the affine visibility, so this is the row in the form the fit uses, with $\Psi_{lm}$ the disk
+basis of section~\ref{sec:visibility} carried through the stretch.
 
-\paragraph{The fit.}  The image it is fitted to is
-\begin{equation}
-  I(x,y) \;=\; \bigl(1 - u_\text{limb}(1-\mu)\bigr)\, g\bigl(n(x,y)\bigr) ,
-  \label{eq:data-image}
-\end{equation}
-with $\hat{\mathbf r}$ the near-side direction above $(x,y)$ and $\mu$ its viewing cosine; no
-$\Lambda$ enters, the stretch being in $\Psi$ alone.  Least squares in the image plane gives the
+\paragraph{The fit.}  The image fitted to is the $I(x,y)$ of
+section~\ref{sec:deformation-exact}, evaluated at each sample; no $\Lambda$ enters it, the stretch
+being in $\Psi$ alone.  Least squares in the image plane gives the
 normal equations
 \begin{equation}
   G\,\mathbf{a} \;=\; \mathbf{b} ,
@@ -832,9 +855,9 @@ limb factor treats them differently.  The row applies the limb factor
 \eqref{eq:limb-factor} to the constant and the limb dipole and leaves the quadrupoles bare,
 which is what \eqref{eq:limb-coefficients} says.  Its two errors are then
 \begin{equation}
-  I_\text{exact} - I_\text{row} \;=\;
-    \bigl(1 - u_\text{limb}(1-\mu)\bigr)\bigl(g - g_\text{lin}\bigr)
-    \;-\; u_\text{limb}(1-\mu)\,q
+  I_\text{exact} - \tilde I \;=\;
+    \bigl(1 - u_\text{limb}(1 - z/r)\bigr)\bigl(g - g_\text{lin}\bigr)
+    \;-\; u_\text{limb}(1 - z/r)\,q
   \label{eq:row-error}
 \end{equation}
 both brightnesses: the first of order $\epsilon^2$, the linearisation of $g$; the second of order

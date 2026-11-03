@@ -123,3 +123,15 @@ def test_a_null_deformation_is_the_unit_sphere():
     assert field.level_radius([1.0, 1.0, 0.0]) == pytest.approx(1.0, abs=1e-12)
     assert field.surface_gravity([0.0, 1.0, 0.0]) == pytest.approx(1.0, abs=1e-12)
     assert field.equivalent_radius() == pytest.approx(1.0, abs=1e-6)
+
+
+def test_v28_the_limb_darkened_disk_matches_the_classical_two_term():
+    """V28: zero deformation reduces the row to the classical limb-darkened disk.
+
+    At eps = 0 the coefficients are a_00 = 1 and a_10 = u_limb/sqrt(3), so the row is the
+    classical answer (manual eq. 118): the uniform disk's J_1 term from l = 0, and the
+    limb's j_1 term from l = 1.  Comparing V(q)/V(0) pins the normalisation at the origin
+    rather than at any convention for u_limb.  The reference is scipy's Bessel functions,
+    which share nothing with the row but the definition.
+    """
+    assert dv.check_limb_darkened_disk() < 1e-10

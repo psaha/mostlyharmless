@@ -264,6 +264,7 @@ left outside every tag. The table below lists tags, not functions.
 | V25 | the real basis is orthonormal, and matches the complex one up to the phase | numerical, `l <= 4` |
 | V26 | the fit returns a synthetic image's own coefficients | algebraic, `1e-12` |
 | V27 | the Gram matrix: analytic entry `1/4`, block structure, midpoint rule | numerical, `5e-3` |
+| V28 | the row at `eps = 0` is the classical limb-darkened disk, `V(q)/V(0)` | numerical |
 
 Two habits, from D10: prefer exact expansion and coefficient comparison to `simplify`; and
 state the rung and the scope next to every claim, in the register and in the text.
@@ -463,43 +464,6 @@ cross-reference elsewhere.
 
 ### Yet to be implemented
 
-**T1 — limb darkening.** *The GUI now carries a linear limb term in the numeric row, and the
-fitted rows absorb it (D28); what remains is the analytic route.* Required, not optional: without it the model is wrong for real data,
-because the brightness law of section 8 depends on `g` alone. It is the *route* that is open, not
-the need. Two candidates. **On the sphere**, multiply the pattern by `f(mu)` with
-`mu = N_hat . e_obs`, a product of harmonics, so the coefficient update is a Clebsch--Gordan /
-Gaunt sum --- and a small one, because `f` is zonal about the line of sight, which leaves only the
-`m`-diagonal terms: a sum over `l` and `k` at fixed `m`, not the general triple product. **On the
-disk**, `mu = sqrt(1 - rho^2)` is radial, so limb darkening is a Zernike expansion with `m = 0` and
-no angular coupling at all --- manual section 9.5, and the reason this may re-scope from a Gaunt
-problem into the same piece of work as the disk surrogate.
-
-Three things bear on that choice. (i) **It breaks the rotation trick**: `mu` is defined relative to
-the observer, so a limb-darkened coefficient set cannot be rotated from one orientation to another,
-and the factor must be applied *after* the rotation. (ii) **The zonal property is exact only for a
-sphere, or for a configuration axisymmetric about the line of sight.** A deformed star tilts its
-normal, so `mu` varies with azimuth at fixed `rho`; the disk route is then exact only to `O(eps)`,
-which is the affine model's own accuracy rather than a new error. (iii) **Exactness for a deformed
-star cannot come from factorisation**: `mu` must be computed from the actual normal, per sample and
-per view, which is what the numeric row does --- and for a surrogate the right home is the
-*targets*, not the analytic layer.
-
-*What would settle it:* whether a modest mode count beats the affine model on the existing
-certificate while keeping the per-frequency cost small against the setup, and whether the radial
-basis really removes the Gaunt requirement once the normal tilts. F19--F20; the manual plans it as
-section 11, and the classical linearly limb-darkened disk is a two-term Bessel combination worth
-reproducing as an anchor (F21).
-
-**T2 — `real_sph_harm` labelling.** *Closed as documented rather than unified.* The manual
-labels the real basis `(l, m, c)` and `(l, m, s)` with `m > 0`, the code reaches the sine branch
-as `real_sph_harm(l, -m, ...)`, and the two agree under D14, which now records exactly this
-correspondence along with the rule that negative orders are indices and never coefficients. The
-stakes fell further when the real basis left the main line for section 2.2: its remaining
-appearances are that subsection, `maps.sky_map` and V25's certificate, so the "call sites" this
-item was written for are two and both are documented. Unifying the labelling would mean choosing
-one convention for two different jobs --- the literature's on one side, the storage's on the
-other --- and D14 is the bridge between them.
-
 **T4 — retire the affine model.** Its radio button is gone from the interface: with the fitted
 row at `l <= 4`, the affine row is strictly worse by every measure we have, since the fit minimises
 the same norm the affine row projects into. What is left is the code path --- the `affine` branch of
@@ -507,88 +471,6 @@ the same norm the affine row projects into. What is left is the code path --- th
 (`test_the_analytic_and_numeric_panels_are_similar`, the affine row of the Im-sign test). Delete it
 once the fitted row has been looked at for a while and nothing wants it back; the first-order row
 stays, because it is closed form and has no fit in it at all.
-
-**T5 — a map GUI.** *Done.* `symbolic/map_gui.py`, with `make mapgui`, and the scaffolding
-extracted into `symbolic/gui_core.py` and used by both GUIs. The manual had two picture figures:
-a starspot's brightness in two orientations, and its visibility. A second GUI carries both live,
-with two panels rather than the figures' four --- the spin-frame against observer-frame distinction
-is the inclination slider --- and sliders for half-angle, depth, the spot's colatitude, its
-longitude, $eta$ and PA, with `l_max` as a radio. Having a colatitude is what makes the rotation
-phase mean anything: the cap is built zonal, and an axisymmetric map is invariant under a rotation
-about its own axis, which is why the first version's $lpha$ slider did nothing and the test suite
-now pins that as a property rather than a bug.
-
-`gui_core` holds the coalescing timer, the colour-scale rule, the East-leftward flip, the panel and
-colourbar layout, the slider factory and the widget-retention line. Each was written twice before,
-and two of the three defects that came from the untestable `build()` boundary --- the forward
-reference and the lost widget references --- were exactly the kind that gets fixed in one copy and
-not the other. The pure parts are tested: the flip, the colour-scale cache, and the coalescer's
-behaviour with and without a timer.
-
-Both GUIs also carry a **preset box** --- named parameter sets, labelled by what you should see
-rather than by their angles, with a `manual` entry that means "these are the user's own numbers"
-and is re-selected whenever a slider moves. For the map GUI the presets are the geometry checks
-themselves: *spot left* (colatitude 60, longitude 90, inclination 0, which puts the spot left of
-centre only if East is left), *spot right*, *spot above*, and *spot behind* (inclination 90, which
-moves it to the far panel). For the deformation GUI: *reference*, *tilt check* (the off-axis
-diagonal that a mirror cannot hide) and *ceiling*. They were added after a visual pass in which two
-of the expected answers were written down wrongly --- the presets make the expectations part of the
-code instead of part of a conversation.
-
-**T6 — retired the manual's figures.** *Done.* With T5 in place the three figures and their machinery can go:
-the `figure_*` functions, `write()`, the `FIGURES` list, the figure half of the `data` target, the
-three rendering tests, and the `\includegraphics` calls. Two things were carried out first and both
-have since been settled in their turn: the convergence figure's number became a certificate, which
-has now been retired because its claim is textbook, and `cap_coefficients` survived the deletion
-because certificates used it, which they no longer do. The consequence to accept deliberately: the
-manual becomes figure-free, and section 1's "North up, East to the left" becomes a statement about
-the display rather than about a picture.
-
-**T7 — convert the certificates to the in-place format.** Done for two subsections, 6.2 and 6.3,
-which are the model; the other twenty-two are not, and they are in at least three styles. Some are
-prose sentences that fold the certification into the mathematics --- "Certificate V13 compares ...",
-which is what 6.2 and 6.3 looked like before --- some carry the scope and rung in the same sentence,
-and some are register tables at the ends of sections 8, 9 and 10. So this is per-section judgement
-rather than a search and replace, which is why it is not one commit.
-
-The format, as settled on 6.2 and 6.3: each certificate becomes its own item, marked with a
-`\checkmark` in place of the word "Certificate", carrying the \emph{name of the Python function}
-where the tag used to be, with the claim and its scope in the sentence --- "in rational arithmetic,
-for `l <= 6`" --- and the tag and rung on a second line at the item's own margin. The reader then
-sees what was verified and which function does it, in place, without a register lookup and without
-having to remember the rung vocabulary; and deleting that second line remains possible, so the tags
-can be retired later without touching the prose.
-
-Two consequences, both to be taken deliberately rather than by accident. The tags exist for the
-registers; once every certificate is converted the per-section registers go, section 1.5 stops
-describing them, and the roadmap's own table in section 4 becomes the checklist. And with the tags
-gone from the prose, the correspondence between tag and function is no longer visible at all --- so
-either the appendix idea is revived, or a test asserts it by scanning the sources, which is the gap
-C9 was opened for. `\code` already detokenises, so function names need no escaped underscores.
-
-**T8 — all-subscript indices for the harmonics, Legendre and Zernike.** *Done, with one exception since: the Zernike radial is back to `R_n^m`.* Write `Y_{lm}`, `P_{lm}`,
-`R_{n,m}` and `V_{lm}` --- and `Y_{l,-m}` for a negative order, `R_{l,m,c}` and `R_{l,m,s}` for the
-real basis --- instead of the superscript forms. The argument is internal uniformity: the
-coefficients are already subscripts (`a_{lm}`, `c_k`, `Phi_{lm}`, `R_{lm}`), so the basis functions
-are the odd members of the family; and the superscript is genuinely misleading exactly where it
-matters, since `Y_{l,-m}` reads as an inverse as readily as a negative order, which section 1 has to
-forbid explicitly. `V_{lm}` is our own notation, so nothing external is at stake there, and the
-sum-over-modes expressions read better once orders sit on the same level as degrees.
-
-*What does not change.* Powers and squares --- `rho^2`, `epsilon^2`, `e^{im phi}`, `(-1)^m`, `g^p`,
-`Lambda^{T}`, `10^{-5}` --- since those superscripts are exponents. The Wigner matrices keep
-`D^l_{m'm}` and `d^l_{m'm}`: the degree is a superscript in every convention that uses them, and
-breaking that would cost more than the uniformity buys. Jacobi parameters stay a parenthesised
-superscript pair, `P_{k}^{(m,0)}`, which is likewise universal. Bessel functions are already
-subscripts.
-
-*Cost.* About a hundred and five occurrences in the manual, plus the roadmap's own formulas, plus the
-docstrings in `spherical_harmonics.py`, `zernike.py` and `visibility.py`, which are where a reader of
-the code meets the notation. Mechanical per family --- `_l^m`, `_n^m`, `_l^{-m}` are specific enough
-that no power can be caught --- but worth checking section by section rather than in one pass, since
-the superscript on `R_{l,m,c}` also carries a branch label. No certificate can cover a notation
-change; the check is that the PDF still builds and that the sections that reconcile our conventions
-with published ones (section 5 in particular) say which form we use.
 
 **T9 — Tikhonov regularisation for the fitted rows.** The fitted rows ring at the rim, where
 the brightness falls to zero, and near the cusp at the equator; with the grayscale rendering the
@@ -723,46 +605,6 @@ certify the pairing instead or to be retired with it. And `test_maps` compares t
 against a per-mode sum written in the real basis, which is a genuine independent route at the
 moment and would become a comparison of one complex sum against another --- still worth having,
 but a weaker check, and the replacement should be chosen deliberately rather than inherited.
-
-**T14 — fix the mean-radius gauge for the deformation.** Section 8 pins the level surface at
-$\Phi = -M/a$ with $a$ the level-value radius, so the $l = 0$ part of the potential's
-perturbation shows up as a uniform change of radius. That is a gauge, not physics, and it makes
-every equation in the section carry a term that the ellipsoid and $\Lambda$ immediately discard.
-Gauge it away instead: pin the level by the monopole part alone, which makes the mean radius
-exactly 1. Three consequences, all of them wanted:
-
-- $\delta r$ is a pure quadrupole, so the first-order surface is an ellipsoid of mean radius 1;
-- $\det\Lambda = 1 + O(\epsilon^{2})$, so the stretch is area-preserving to first order and the
-  $|\det\Lambda|$ flux factor can be dropped at the order the model claims;
-- the brightness keeps its $l = 0$ part, $g = 1 - 2\epsilon_\text{spin} - 4q$ with $q$ the
-  quadrupole — that term is physical (rotation lowers the mean effective gravity) and cannot be
-  gauged away, which is worth saying rather than hiding.
-
-Order of work: this entry, then the order of presentation in section 8, then the section, then the
-code. The code step shifts every deformation coefficient and should move the GUI numbers and the
-first-order residual's halving ratio slightly; the Earth carries no deformation, so nothing cached
-depends on it.
-
-**T16 — one account of limb darkening, and of what $\mu$ means in each row.** The limb is now
-described in five places and $\mu$ is defined four times: $z/r$ for the numerical row, the
-sphere's $\sqrt{1-\rho^{2}}$ for the pattern, $\sqrt{1-|\Lambda^{-1}(x,y)|^{2}}$ for the model
-rows, and $\hat{\mathbf r}\cdot\hat{\mathbf z}$ again in the appendix. Three of the four are the
-same quantity seen through a different row, which is worth a table -- row, what $\mu$ is, where
-the limb is applied -- and one sentence saying they agree to first order and where the difference
-is counted.
-
-The substantive item underneath: the fitted row's basis is limb-free, $\Yup_{lm}$ is a basis for
-any visible pattern, while the image it is fitted to carries the limb, so a limb-darkened star is
-fitted by absorbing the limb into the coefficients. That is stated in 8.9 but not in 8.8, which
-still says the limb reaches "the fitted coefficients" and reads as though the basis carried it.
-Say once, in 8.8, which rows carry the limb analytically and which absorb it, and let 8.9 drop
-its own sentence.
-
-Two smaller ones seen while looking. The appendix's (A15) repeats the $\mu$ definition that
-section 8.4 now owns. And "why the limb is not done analytically" in 8.8 explains the absence of
-Gaunt coefficients on the disk, which is a different point from the row bookkeeping and should
-not be merged with it.
-
 
 **The Earth's render, made fast.** A timing table (`make time-earth`) attributed the cost
 before anything was changed, which was worth doing: the guess that the panel's Legendre
@@ -927,6 +769,92 @@ against the projection. The affine model's error is **second order in
    against the first-order expectation, with a network reserved for the case where the target
    turns out non-smooth or the parameter count grows.
 ### Closed since this list was written
+
+* **`real_sph_harm` labelling (T2), closed as documented rather than unified.** The manual labels the
+  real basis `(l, m, c)` and `(l, m, s)` with $m>0$; the code reaches the sine branch as
+  `real_sph_harm(l, -m, ...)`; and D14 records the correspondence along with the rule that negative
+  orders are indices and never coefficients. Once the real basis left the main line for section
+  2.2, the call sites the item was written for numbered two, both documented.
+
+* **The map GUI (T5).** `symbolic/map_gui.py`, `make mapgui`, with the scaffolding extracted into
+  `symbolic/gui_core.py` and used by both GUIs. It replaced two of the manual's figures, carrying
+  both panels rather than the figures' four: the spin-frame against observer-frame distinction is
+  the inclination slider. Having a colatitude is what makes the rotation phase mean anything ---
+  the cap is zonal, so a rotation about its own axis does nothing, which the first version's slider
+  discovered by doing nothing and the tests now pin as a property. `gui_core` holds the coalescing
+  timer, the colour-scale rule, the East-leftward flip, the colourbar layout, the slider factory
+  and the widget-retention line, each written twice before, with the pure parts tested. Both GUIs
+  carry a preset box of named parameter sets, labelled by what should be seen.
+
+* **The manual's figures retired (T6).** With T5 in place the three figures went, with the
+  `figure_*` functions, `write()`, the `FIGURES` list, the figure half of the `data` target, three
+  rendering tests and the `\includegraphics` calls. The convergence figure's number became a
+  certificate, since retired because its claim is textbook. The manual is figure-free, and section
+  1's "North up, East to the left" is a statement about the display rather than about a picture.
+
+* **The in-place certificate format (T7), settled on 6.2 and 6.3.** Those two are the pattern:
+  each certificate its own item, a $\checkmark$ in place of the word "Certificate", the Python
+  function's name where the tag used to be, the claim and scope in the sentence, and the tag and
+  rung on a second line at the item's margin. The rest of the manual is still in three styles ---
+  certification folded into the prose, scope in the same sentence, or register tables at the ends
+  of sections 8, 9 and 10 --- so this closed as the format decision with the per-section conversion
+  left to do rather than as a finished conversion.
+
+* **All-subscript indices (T8).** `R_{n,m}`, `V_{lm}`, `Y_{l,-m}`, `R_{l,m,c}`, `R_{l,m,s}`
+  throughout, so orders sit on the same level as degrees. Powers and squares untouched, since those
+  superscripts are exponents; the Wigner matrices keep $D^l_{m'm}$ and $d^l_{m'm}$ because the
+  degree is a superscript in every convention that uses them; Jacobi parameters stay a parenthesis
+  pair. No certificate covers a notation change, so the check was that the PDF builds and that the
+  sections reconciling our conventions with published ones say which form we use.
+
+* **The limb-darkened disk, as an anchor for the closed-form row (T1).** The route was settled long
+  before the item closed, and the manual now carries it: the limb enters as a dipole about the line
+  of sight, applied in the observer frame, so no coefficient set is rotated after the fact; the
+  azimuthal variation of $\mu$ on a deformed star enters only through the dropped $O(u\epsilon)$
+  terms; and exactness for a deformed star is the numerical row's job, per sample.
+
+  The classical case is proved rather than quoted. Section 8.8 derives
+  $\frac{V(q)}{V(0)} = 2[(1-u)J_1(x)/x + u\,j_1(x)/x]/[(1-u)+\tfrac23u]$ from the standard
+  $(1-\rho^2)^{1/2}J_0$ integral, notes that its two terms are the $l = 0$ and $l = 1$ rows at
+  $\epsilon = 0$, and that the $u = 0$ limit is the $2J_1(x)/x$ anchor of section 4. Certificate
+  V28 evaluates the row at $\epsilon = 0$ against that expression, over a range of $q$ and against
+  scipy's Bessel functions rather than ours, with the value at the origin checked first so the
+  ratio has a fixed normalisation.
+
+* **The mean-radius gauge for the deformation (T14), implemented in both text and code.** The level
+  value is $a = 1 - \epsilon_\text{spin}$, the level surface sitting at $-1/a$, so the first-order
+  displacement is the pure quadrupole $E - \langle E\rangle$ and the $l = 0$ part of the perturbation
+  distorts nothing. Three consequences, all in the text: the first-order surface is an ellipsoid
+  whose semi-axes sum to the mean radius; $\det\Lambda = 1 + O(\epsilon^{2})$ follows from the
+  displacement being traceless, so the flux factor is dropped rather than cancelled; and the
+  brightness keeps its $l = 0$ part, $g = 1 - 2\epsilon_\text{spin} - 4q$, which is physical and
+  cannot be gauged away.
+
+  The code follows: `Deformation.level_value` returns $-1/(1-\epsilon_\text{spin})$,
+  `first_order_radii` returns the quadrupole displacement and the gauged $\delta g$, the first-order
+  $a_{00}$ is $1 - 2\epsilon_\text{spin}$, and the two certificates that pin them were restated.
+  Two guard tests were added: the angular mean of the level radii is 1 to $O(\epsilon^{2})$, and
+  $\det\Lambda = 1 + O(\epsilon^{2})$. One bug was found and fixed on the way --- the closure test
+  in `level_radii` took its bracket from the gauged level rather than from the depth, which widened
+  the bracket past the outer root and reported an open surface.
+
+* **One account of limb darkening, and one meaning of $\mu$ per row (T16).** The brightness model
+  moved to the numerical row, where it belongs: section 8.4 declares $I(x,y)$ general --- a
+  stellar-atmosphere model with no simple form is what the fit actually expects --- and gives the
+  instance every figure uses, (86), gravity times a linear limb factor written with $z/r$ rather
+  than $\mu$. Equation (85) is then visibly its $u_\text{limb} = 0$ case.
+
+  Section 8.8 owns the limb and nothing else does. Its opening no longer says the limb is absent by
+  construction, which contradicted the machinery below it; it says the numerical row has applied it
+  sample by sample since (86), and that what remains is the projection onto the disk basis. Both
+  cosines are defined there and only there: the surface's $z/r$ in (103) and the model rows'
+  $\sqrt{1-|\Lambda^{-1}(x,y)|^{2}}$ in (104), with the agreement to first order and the counting of
+  the difference. The section then says which rows carry the factor exactly --- the closed-form one,
+  in its coefficients --- and which absorb it, the fitted row, whose basis $\Yup_{lm}$ is limb-free.
+
+  The fitted row now refers to section 8.4 for its image instead of restating it, and (115) is
+  written with $\tilde I$ and $z/r$. The appendix's duplicate of the $\mu$ definition is the one
+  piece of the item left standing.
 
 * **The translation to Dholakia & Pope's conventions is written, and needs no table.**
   Section 4.1 carries the basis: $\Yup_{lm}$ is their $\tilde y_{\mathrm{HSH}}$ for $l+m$ even and

@@ -983,6 +983,51 @@ def check_level_surface(tide=0.03, centrifugal=0.01, n_dir=32):
 # V21 -- the first-order coefficients in closed form
 # --------------------------------------------------------------------------
 
+def check_limb_darkened_disk(limb=0.6, q_values=None):
+    """V28, numerical rung -- the row at zero deformation against the classical disk.
+
+    A linearly limb-darkened disk has the visibility
+
+        V(q)/V(0) = 2 [ (1-u) J_1(x)/x + u j_1(x)/x ] / [ (1-u) + 2u/3 ] ,
+
+    with x = 2 pi q, from the standard integral of (1-rho^2)^{1/2} J_0 against rho,
+    which gives J_{3/2} and hence j_1.  The two terms are the l = 0 and l = 1 rows.
+
+    At eps = 0 the closed-form coefficients are a_00 = 1 and a_10 = u/sqrt(3), so the
+    row should reproduce that expression exactly, up to the arithmetic of the mode sum.
+    The reference uses scipy's Bessel functions, so it shares nothing with the code
+    under test but the definition.
+
+    Returns the largest relative deviation of V(q)/V(0) over ``q_values``.
+    """
+    from scipy.special import jv, spherical_jn
+
+    from mostlyharmless.symbolic import affine
+    from mostlyharmless.visylm import visibility
+
+    if q_values is None:
+        q_values = np.array([0.05, 0.1, 0.2, 0.4, 0.8, 1.2])
+    eye = np.array([0.0, 0.0, 1.0])
+    field = Deformation(tide=0.0, tide_direction=(1.0, 0.0, 0.0),
+                        centrifugal=0.0, spin_direction=(0.0, 0.0, 1.0))
+    coefficients = affine.first_order_coefficients(field, eye, limb=limb)
+
+    origin = visibility.visibility(coefficients, 0.0, 0.0)
+    analytic = 2.0 * np.pi * (0.5 * (1.0 - limb) + limb / 3.0)
+    if abs(origin - analytic) > 1e-12 * abs(analytic):
+        return abs(origin - analytic) / abs(analytic)
+
+    worst = 0.0
+    for q in q_values:
+        x = 2.0 * np.pi * q
+        classical = 2.0 * ((1.0 - limb) * jv(1, x) / x
+                           + limb * spherical_jn(1, x) / x)
+        classical = classical / ((1.0 - limb) + 2.0 * limb / 3.0)
+        row = visibility.visibility(coefficients, q, 0.0) / origin
+        worst = max(worst, abs(row - classical) / abs(classical))
+    return float(worst)
+
+
 def check_first_order_coefficients(tide=0.03, centrifugal=0.01, n_samples=20000):
     """V21, numerical rung -- the closed-form first-order harmonics against quadrature.
 
