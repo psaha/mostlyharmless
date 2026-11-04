@@ -516,6 +516,33 @@ rather than as a quiet contradiction. And a pass over the exposition's sections 
 that the manual has since overtaken: the gauge of section 8.2, the limb's two cosines, and the
 retirement of the affine row all postdate most of what is written there.
 
+**T18 — the two conventions that decide a sign and a factor.** A reader who lifts an expression
+from a library will be wrong by one or the other, and the manual currently mentions them only where
+it happens to trip over them. One short subsection, two headings, the libraries named under each:
+everything else about a library's interface is in its own documentation and does not belong here.
+
+**Condon--Shortley.** Both `scipy.special.lpmv` and sympy's `assoc_legendre` and `Ynm` carry
+$(-1)^m$ inside the associated Legendre function; (7) does not, and (8) shows the consequence in
+the two odd-order entries. So sympy's $Y_{11} = -\sqrt{3/8\pi}\sin\theta e^{i\varphi}$ against our
+$+\sqrt{3/2}\sin\theta e^{i\varphi}$, and the sign alternates with $m$. The phase is dropped
+deliberately (D8), and the footnote to (6) says what it buys: no $(-1)^m$ inside the real basis,
+the Zernike polynomial, or either closed form.
+
+**Normalisation.** sympy's `Ynm` is normalised so that $\int|Y|^2\,d\Omega = 1$; ours so that the
+*mean* is one, with $Y_{00} = 1$. Two normalisations differ by $\sqrt{4\pi}$, and the quantum
+convention is the one most of the literature uses, so this is where most factors of $4\pi$ in the
+wild come from. Composing the two: our $Y_{lm}$ is $(-1)^m\sqrt{4\pi}$ times sympy's, which is
+exactly what the 30-digit comparison in section 2 has to remove before the functions agree, and it
+is why that comparison is called a convention check rather than an identity.
+
+Two more that have no library counterpart, so they are translations rather than corrections. Our
+$R_{l,m,c}$ and $R_{l,m,s}$ carry no phase and no $\sqrt2$-free variant, and nothing standard
+provides them; and the Zernike polynomials exist in no scipy or sympy function, so the OSA/ANSI
+single index is a relabelling of $(l, m)$ rather than a different function.
+
+What does *not* differ, and should say so briefly so the reader stops looking:
+`numpy.polynomial.legendre`, `scipy.special.spherical_jn` and `jv` agree with our $P_l$, $j_l$ and
+$J_\nu$ to the letter, and the manual computes any of them itself only for the recurrence cost.
 ### Closed since this list was written
 
 * **The five-part document structure (T11), superseded rather than done.** The parts were: spherical

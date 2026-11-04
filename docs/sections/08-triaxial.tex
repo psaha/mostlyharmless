@@ -216,6 +216,55 @@ gradient.
     the perturbation.
     \\[1pt] \vtag{19}\quad \emph{Algebraic}
 \end{itemize}
+\subsection{The limits on the amplitudes}
+\label{sec:deformation-limits}
+
+Two things bound the model: the level surface must exist, and the star must rotate below
+break-up.  The first binds first, and by a wide margin once the two axes are perpendicular.
+
+\paragraph{Closure.}  The left side of \eqref{eq:level-condition} is not monotone in $r$: the monopole falls and
+the quadrupole grows.  Its minimum is at $r^3 = 1/(2E)$ and equals
+$1.89\,E^{1/3}$, so a solution exists only while
+\begin{equation}
+  E(\uvecr) \;<\; 0.148 \qquad \text{for every } \uvecr ,
+  \qquad 0.148 = (1/1.89)^3
+  \label{eq:closure}
+\end{equation}
+Past that the surface opens along the deepest direction, as a Roche lobe does.  This is a
+\emph{physical} limit of the model, not a numerical one, and the amplitude that triggers it
+is the useful result: in the perpendicular case, where the depth along the tide axis is
+\begin{equation}
+  E \;=\; \etide + 1.5\,\espin
+  \label{eq:equatorial-depth}
+\end{equation}
+the bound reads $0.148$ for the tide alone, $0.099$ for the spin alone (whose coefficient
+is $1.5\espin$), and $0.059$ for two equal amplitudes.  A twenty per cent
+deformation of the potential, which was the first target, is therefore not attainable in
+this model at all.
+
+When the two axes are not perpendicular but separated by an angle $\theta$, the deepest
+direction is found from the quadratic form \eqref{eq:level-depth} above, and the depth
+becomes
+\begin{equation}
+  E_\text{max} \;=\; \tfrac34\Bigl[(\epsilon_t-\epsilon_s)
+    + \sqrt{(\epsilon_t-\epsilon_s)^2 + 4\epsilon_t\epsilon_s\cos^2\theta}\Bigr]
+    + \tfrac{3\epsilon_s-\epsilon_t}{2}
+  \label{eq:depth-latitude}
+\end{equation}
+which reduces to \eqref{eq:equatorial-depth} at $\theta = \pi/2$ and to
+$\etide$ alone at $\theta = 0$.  A tide aligned with the spin costs nothing in
+the centrifugal term, which has no gradient along the spin axis, so tilting the tide
+\emph{loosens} the bound.  That is the opposite of the intuition that a more oblique system
+is more constrained, and it is what makes the latitude a useful parameter rather than a
+nuisance.
+
+\paragraph{Break-up.}  The spin amplitude and the rotation rate are one quantity,
+$\espin = \Omega^2/3$, so a star at break-up --- where centrifugal support
+balances gravity at the equator --- would have $\espin = \tfrac13$.  The figures of \eqref{eq:closure} are below that, and comfortably so for the spin
+alone: the truncated potential opens before the star could rotate apart.  That is a statement
+about the quadrupole truncation, not about stars --- the true Roche surface closes at every
+rotation rate, because the higher multipoles the expansion drops are what keep it closed.
+
 \subsection{The numerical row}
 \label{sec:deformation-exact}
 
@@ -796,55 +845,6 @@ the affine row's error separates the two errors that row conflates --- the shape
 truncation at $l \le 2$.  It is not the floor of the class: that would need $\Lambda$ fitted too, and
 $\Lambda$ is only weakly identifiable, its limit being independent of it.  Finally, the five condition numbers of $G$ are what to watch as the
 mode count grows; they are properties of the basis alone, fixed once rather than per parameter set.
-
-\subsection{The limits on the amplitudes}
-\label{sec:deformation-limits}
-
-Two things bound the model: the level surface must exist, and the star must rotate below
-break-up.  The first binds first, and by a wide margin once the two axes are perpendicular.
-
-\paragraph{Closure.}  The left side of \eqref{eq:level-condition} is not monotone in $r$: the monopole falls and
-the quadrupole grows.  Its minimum is at $r^3 = 1/(2E)$ and equals
-$1.89\,E^{1/3}$, so a solution exists only while
-\begin{equation}
-  E(\uvecr) \;<\; 0.148 \qquad \text{for every } \uvecr ,
-  \qquad 0.148 = (1/1.89)^3
-  \label{eq:closure}
-\end{equation}
-Past that the surface opens along the deepest direction, as a Roche lobe does.  This is a
-\emph{physical} limit of the model, not a numerical one, and the amplitude that triggers it
-is the useful result: in the perpendicular case, where the depth along the tide axis is
-\begin{equation}
-  E \;=\; \etide + 1.5\,\espin
-  \label{eq:equatorial-depth}
-\end{equation}
-the bound reads $0.148$ for the tide alone, $0.099$ for the spin alone (whose coefficient
-is $1.5\espin$), and $0.059$ for two equal amplitudes.  A twenty per cent
-deformation of the potential, which was the first target, is therefore not attainable in
-this model at all.
-
-When the two axes are not perpendicular but separated by an angle $\theta$, the deepest
-direction is found from the quadratic form \eqref{eq:depth-form} below, and the depth
-becomes
-\begin{equation}
-  E_\text{max} \;=\; \tfrac34\Bigl[(\epsilon_t-\epsilon_s)
-    + \sqrt{(\epsilon_t-\epsilon_s)^2 + 4\epsilon_t\epsilon_s\cos^2\theta}\Bigr]
-    + \tfrac{3\epsilon_s-\epsilon_t}{2}
-  \label{eq:depth-latitude}
-\end{equation}
-which reduces to \eqref{eq:equatorial-depth} at $\theta = \pi/2$ and to
-$\etide$ alone at $\theta = 0$.  A tide aligned with the spin costs nothing in
-the centrifugal term, which has no gradient along the spin axis, so tilting the tide
-\emph{loosens} the bound.  That is the opposite of the intuition that a more oblique system
-is more constrained, and it is what makes the latitude a useful parameter rather than a
-nuisance.
-
-\paragraph{Break-up.}  The spin amplitude and the rotation rate are one quantity,
-$\espin = \Omega^2/3$, so a star at break-up --- where centrifugal support
-balances gravity at the equator --- would have $\espin = \tfrac13$.  The figures of \eqref{eq:closure} are below that, and comfortably so for the spin
-alone: the truncated potential opens before the star could rotate apart.  That is a statement
-about the quadrupole truncation, not about stars --- the true Roche surface closes at every
-rotation rate, because the higher multipoles the expansion drops are what keep it closed.
 
 \subsection{How good the first-order row is}
 \label{sec:first-order-residual}

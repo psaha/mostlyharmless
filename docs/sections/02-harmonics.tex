@@ -54,10 +54,17 @@ $\cos\theta$ and the uniform Fourier rule in $\varphi$.  Both are exact for this
 integrand, so the residual is floating point alone.  \emph{Numerical}, $l \le 4$.
 
 The complex harmonics are also compared against SymPy's own \code{Ynm} at $30$
-digits.  That is a convention check rather than an identity check, and it is done
-numerically because the two expressions are algebraically equal but not
-identically written --- a symbolic zero there would test the simplifier more than
-the claim.
+digits.  That is a convention check rather than an identity check, and the
+convention is one factor: SymPy carries the Condon--Shortley phase and the
+normalisation with unit integral, so the two agree only after multiplying by
+\begin{equation}
+  (-1)^{m}\sqrt{4\pi} ,
+  \label{eq:sympy-factor}
+\end{equation}
+the sign from the phase and the root from the $4\pi$ that separates a unit mean
+from a unit integral.  The comparison is done numerically because the two
+expressions are algebraically equal but not identically written --- a symbolic
+zero there would test the simplifier more than the claim.
 
 \subsection{The real basis, and other conventions}
 \label{sec:other-conventions}
@@ -127,7 +134,7 @@ tag & claim & rung \\
 \hline
 \vtag{1} & Legendre orthogonality & exact, $l \le 5$ \\
          & $\int_{S^2}|Y_{lm}|^2\,d\Omega = 4\pi$ for the implementation & numerical, $l \le 4$ \\
-         & the $\sqrt{4\pi}$ against SymPy's orthonormal \code{Ynm} & numerical, $30$ digits \\
+         & the $(-1)^{m}\sqrt{4\pi}$ against SymPy's \code{Ynm} & numerical, $30$ digits \\
 \vtag{2} & the extension \eqref{eq:ylm-extension}, and the implementation reproduces it & exact \\
 \vtag{3} & the $l = 2$ zonal corollary \eqref{eq:zonal-l2}, against the general \code{sph_harm_addition} & numerical, $40$ digits, $l \le 6$ \\
 \vtag{25} & the real basis \eqref{eq:real-basis}: mean square one on the grid, and equal to the complex one & numerical, $l \le 4$ \\

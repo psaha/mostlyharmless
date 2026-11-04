@@ -1,10 +1,30 @@
 \section{Fourier transforms of hemispheres}
 
 \begin{equation}
-  V_{lm}(q,\psi) = N_{lm}
-  \int_0^1 P_lm\!\left(\sqrt{1-\rho^2}\right)\, \rho\,d\rho
-  \int_0^{2\pi} e^{im\phi} e^{-2\pi i q\rho\cos(\phi-\psi)} \, d\phi
+  \Yup_{lm}(\rho,\varphi) = N_{lm}\,P_{lm}\bigl(\sqrt{1-\rho^{2}}\bigr)\,e^{im\varphi}
+  \qquad \rho \le 1
+  \label{eq:disk-harmonic}
 \end{equation}
+$\theta > \pi/2$ being the negative branch and the far side.
+
+\begin{equation}
+  N_{lm}^{-1}\;\Yup_{lm} =
+  \begin{cases}
+    \tilde y_{\mathrm{HSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)+m)}
+      + i\,\tilde y_{\mathrm{HSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)-m)}
+      & \quad l+m\ \text{even}  \\[8pt]
+    \tilde y_{\mathrm{CHSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)+m)}
+      + i\,\tilde y_{\mathrm{CHSH},{\scriptscriptstyle\frac{1}{2}}(l(l+2)-m)}
+      & \quad l+m\ \text{odd}
+  \end{cases}
+  \label{eq:disk-basis-hsh}
+\end{equation}
+
+\begin{equation}
+  V_{lm}(q,\psi) = \int_0^1 \rho\,d\rho\, \int_0^{2\pi} \Yup_{lm}(\rho,\varphi) \,
+                            e^{-2\pi i \, q\rho \cos(\varphi - \psi)} \, d\phi
+\end{equation}
+
 
 \begin{equation}
 \begin{aligned}
@@ -14,38 +34,42 @@
 \end{aligned}
 \end{equation}
 
-\cite{2026PASP..138e4504D} provided elegant expressions for $X_lm(q)$
+\cite{2026PASP..138e4504D} provided elegant expressions for $X_{lm}(q)$
 in terms of Bessel functions and spherical Bessel functions.
 
 \begin{equation}
-  X_{lm}(q) = \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q} ,
-  \qquad l+m \text{ odd}
-  \label{eq:odd-radial}
+  X_{lm}(q) =
+  \begin{cases}
+    \displaystyle
+    \sum_{k=0}^{(l-m)/2} c_{lmk}\, (-1)^k\, \frac{J_{m+2k+1}(2\pi q)}{2\pi q}
+    & \quad l+m \text{ even}   \\[16pt]
+    \displaystyle
+    \frac{(l+m)!!}{(l-m-1)!!} \frac{j_l(2\pi q)}{2\pi q}
+    & \quad l+m \text{ odd}
+  \end{cases}
+  \label{eq:oddeven-radial}
 \end{equation}
-
-\begin{equation}
-  X_{lm}(q) = \sum_{k=0}^{(l-m)/2} c_{lmk}\, (-1)^k\,
-  \frac{J_{m+2k+1}(2\pi q)}{2\pi q} , \qquad l+m \text{ even}
-  \label{eq:even-radial}
-\end{equation}
-
-In \cite{2026PASP..138e4504D} the $c_{lmk}$ were obtained numerically,
-but it is possible to find express them exactly as rationals.
+For the even case we need
 \begin{equation}
   c_{lmk} = 2(m+2k+1) \int_0^1 P_{lm}\bigl(\sqrt{1-\rho^2}\bigr)\,
   R_{m+2k}^m(\rho)\, \rho\, d\rho
   \label{eq:even-coefficients}
 \end{equation}
-and
+where $R_{m+2k}^m$ denotes a Zernike polynomial, which itself can be a
+Jacobi polynomial in $1-2\rho^2$ as
 \begin{equation}
   R_{m+2k}^m(\rho) = (-1)^{k} \rho^m P_k^{(m,0)}\!\left(1-2\rho^2\right)
   \qquad k \ge 0
   \label{eq:zernike-jacobi}
 \end{equation}
-a Jacobi polynomial in $1-2\rho^2$ with
+Jacobi polynomials
 \begin{equation}
   P_k^{(m,0)}(x) = \frac{(-1)^{k}}{2^{k}k!}\,(1-x)^{-m}\,
   \frac{d^{k}}{dx^{k}}\Bigl[(1-x)^{m+k}(1+x)^{k}\Bigr]
   \label{eq:jacobi-rodrigues}
 \end{equation}
+are available in sympy, so the integral (\ref{eq:even-coefficients})
+for $c_{lmk}$ can be evaluated as a rational number.
 
+In \cite{2026PASP..138e4504D} the $c_{lmk}$ were obtained by a more
+indirect route.

@@ -1,4 +1,24 @@
 \section{An affine approximation}
 
-Introduce $\Lambda$
+\begin{equation}
+  \Lambda_{\mathrm{3D}} \;=\; \sum_k r_k\,\uvece_k\uvece_k^{T} ,
+  \label{eq:deformation-stretch-3d}
+\end{equation}
+
+\begin{equation}
+  \Lambda \;=\; \sqrt{(P\Lambda_{\mathrm{3D}})(P\Lambda_{\mathrm{3D}})^{T}} ,
+  \label{eq:deformation-stretch}
+\end{equation}
+carries the unit circle onto the shadow. 
+
+\begin{equation}
+  \tilde I(x,y) \;=\; \sum_{lm} a_{lm}\,\Psi_{lm}(x,y)
+  \qquad \Psi_{lm}(x,y) \;=\; \Yup_{lm}\bigl(\Lambda^{-1}(x,y)\bigr)
+  \label{eq:fitted-model-image}
+\end{equation}
+
+\begin{equation}
+  \sum_{l'm'} a_{l'm'} \; \iint \Psi_{lm}\,\Psi_{l'm'}^*\,dx\,dy
+  = \iint I(x,y)\,\Psi_{lm}^*\,dx\,dy
+\end{equation}
 

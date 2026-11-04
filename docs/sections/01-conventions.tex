@@ -119,18 +119,15 @@ associated functions are
 \end{equation}
 so that for $l \le 2$ and $m \ge 0$
 \begin{equation}
-  \begin{bmatrix}
-    Y_{00} & Y_{10} & Y_{11} \\[2pt]
-    Y_{20} & Y_{21} & Y_{22}
-  \end{bmatrix}
-  \;=\;
-  \begin{bmatrix}
-    1 & \sqrt{3}\,\cos\theta & \sqrt{\tfrac32}\,\sin\theta\,e^{i\varphi} \\[4pt]
-    \tfrac{\sqrt{5}}{2}(3\cos^{2}\theta-1) &
-      \sqrt{\tfrac{15}{2}}\,\sin\theta\cos\theta\,e^{i\varphi} &
-      \sqrt{\tfrac{15}{8}}\,\sin^{2}\theta\,e^{2i\varphi}
-  \end{bmatrix}
-  \label{eq:legendre-table}
+  \begin{matrix}
+      Y_{00} = 1 \hfill
+    & Y_{10} = \sqrt{3}\,\cos\theta \hfill
+    & Y_{11} = \sqrt{\tfrac32}\,\sin\theta\,e^{i\varphi} \hfill \\[4pt]
+      Y_{20} = \tfrac{\sqrt{5}}{2}(3\cos^{2}\theta-1) \hfill
+    & Y_{21} = \sqrt{\tfrac{15}{2}}\,\sin\theta\cos\theta\,e^{i\varphi} \hfill
+    & Y_{22} = \sqrt{\tfrac{15}{8}}\,\sin^{2}\theta\,e^{2i\varphi} \hfill
+  \end{matrix}
+  \label{eq:ylm-table}
 \end{equation}
 with the standard $(-1)^m$ the two odd-$m$ entries would change sign, so that
 $Y_{11} = -\sqrt{3/2}\sin\theta e^{i\varphi}$ and $Y_{21}$ likewise.  Negative orders are never formed --- not in the derivations, not for
