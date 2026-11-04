@@ -18,7 +18,7 @@ certificate.
 With negative orders defined by \eqref{eq:ylm-extension}, the complex harmonics
 are orthonormal over the full range,
 \begin{equation}
-  \int_{S^2} Y_{lm} \, \overline{Y_{l'm'}} \, d\Omega
+  \int_{S^2} Y_{lm} \, Y_{l'm'}^* \, d\Omega
   = \delta_{ll'} \, \delta_{mm'} , \qquad -l \le m, m' \le l ,
   \label{eq:ylm-orthonormal}
 \end{equation}
@@ -103,9 +103,9 @@ map.
 fact about conjugation used throughout, that conjugating a map conjugates its transform and
 mirrors the baseline:
 \begin{equation}
-  V(R_{l,m,c}) \;=\; \frac{V_{lm} + (-1)^m\,\overline{V_{lm}}}{\sqrt2} ,
+  V(R_{l,m,c}) \;=\; \frac{V_{lm} + (-1)^m\,V_{lm}^*}{\sqrt2} ,
   \qquad
-  V(R_{l,m,s}) \;=\; \frac{V_{lm} - (-1)^m\,\overline{V_{lm}}}{i\sqrt2} ,
+  V(R_{l,m,s}) \;=\; \frac{V_{lm} - (-1)^m\,V_{lm}^*}{i\sqrt2} ,
   \label{eq:real-branch-visibilities}
 \end{equation}
 which reduce to the $\cos(m\psi)$ and $\sin(m\psi)$ forms met in the literature.  No object

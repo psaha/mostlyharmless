@@ -145,7 +145,7 @@ The contribution of one stored coefficient is then not a new result but a substi
 summand of \eqref{eq:pairing-visibility-parity} at order $m$ and put in the mode
 \eqref{eq:mode-visibility}, which reduces both branches to a common form,
 \[
-  a_{lm}V_{lm} + (-1)^m\,\overline{a_{lm}V_{lm}}
+  a_{lm}V_{lm} + (-1)^m\,a_{lm}V_{lm}^*
   \;=\; 4\pi(-i)^m N_{lm} X_{lm}(q)\, \mathrm{Re}\!\left(a_{lm} e^{im\psi}\right) ,
   \qquad m > 0 ,
 \]
@@ -178,7 +178,7 @@ The model in \code{make mapgui-levels} draws exactly this: the real and imaginar
 $\Delta V$, in the observer's frame, on a common scale, with the origin at the centre of
 each panel.  Both halves of \eqref{eq:pairing-visibility-parity} are then visible at once ---
 the real part is even and the imaginary part odd under $(u,v) \to (-u,-v)$, since
-$V(-u,-v) = \overline{V(u,v)}$ for a real map.
+$V(-u,-v) = V(u,v)^*$ for a real map.
 
 \subsection{The two parities}
 \label{sec:parity}
@@ -212,7 +212,7 @@ turn about the polar axis.  Only $m$ enters, through $e^{im\pi} = (-1)^m$, becau
 factor is the single exponential $e^{im\varphi}$ and not a sum of two.  That parity is what
 governs the \emph{angular} behaviour, and it appears in four places: the phase $(-i)^m$ of the
 mode, which is the statement $J_m(-z) = (-1)^mJ_m(z)$; the sign the visibility's own negative
-order carries, $V_{l,-m} = (-1)^m\overline{V_{lm}}$; the switch between real and imaginary parts
+order carries, $V_{l,-m} = (-1)^mV_{lm}^*$; the switch between real and imaginary parts
 in \eqref{eq:pairing-visibility-parity}, which follows from it; and the $\cos(m\psi)$ and
 $\sin(m\psi)$ factors of the real branches.  The map's extension is \emph{not} one of them: it is
 plain conjugation, and the sign sits on the visibility, where the pairing needs it and the
@@ -225,7 +225,7 @@ Bessel--Zernike split, and why it is worth naming them separately here.
 Identity \eqref{eq:pairing-baseline-sign} is \textbf{certificate \vtag{23}}: it is checked
 directly against \eqref{eq:mode-visibility} at the two baselines, with no coefficients and no
 pairing involved, so the identity is isolated rather than inferred.  That isolation is the
-point.  Hermitian symmetry of a real map, $V(-u,-v) = \overline{V(u,v)}$, also depends on it,
+point.  Hermitian symmetry of a real map, $V(-u,-v) = V(u,v)^*$, also depends on it,
 but only in combination with the pairing, so a sign error common to both would satisfy the
 symmetry and still be wrong.  Certificate \vtag{23} would fail instead, and it would fail
 loudly if the sense of the azimuth were ever changed again --- which it has been.

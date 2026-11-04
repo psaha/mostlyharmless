@@ -137,7 +137,7 @@ convention to get wrong.
 
 The harmonics are extended to negative orders by
 \begin{equation}
-  Y_{l,-m} := \overline{Y_{lm}} , \qquad m > 0 ,
+  Y_{l,-m} := Y_{lm}^* , \qquad m > 0 ,
   \label{eq:ylm-extension}
 \end{equation}
 which is a definition, and the natural one: the sign of $m$ is the sense of
@@ -154,12 +154,12 @@ branches to the complex coefficients in section~\ref{sec:visibility}.  No coeffi
 stored at a negative order.
 
 Coefficients, by contrast, are never formed at a negative order.  For a real map
-the term accompanying $a_{lm} Y_{lm}$ is $\overline{a_{lm}} \, Y_{l,-m}$,
+the term accompanying $a_{lm} Y_{lm}$ is $a_{lm}^* \, Y_{l,-m}$,
 which is to say $2\,\mathrm{Re}(a_{lm} Y_{lm})$; wherever the rotation would call
 for a negative-order coefficient, its value is substituted in that form.  The pairing is
 therefore also a statement about the coefficients,
 \begin{equation}
-  a_{l,-m} \;=\; \overline{a_{lm}} ,
+  a_{l,-m} \;=\; a_{lm}^* ,
   \label{eq:pairing-reality}
 \end{equation}
 and carrying only $m \ge 0$ costs nothing: each stored coefficient is one real number's worth
@@ -192,7 +192,7 @@ rotations: rotating a map rotates its transform by the same angle, so the azimut
 mode is the only azimuthal structure its visibility can have.  Second, conjugating a map
 conjugates its transform and mirrors the baseline,
 \begin{equation}
-  \mathcal{F}\bigl[\,\overline{f}\,\bigr](u,v) \;=\; \overline{\mathcal{F}[f](-u,-v)} ,
+  \mathcal{F}\bigl[\,f^*\,\bigr](u,v) \;=\; \mathcal{F}[f](-u,-v)^* ,
   \label{eq:transform-conjugate}
 \end{equation}
 a plane wave with its phase conjugated being the wave travelling the other way.  Now $Y_{lm}$
@@ -204,7 +204,7 @@ of the baseline by $\pi$, which advances that structure by $m\pi$.  So
 \end{equation}
 and, composing the two,
 \begin{equation}
-  \mathcal{F}\bigl[\overline{Y_{lm}}\bigr] \;=\; (-1)^m\,\overline{V_{lm}} .
+  \mathcal{F}\bigl[Y_{lm}^*\bigr] \;=\; (-1)^m\,V_{lm}^* .
   \label{eq:pairing-v-negative}
 \end{equation}
 The visibility is linear in the map, so it inherits the expansion outright:
@@ -212,14 +212,14 @@ The visibility is linear in the map, so it inherits the expansion outright:
   V(u,v) \;=\; \sum_{l}\sum_{m=-l}^{l} a_{lm}\,V_{lm}(u,v) ,
   \label{eq:pairing-visibility-full}
 \end{equation}
-with the visibility's own negative order given by $V_{l,-m} = (-1)^m\overline{V_{lm}}$,
-which is \eqref{eq:pairing-v-negative} read with $Y_{l,-m} = \overline{Y_{lm}}$: the transform
+with the visibility's own negative order given by $V_{l,-m} = (-1)^mV_{lm}^*$,
+which is \eqref{eq:pairing-v-negative} read with $Y_{l,-m} = Y_{lm}^*$: the transform
 of the conjugate mirrors the baseline, and the $(-1)^m$ of \eqref{eq:pairing-baseline-sign} is
 what the mirroring costs.
 
 Written over the stored half, \eqref{eq:pairing-visibility-full} turns into a sum in which each
 coefficient brings its conjugate partner.  That partner is
-$a_{l,-m}V_{l,-m} = (-1)^m\overline{a_{lm}V_{lm}}$, the phase coming now from the visibility
+$a_{l,-m}V_{l,-m} = (-1)^ma_{lm}V_{lm}^*$, the phase coming now from the visibility
 rather than from the coefficient:
 \begin{equation}
   V(u,v) \;=\; \sum_{l}\Bigl[\, a_{l0}\,V_{l0}(u,v)

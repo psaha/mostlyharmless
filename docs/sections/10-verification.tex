@@ -133,7 +133,7 @@ For the zonal $l = 2$ patterns that the deformation needs, this specialises to o
 With $\uvece$ the axis of the pattern,
 \begin{equation}
   P_2(\uvecr\cdot\uvece) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
-  \overline{Y_{2m}(\uvece)}\,Y_{2m}(\uvecr) ,
+  Y_{2m}^*(\uvece)\,Y_{2m}(\uvecr) ,
   \label{eq:brief-zonal}
 \end{equation}
 which needs only the stored orders,\footnote{For an axis at direction cosines $(a,b,c)$ the
@@ -370,8 +370,8 @@ whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
   \begin{aligned}
     a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \\
     a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
-    a_{2m} = -\frac{4}{5}\Bigl[\etide\,\overline{Y_{2m}(\uvectide)}
-    - \espin\,\overline{Y_{2m}(\uvecspin)}\Bigr] .
+    a_{2m} = -\frac{4}{5}\Bigl[\etide\,Y_{2m}^*(\uvectide)
+    - \espin\,Y_{2m}^*(\uvecspin)\Bigr] .
   \end{aligned}
   \label{eq:brief-first-order-coefficients}
 \end{equation}
@@ -386,7 +386,7 @@ equation whose matrix is the sample Gram $G_s = \sum_s w_s \Psi_s\Psi_s^{\dagger
 the same samples as the right-hand side --- pairing the samples with the analytic Gram would
 bias every coefficient (section 8.9) --- and whose right-hand side is a sum over the samples,
 \begin{equation}
-  b_{lm} \;=\; \sum_s w_s\, I_s\, \overline{\Phi_{lm}\bigl(\Lambda^{-1}x_s\bigr)} ,
+  b_{lm} \;=\; \sum_s w_s\, I_s\, \Phi_{lm}\bigl(\Lambda^{-1}x_s\bigr)^* ,
   \label{eq:brief-fitted-rhs}
 \end{equation}
 with $\Phi_{lm}$ the projected harmonics and $w_s$ the projected area each sample carries.

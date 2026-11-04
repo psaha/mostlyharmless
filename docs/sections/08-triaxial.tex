@@ -518,8 +518,8 @@ outright,
 \begin{equation}
   I(\uvecr) \;=\; 1 - 2\espin
     - \frac{4}{5}\sum_{m=-2}^{2}\bigl(
-      \etide\,\overline{Y_{2m}(\uvectide)}
-      - \espin\,\overline{Y_{2m}(\uvecspin)}\bigr)
+      \etide\,Y_{2m}^*(\uvectide)
+      - \espin\,Y_{2m}^*(\uvecspin)\bigr)
       Y_{2m}(\uvecr)
   \label{eq:first-order-harmonics}
 \end{equation}
@@ -529,8 +529,8 @@ coefficients are
 \begin{equation}
   a_{00} \;=\; 1 - 2\espin , \qquad
   a_{2m} \;=\; -\frac{4}{5}\Bigl[\etide\,
-      \overline{Y_{2m}(\uvectide)}
-    \;-\; \espin\,\overline{Y_{2m}(\uvecspin)}\Bigr]
+      Y_{2m}^*(\uvectide)
+    \;-\; \espin\,Y_{2m}^*(\uvecspin)\Bigr]
   \label{eq:first-order-coefficients}
 \end{equation}
 every other coefficient being zero, with the two axes referred to the observer frame by the
@@ -607,7 +607,7 @@ for each sampled direction $\vecr_i$,
   \varphi_i = \operatorname{atan2}(\vecr_i\cdot\uvecy,\, \vecr_i\cdot\uvecx)
   \label{eq:observer-angles}
 \end{equation}
-and $a_{lm} = \frac{1}{N}\sum_i I_i \overline{Y_{lm}(\theta_i,\varphi_i)}$ is a plain
+and $a_{lm} = \frac{1}{N}\sum_i I_i Y_{lm}^*(\theta_i,\varphi_i)$ is a plain
 quadrature, exactly as in section~\ref{sec:mode-visibility}.
 
 Projecting in the body frame and rotating the coefficients afterwards does not do instead.
@@ -677,8 +677,8 @@ whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
   \begin{aligned}
     a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \\
     a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
-    a_{2m} = -\frac{4}{5}\Bigl[\,\etide\,\overline{Y_{2m}(\uvectide)}
-    - \espin\,\overline{Y_{2m}(\uvecspin)}\,\Bigr] .
+    a_{2m} = -\frac{4}{5}\Bigl[\,\etide\,Y_{2m}^*(\uvectide)
+    - \espin\,Y_{2m}^*(\uvecspin)\,\Bigr] .
   \end{aligned}
   \label{eq:limb-coefficients}
 \end{equation}
@@ -775,9 +775,9 @@ normal equations
 \begin{equation}
   G\,\mathbf{a} \;=\; \mathbf{b} ,
   \qquad
-  G_{lm,l'm'} \;=\; \iint \Psi_{lm}\,\overline{\Psi_{l'm'}}\,dx\,dy ,
+  G_{lm,l'm'} \;=\; \iint \Psi_{lm}\,\Psi_{l'm'}^*\,dx\,dy ,
   \qquad
-  b_{lm} \;=\; \iint I(x,y)\,\overline{\Psi_{lm}}\,dx\,dy ,
+  b_{lm} \;=\; \iint I(x,y)\,\Psi_{lm}^*\,dx\,dy ,
   \label{eq:fitted-normal-equations}
 \end{equation}
 both integrals over the sky plane.  $G$ carries no data: it is block diagonal in $m$, with blocks
@@ -795,7 +795,7 @@ per cent of the map.  The same definition scores any coefficient set, which is w
 comparable, and what \eqref{eq:row-error} and its consequences use for the first-order row of
 section~\ref{sec:deformation-first-order}.
 
-\paragraph{Bookkeeping.}  The map is real, so $a_{l,-m} = \overline{a_{lm}}$ and only
+\paragraph{Bookkeeping.}  The map is real, so $a_{l,-m} = a_{lm}^*$ and only
 $m \ge 0$ is fitted: one design function $\Psi_{l0}$ for $m = 0$, and the pair
 $\mathrm{Re}\,\Psi_{lm}$, $\mathrm{Im}\,\Psi_{lm}$ for $m > 0$.  Odd $l$ is excluded, and not for
 convenience: the parity argument of section~\ref{sec:deformation-brightness} forbids it, so fitting it
