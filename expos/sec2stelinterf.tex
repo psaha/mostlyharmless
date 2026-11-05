@@ -1,14 +1,34 @@
 \section{Stellar interferometry}
 
+One is interested in the interferometric visibility, which is the
+Fourier transform of the brightness map on the sky.  Standard usage
+take the following form.
 \begin{equation}
   V(u,v) = \int I(x,y)\, e^{-2\pi i (u x + v y)}\; dx\, dy
   \label{eq:visibility-definition}
 \end{equation}
-
+If we have a three-dimensional model with brightness defined on a
+surface we have
 \begin{equation}
-  V(u,v) = \int_{\uvecg\cdot\uvecz > 0}
+  V(u,v) = \int_{\uvecn\cdot\uvecz > 0}
   I(\vecr\in S)\, 
-  e^{-2\pi i (u x + v y)}\; (\uvecg\cdot\uvecz)\, dS
+  e^{-2\pi i (u x + v y)}\; (\uvecn\cdot\uvecz)\, dS
   \label{eq:deformation-visibility-integral}
 \end{equation}
+Here $\uvecn$ denotes a unit vector normal to the surface.
+
+For a spinning a triaxially deformed star we want to model the
+brightness and interferometric visibility in the following form.
+\begin{equation}
+  \begin{aligned}
+    \tilde I(x,y) &= \sum_{lm} a_{lm} \Yup_{lm}\left(\Lambda^{-1}\circ(x,y)\right) \\
+    \tilde V(u,v) &= \sum_{lm} a_{lm} V_{lm}\left(\Lambda\circ(x,y)\right)
+  \end{aligned}
+\end{equation}
+Our goals
+\begin{itemize}
+  \item Find suitable basis functions $\Yup_{lm}(x,y)$ on a circle
+    along with their Fourier transforms $V_lm(u,v)$.  Solved by \cite{2026PASP..138e4504D}.
+  \item Find an affine transformation $\Lambda$.
+\end{itemize}
 

@@ -1,20 +1,17 @@
 \section{Spherical harmonics}
 
 \begin{equation}
-  Y_{lm}(\theta,\varphi) = N_{lm}\, P_{lm}(\cos\theta)\, e^{im\varphi}
+\begin{aligned}
+  Y_{lm}(\theta,\varphi) &= N_{lm}\, P_{lm}(\cos\theta)\, e^{im\varphi}  \\
+  N_{lm}^2 = (2l+1)\,\frac{(l-m)!}{(l+m)!}
+\end{aligned}
+\label{eq:ylm}
 \end{equation}
 where
 \begin{equation}
-\begin{aligned}
-  P_{lm}(x) &= (1-x^{2})^{m/2}\,\frac{d^{m}}{dx^{m}}P_l(x) \\
-  P_l(x)    &= \frac{1}{2^{l}l!}\,\frac{d^{l}}{dx^{l}}\,(x^{2}-1)^{l}
-\end{aligned}
+  P_{lm}(x) = \frac{1}{2^{l}l!} \, (1-x^{2})^{m/2} \,
+              \frac{d^{l+m}}{dx^{l+m}} (x^{2}-1)^{l}
 \label{eq:associated-legendre}
-\end{equation}
-and
-\begin{equation}
-  N_{lm} = \sqrt{(2l+1)\,\frac{(l-m)!}{(l+m)!}} ,
-  \label{eq:ylm}
 \end{equation}
 
 \begin{equation}
@@ -36,8 +33,8 @@ and
 
 Addition theorem
 \begin{equation}
-  P_2(\uvecr\cdot\uvece) \;=\; \frac{1}{5}\sum_{m=-2}^{2}
-    Y_{2m}^*(\uvece)\,Y_{2m}(\uvecr)
+  P_2(\uvecr\cdot\uvece) = \frac{1}{5}\sum_{m=-2}^{2}
+                           Y_{2m}^*(\uvece)\,Y_{2m}(\uvecr)
   \label{eq:zonal-l2}
 \end{equation}
 

@@ -874,10 +874,13 @@
 % End-of-document text
 %%%%%%%%%%%%
 
-\AtEndDocument{
-\begin{bottompar}
-This preprint was typeset with the \texttt{preprint} \LaTeX\ class.
-\end{bottompar}
+% Do not use the bottompar environment here: revtex redefines \clearpage
+% to \clear@document at the end of the document, and \clear@document writes
+% the LastPage label.  The \clearpage at the end of bottompar would therefore
+% write LastPage a second time, producing a "multiply defined" warning.
+\AtEndDocument{%
+\par\vspace*{\fill}
+This preprint was typeset with the \texttt{preprint} \LaTeX\ class.\par
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

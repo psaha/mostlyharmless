@@ -295,34 +295,34 @@ With the surface and the brightness fixed, the visibility is the integral of
 section~\ref{sec:mode-visibility} over the sky plane.  The level surface carries it to an integral
 over directions,
 \begin{equation}
-  V(u,v) \;=\; \int_{\uvecg\cdot\uvecz > 0}
-    I(\uvecr)\,(\uvecg\cdot\uvecz)\,
+  V(u,v) \;=\; \int_{\uvecn\cdot\uvecz > 0}
+    I(\uvecr)\,(\uvecn\cdot\uvecz)\,
     e^{-2\pi i (u x + v y)}\; dS ,
   \label{eq:deformation-visibility-integral}
 \end{equation}
-with $dS$ the element of the level surface and $d^2x = (\uvecg\cdot\uvecz)\,dS$
+with $dS$ the element of the level surface and $d^2x = (\uvecn\cdot\uvecz)\,dS$
 its projection onto the sky plane.  The solid angle enters only through
-$dS = r^2\,d\Omega/(\uvecr\cdot\uvecg)$, the tilted patch being larger than its
-spherical shadow by $1/(\uvecr\cdot\uvecg)$.
+$dS = r^2\,d\Omega/(\uvecr\cdot\uvecn)$, the tilted patch being larger than its
+spherical shadow by $1/(\uvecr\cdot\uvecn)$.
 
 The quadrature replaces $dS$ by the surface element each sample owns, which for evenly spread
 directions is
 \begin{equation}
-  \Delta S_i \;=\; \frac{r_i^2\,\Delta\Omega_i}{\uvecr_i\cdot\uvecg_i} ,
+  \Delta S_i \;=\; \frac{r_i^2\,\Delta\Omega_i}{\uvecr_i\cdot\uvecn_i} ,
   \qquad \Delta\Omega_i = \frac{4\pi}{N} ,
   \label{eq:deformation-surface-element}
 \end{equation}
 so that the sum is
 \begin{equation}
-  V(u,v) \;=\; \sum_i I(\uvecr_i)\,(\uvecg_i\cdot\uvecz)\,
+  V(u,v) \;=\; \sum_i I(\uvecr_i)\,(\uvecn_i\cdot\uvecz)\,
     \Delta S_i\; e^{-2\pi i (u x_i + v y_i)}
   \label{eq:deformation-visibility}
 \end{equation}
 which is the form the code evaluates.
 
 Two properties of a level surface make this cheap.  The outward normal is the gradient direction,
-$\uvecg = \nabla\Phi/|\nabla\Phi|$, so a sample is visible exactly when
-$\uvecg\cdot\uvecz > 0$: there is no z-buffer and no nested root find.  And for
+$\uvecn = \nabla\Phi/|\nabla\Phi|$, so a sample is visible exactly when
+$\uvecn\cdot\uvecz > 0$: there is no z-buffer and no nested root find.  And for
 modest deformation the body is convex, so the map from direction to sky position is one-to-one.
 
 Equation~\eqref{eq:deformation-visibility} is a quadrature, not a periodic transform, so its
@@ -684,12 +684,23 @@ gives one dipole, and it is the whole of the dipole.  Multiplying it by the two 
 $l = 1$ and $l = 3$ terms, of order $u_\text{limb}\epsilon$; those are dropped, as is the
 $u_\text{limb}$ scaling of the quadrupoles themselves, which is of the same order.  What survives
 is a constant, a dipole and two quadrupoles --- no Gaunt coefficient anywhere, because the only
-coupling the factor introduces is in the terms just dropped:
+coupling the factor introduces is in the terms just dropped.  Written out term by term, with
+$Y_{00} = 1$,
 \begin{equation}
   \begin{aligned}
-    a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \\
-    a_{10} &= \frac{u_\text{limb}}{\sqrt3} , \qquad
-    a_{2m} = -\frac{4}{5}\Bigl[\,\etide\,Y_{2m}^*(\uvectide)
+    I(\uvecr) \;=\;& \bigl[(1-u_\text{limb})\,(1-2\espin)\bigr]\,Y_{00}
+      \;+\; \frac{u_\text{limb}}{\sqrt3}\,Y_{10}(\uvecr) \\
+    &\;-\; \frac{4}{5}\sum_{m}\Bigl[\,\etide\,Y_{2m}^*(\uvectide)
+      - \espin\,Y_{2m}^*(\uvecspin)\,\Bigr]\,Y_{2m}(\uvecr) ,
+  \end{aligned}
+  \label{eq:limb-expansion}
+\end{equation}
+so the coefficients are
+\begin{equation}
+  \begin{aligned}
+    a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \qquad
+    a_{10} = \frac{u_\text{limb}}{\sqrt3} , \\
+    a_{2m} &= -\frac{4}{5}\Bigl[\,\etide\,Y_{2m}^*(\uvectide)
     - \espin\,Y_{2m}^*(\uvecspin)\,\Bigr] .
   \end{aligned}
   \label{eq:limb-coefficients}
