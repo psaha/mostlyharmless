@@ -352,17 +352,17 @@ in monomial form,
 \end{equation}
 with the common factor $\tfrac32$ on the squared projections and the constant left outside.  Since
 $(\uvecr\cdot\uvece)^2 = \uvecr^{T}
-(\uvece\uvece^{T})\uvecr$, the bracket is the quadratic form of
+(\uvece\otimes\uvece)\uvecr$, the bracket is the quadratic form of
 \begin{equation}
   \mathbf{M} \;=\; \etide\,
-    \uvectide\uvectide^{T}
+    \uvectide\otimes\uvectide
     \;-\; \espin\,
-    \uvecspin\uvecspin^{T}
+    \uvecspin\otimes\uvecspin
   \label{eq:depth-tensor}
 \end{equation}
 a symmetric matrix with no numerical factor in it, so that
 \begin{equation}
-  E(\uvecr) \;=\; \tfrac32\;\uvecr^{T}\mathbf{M}\,\uvecr
+  E(\uvecr) \;=\; \tfrac32\;\uvecr^{T}\cdot\mathbf{M}\cdot\uvecr
     \;+\; \tfrac12\bigl(3\espin - \etide\bigr)
   \label{eq:depth-quadratic}
 \end{equation}
@@ -399,7 +399,7 @@ $\uvece_k$ of section~\ref{sec:deformation-axes}, and the $r_k$ are found numeri
 the level surface, one root per direction: this is where the approximation enters, and the only
 place it does.  The matrix carrying the unit sphere onto the ellipsoid is
 \begin{equation}
-  \Lambda_{\mathrm{3D}} \;=\; \sum_k r_k\,\uvece_k\uvece_k^{T} ,
+  \Lambda_{\mathrm{3D}} \;=\; \sum_k r_k\,\uvece_k\otimes\uvece_k ,
   \label{eq:deformation-stretch-3d}
 \end{equation}
 symmetric positive definite, with those eigenvalues and eigenvectors.
@@ -664,15 +664,27 @@ the closed-form one carries the limb exactly, in the coefficients of \eqref{eq:l
 while the fitted row absorbs it into the coefficients: its basis $\Yup_{lm}$ is limb-free.  With $u_\text{limb} = 0$ the factor recovers
 \eqref{eq:brightness-law} and with $u_\text{limb} = 1$ it darkens the limb to nothing.
 
-Written out, the pattern is multiplied by the limb factor:
+The pattern of \eqref{eq:brightness-example} is the first-order brightness of
+section~\ref{sec:deformation-first-order}.  Multiplying it by the limb factor
+\eqref{eq:limb-factor}, and writing that factor as $1 - u_\text{limb} + u_\text{limb}\mu$, gives
 \begin{equation}
-  I(\uvecr) \;=\; \bigl(1 - u_\text{limb}\,(1-\mu)\bigr)\,
+  I(\uvecr) \;=\; \bigl[(1 - u_\text{limb}) + u_\text{limb}\,\mu\bigr]\,
   \Bigl[\,1 - 2\espin
   - 4\etide\,P_2(\uvecr\cdot\uvectide)
-  + 4\espin\,P_2(\uvecr\cdot\uvecspin) \Bigr]
+  + 4\espin\,P_2(\uvecr\cdot\uvecspin) \Bigr] ,
   \label{eq:limb-pattern}
 \end{equation}
-whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
+which is a product of harmonics throughout.  The cosine is a single one,
+\begin{equation}
+  Y_{10} = \sqrt3\,\cos\theta , \qquad \mu = \frac{Y_{10}}{\sqrt3} ,
+  \label{eq:mu-as-y10}
+\end{equation}
+so the four products separate at once.  Multiplying $u_\text{limb}\mu$ by the pattern's constant
+gives one dipole, and it is the whole of the dipole.  Multiplying it by the two quadrupoles gives
+$l = 1$ and $l = 3$ terms, of order $u_\text{limb}\epsilon$; those are dropped, as is the
+$u_\text{limb}$ scaling of the quadrupoles themselves, which is of the same order.  What survives
+is a constant, a dipole and two quadrupoles --- no Gaunt coefficient anywhere, because the only
+coupling the factor introduces is in the terms just dropped:
 \begin{equation}
   \begin{aligned}
     a_{00} &= (1-u_\text{limb})\,(1-2\espin) , \\
@@ -682,28 +694,10 @@ whose coefficients are, to leading order in $u_\text{limb}\epsilon$,
   \end{aligned}
   \label{eq:limb-coefficients}
 \end{equation}
-None of these coefficients needs a Gaunt integral, and it is worth saying why, since the limb
-factor is a product.  The dipole is the whole of the limb term because $\mu$ \emph{is} a single
-harmonic: $Y_{10} = \sqrt3\cos\theta$, so $\mu = Y_{10}/\sqrt3$, and its
-coefficient is its own amplitude.  The constant term is the other half of
-$1 - u_\text{limb} + u_\text{limb}\mu$, multiplied by the pattern's mean.  The quadrupoles are
-untouched, and come from the corollary \eqref{eq:zonal-l2} of
-section~\ref{sec:rotation-law} rather than from any coupling of harmonics.
-
-Coupling enters only through the terms that are dropped, and those are exactly the ones a Gaunt
-coefficient describes: multiplying the factor into the pattern couples
-$Y_{2m}\cdot Y_{10}$ into $l = 1$ and $l = 3$, with coefficients the $2\times1 \to 1$ and
-$2\times1 \to 3$ integrals.  Two further corrections of order $u_\text{limb}\epsilon$ go with
-them: the quadrupoles are not scaled by $(1-u_\text{limb})$.  What makes the omission defensible
-is that the row is a model chosen for algebra and not a truncation of a physical law, and that
-$a_{10}$ carries no deformation at all, so at zero tide and spin the row is exact --- which is
-what \code{test\_at\_zero\_deformation\_the\_rows\_agree\_with\_the\_limb\_on} checks.
-
-The factor multiplies the quadrupole pattern, so strictly the cross terms at
-$O(\epsilon c)$ add small $l = 3$ structure; those are dropped, and the row stays a constant,
-a dipole and two quadrupoles.  The law is linear in $\mu$ because $\mu$ is a single harmonic,
-which is what keeps the coefficients closed at that order; the first-order coefficients of
-\eqref{eq:limb-coefficients} treat it as a dipole about the observer's axis.
+What makes the omission defensible is that the row is a model chosen for algebra rather than a
+truncation of a physical law, and that $a_{10}$ carries no deformation at all: at zero tide and
+spin the row is exact, which is the zero-deformation test of
+section~\ref{sec:models-worth}.
 
 At zero deformation that row is the classical limb-darkened disk, and its answer follows from one
 standard integral,

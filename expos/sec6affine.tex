@@ -1,12 +1,20 @@
 \section{An affine approximation}
 
+Rewrite $E(\uvecr)$ as
 \begin{equation}
-  \Lambda_{\mathrm{3D}} \;=\; \sum_k r_k\,\uvece_k\uvece_k^{T} ,
+  E(\uvecr) = \tfrac32\;\uvecr^{T}\cdot
+  \Big[ \etide\, \uvectide\otimes\uvectide
+      - \espin\,\uvecspin\otimes\uvecspin \Big]
+  \cdot\uvecr + \tfrac12\bigl(3\espin - \etide\bigr)
+\end{equation}
+
+\begin{equation}
+  \Lambda_{\mathrm{3D}} = \sum_k r_k \uvece_k \otimes \uvece_k^{T}
   \label{eq:deformation-stretch-3d}
 \end{equation}
 
 \begin{equation}
-  \Lambda \;=\; \sqrt{(P\Lambda_{\mathrm{3D}})(P\Lambda_{\mathrm{3D}})^{T}} ,
+  \Lambda = \sqrt{(P\Lambda_{\mathrm{3D}})(P\Lambda_{\mathrm{3D}})^{T}}
   \label{eq:deformation-stretch}
 \end{equation}
 carries the unit circle onto the shadow. 

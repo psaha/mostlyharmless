@@ -1,4 +1,21 @@
 \section{A first-order approximation}
 
-SH coefficients.
+\begin{equation}
+  I(\uvecr) = \big[(1 - \ulimb) + \ulimb\,\cos\theta\big]\,
+  \Bigl[\,1 - 2\espin
+  - 4\etide\,P_2(\uvecr\cdot\uvectide)
+  + 4\espin\,P_2(\uvecr\cdot\uvecspin) \Bigr]
+  \label{eq:limb-pattern}
+\end{equation}
 
+
+\begin{equation}
+  \begin{aligned}
+    a_{00} &= (1-\ulimb)\,(1-2\espin) \\
+    a_{10} &= \tfrac1{\sqrt3} \ulimb \\
+    a_{2m} &= -\tfrac{4}{5}\Big[\,\etide\,Y_{2m}^*(\uvectide)
+    - \espin\,Y_{2m}^*(\uvecspin)\,\Big]
+  \end{aligned}
+  \label{eq:limb-coefficients}
+\end{equation}
+with $O(\ulimb\epsilon)$ error.
